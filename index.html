@@ -105,7 +105,7 @@
 
     /* ojo en el loader */
     #eye-container {
-      width: 148px; height: 148px;
+      width: 200px; height: 130px;
       background: var(--cream);
       border-radius: 14px;
       display: flex;
@@ -421,26 +421,18 @@
     <span class="loader-tagline">Universos visuales desde<br>Argentina hacia el mundo.</span>
 
     <div id="eye-container">
-      <!-- SVG del ojo dibujado -->
-      <svg id="eye-svg" viewBox="0 0 110 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- forma del ojo -->
-        <path d="M5 30 C20 8, 90 8, 105 30 C90 52, 20 52, 5 30 Z"
-              fill="#111111" />
-        <!-- iris -->
-        <circle cx="55" cy="30" r="14" fill="#333" />
-        <!-- pupila -->
-        <circle cx="55" cy="30" r="7" fill="#000" />
-        <!-- reflejo -->
-        <circle cx="60" cy="25" r="3" fill="white" opacity="0.6"/>
-
-        <!-- párpado superior (se anima para cerrar el ojo) -->
-        <g id="eyelid-top">
-          <path id="eyelid-path" d="M5 30 C20 8, 90 8, 105 30"
-                fill="none" stroke="none"/>
-          <!-- máscara del párpado: rectángulo que baja -->
-          <rect id="eyelid-rect" x="0" y="0" width="110" height="30" fill="#0011fe"/>
-        </g>
-      </svg>
+      <!-- Ojo real con párpado animado encima -->
+      <div id="eye-img-wrap" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+        <img id="eye-img" src="assets/ojo.png" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" />
+        <div id="eyelid-rect" style="
+          position:absolute;
+          inset:0;
+          background:#0011fe;
+          border-radius:14px;
+          transform:scaleY(0);
+          transform-origin:50% 0%;
+        "></div>
+      </div>
       <!-- slideshow de trabajos (reemplaza el ojo) -->
       <div id="eye-slides">
         <div class="eye-slide" style="background-color:#1a1a2e;"></div>
@@ -620,7 +612,7 @@ async function finalBlink() {
   await new Promise(r => setTimeout(r, 80));
   // Mostrar slideshow rápido
   eyeSlides.classList.add('active');
-  document.getElementById('eye-svg').style.display = 'none';
+  document.getElementById('eye-img-wrap').style.display = 'none';
   let si = 0;
   await new Promise(resolve => {
     const showSlide = () => {
