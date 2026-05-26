@@ -560,35 +560,23 @@ const pctInterval = setInterval(() => {
 }, 60);
 
 // Parpadeo simple: cierra → abre → invierte colores
-// El GIF dura 600ms. El cambio crema→azul ocurre a los 320ms.
-// Al llegar a 100%: forzar reload del GIF, sincronizar inversión a 320ms.
+// El GIF empieza cuando carga la página y se reproduce UNA sola vez.
+// Dura 600ms. El cambio crema→azul ocurre a los 320ms.
+// No se reinicia nunca — la inversión y la expansión están sincronizadas
+// con el inicio del GIF, no con el loader.
 
-function reloadGif() {
-  const img = document.getElementById('eye-img');
-  const src = img.src;
-  img.src = '';
-  img.src = src; // fuerza reinicio del GIF
-}
+// A los 320ms desde que carga la página: invertir colores
+setTimeout(() => {
+  loader.classList.add('inverted');
+}, 320);
 
+// A los 700ms: arrancar expansión (el GIF ya terminó)
 setTimeout(() => {
   loaderDone = true;
   clearInterval(pctInterval);
   loaderPct.textContent = '100%';
-
-  // Reiniciar GIF desde el frame 0
-  reloadGif();
-
-  // A los 320ms (exactamente cuando el GIF cambia a azul): invertir el loader
-  setTimeout(() => {
-    loader.classList.add('inverted');
-  }, 320);
-
-  // A los 600ms (GIF terminó): arrancar expansión al hero
-  setTimeout(() => {
-    startExpansion();
-  }, 700);
-
-}, 2800);
+  startExpansion();
+}, 700);
 
 /* ═══════════════════════════════════════════════════════════
    POSICIONES DEL GRID
