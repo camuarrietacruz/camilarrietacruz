@@ -462,7 +462,7 @@ function startStage() {
     });
 
     // Sub oculto al inicio — aparece después de que el nombre llega
-    subDisp.style.opacity = '0';
+    subFixed.style.opacity = '0';
     // Nombre empieza en la izquierda
     heroName.style.left = '60px';
     heroName.style.transition = 'none';
@@ -476,42 +476,33 @@ function startStage() {
 
 function animateNameToCenter() {
   const vw = window.innerWidth;
-  const vh = window.innerHeight;
-
-  // Medir ancho SOLO del texto principal (no del sub)
   const nameSpan = document.getElementById('name-display');
   const nameW = nameSpan.offsetWidth;
   const targetLeft = (vw / 2) - (nameW / 2);
-
-  // Animar con JS para detectar colisión
   const startLeft = 60;
-  const duration  = 1000;
+  const duration  = 900;
   const startTime = performance.now();
-
-  let collided = false;
+  let expansionTriggered = false;
 
   function tick(now) {
     const elapsed = now - startTime;
     const t = Math.min(elapsed / duration, 1);
     const eased = easeOut(t);
     const currentLeft = lerp(startLeft, targetLeft, eased);
-
     heroName.style.left = currentLeft + 'px';
-    // transform: none — nunca se toca
 
-    // Detectar colisión
-    if (!collided) {
-      const imgLeft = vw / 2 - 75;
-      if (currentLeft + nameW >= imgLeft - 10) {
-        collided = true;
-        startExpansion();
-      }
+    // Colisión: cuando el nombre llega al 60% del recorrido
+    if (!expansionTriggered && t >= 0.6) {
+      expansionTriggered = true;
+      startExpansion();
     }
 
-    if (t < 1) requestAnimationFrame(tick);
-    else {
+    if (t < 1) {
+      requestAnimationFrame(tick);
+    } else {
       heroName.style.left = targetLeft + 'px';
-      subFixed.style.transition = 'opacity 0.4s ease 0.1s';
+      // Mostrar Buenos Aires cuando llega al centro
+      subFixed.style.transition = 'opacity 0.4s ease';
       subFixed.style.opacity = '0.8';
     }
   }
