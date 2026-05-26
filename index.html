@@ -120,24 +120,11 @@
       background: var(--blue);
     }
     #eye-img {
-      width: 130px;
-      height: auto;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
       display: block;
-      position: relative;
-      z-index: 1;
-    }
-    /* Párpado: cubre el ojo desde arriba hacia abajo (scaleY desde top) */
-    #eyelid {
-      position: absolute;
-      inset: 0;
-      background: var(--blue);
-      transform: scaleY(0);
-      transform-origin: 50% 0%;
-      z-index: 2;
       border-radius: 16px;
-    }
-    #loader.inverted #eyelid {
-      background: var(--cream);
     }
 
     /* SVG del ojo */
@@ -433,8 +420,7 @@
     <span class="loader-tagline">Universos visuales desde<br>Argentina hacia el mundo.</span>
 
     <div id="eye-container">
-      <img id="eye-img" src="assets/ojo.png" alt="" />
-      <div id="eyelid"></div>
+      <img id="eye-img" src="assets/ojito.gif" alt="" />
       <!-- slideshow de trabajos (reemplaza el ojo) -->
       <div id="eye-slides">
         <div class="eye-slide" style="background-color:#1a1a2e;"></div>
@@ -563,7 +549,6 @@ const loader    = document.getElementById('loader');
 const loaderPct = document.getElementById('loader-pct');
 const eyeSlides = document.getElementById('eye-slides');
 const slides    = document.querySelectorAll('.eye-slide');
-const eyelid = document.getElementById('eyelid');
 
 let pct = 0;
 let loaderDone = false;
@@ -575,65 +560,34 @@ const pctInterval = setInterval(() => {
 }, 60);
 
 // Parpadeo simple: cierra → abre → invierte colores
-function closeLid(fast) {
-  return new Promise(resolve => {
-    const dur = fast ? 100 : 160;
-    eyelid.style.transition = `transform ${dur}ms ease-in`;
-    eyelid.style.transform = 'scaleY(1)';
-    setTimeout(resolve, dur);
-  });
-}
-function openLid(fast) {
-  return new Promise(resolve => {
-    const dur = fast ? 80 : 140;
-    eyelid.style.transition = `transform ${dur}ms ease-out`;
-    eyelid.style.transform = 'scaleY(0)';
-    setTimeout(resolve, dur);
-  });
+// El GIF dura 600ms. El cambio crema→azul ocurre a los 320ms.
+// Al llegar a 100%: forzar reload del GIF, sincronizar inversión a 320ms.
+
+function reloadGif() {
+  const img = document.getElementById('eye-img');
+  const src = img.src;
+  img.src = '';
+  img.src = src; // fuerza reinicio del GIF
 }
 
-// Parpadeos idle mientras carga (cada ~1.8s)
-let idleBlinks = 0;
-const maxIdleBlinks = 4;
-async function idleBlink() {
-  if (loaderDone) return;
-  await closeLid(false);
-  await openLid(false);
-  idleBlinks++;
-  if (!loaderDone && idleBlinks < maxIdleBlinks) {
-    setTimeout(idleBlink, 1600 + Math.random() * 800);
-  }
-}
-setTimeout(idleBlink, 1200);
-
-// Al llegar a 100%: parpadeo final que invierte colores
-async function finalBlink() {
-  await closeLid(true);
-  // En el momento exacto que cierra: invertir
-  loader.classList.add('inverted');
-  await new Promise(r => setTimeout(r, 80));
-  // Mostrar slideshow rápido
-  eyeSlides.classList.add('active');
-  document.getElementById('eye-container').style.display = 'none';
-  let si = 0;
-  await new Promise(resolve => {
-    const showSlide = () => {
-      slides.forEach(s => s.classList.remove('visible'));
-      if (slides[si]) slides[si].classList.add('visible');
-      si++;
-      if (si < slides.length) setTimeout(showSlide, 80);
-      else setTimeout(resolve, 150);
-    };
-    showSlide();
-  });
-  startExpansion();
-}
-
-setTimeout(async () => {
+setTimeout(() => {
   loaderDone = true;
   clearInterval(pctInterval);
   loaderPct.textContent = '100%';
-  await finalBlink();
+
+  // Reiniciar GIF desde el frame 0
+  reloadGif();
+
+  // A los 320ms (exactamente cuando el GIF cambia a azul): invertir el loader
+  setTimeout(() => {
+    loader.classList.add('inverted');
+  }, 320);
+
+  // A los 600ms (GIF terminó): arrancar expansión al hero
+  setTimeout(() => {
+    startExpansion();
+  }, 700);
+
 }, 2800);
 
 /* ═══════════════════════════════════════════════════════════
