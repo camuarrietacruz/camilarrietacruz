@@ -4,9 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Camila Arrieta Cruz — Dirección Creativa</title>
-
   <style>
-    /* ─── FONTS ─────────────────────────────────────────────── */
     @font-face {
       font-family: 'SKModernist';
       src: url('fonts/Sk-Modernist-Regular.otf') format('opentype');
@@ -18,7 +16,6 @@
       font-weight: 700;
     }
 
-    /* ─── VARIABLES ──────────────────────────────────────────── */
     :root {
       --blue:  #0011fe;
       --cream: #F8F7EF;
@@ -26,7 +23,6 @@
       --font:  'SKModernist', sans-serif;
     }
 
-    /* ─── RESET ──────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       width: 100%; height: 100%;
@@ -36,7 +32,7 @@
       cursor: none;
     }
 
-    /* ─── CUSTOM CURSOR ──────────────────────────────────────── */
+    /* ── CURSOR ── */
     #cursor {
       position: fixed;
       top: 0; left: 0;
@@ -45,11 +41,9 @@
       z-index: 9999;
       transform: translate(-2px, -2px);
     }
-    #cursor img {
-      width: 100%; height: 100%;
-    }
+    #cursor img { width: 100%; height: 100%; }
 
-    /* ─── LOADER ─────────────────────────────────────────────── */
+    /* ── LOADER ── */
     #loader {
       position: fixed;
       inset: 0;
@@ -57,261 +51,200 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
-      transition: background 0.05s;
+      z-index: 100;
     }
-    #loader.inverted {
-      background: var(--cream);
-    }
-    #loader.inverted .loader-name,
-    #loader.inverted .loader-pct,
-    #loader.inverted .loader-tagline { color: var(--blue); }
-
+    #loader.inverted { background: var(--cream); }
 
     .loader-name {
       position: absolute;
-      left: 60px;
-      top: 50%;
+      left: 60px; top: 50%;
       transform: translateY(-50%);
       color: var(--cream);
       font-size: 15px;
       letter-spacing: 0.08em;
       font-weight: 400;
-      transition: color 0.05s;
     }
+    #loader.inverted .loader-name { color: var(--blue); }
+
     .loader-pct {
       position: absolute;
-      right: 60px;
-      top: 50%;
+      right: 60px; top: 50%;
       transform: translateY(-50%);
       color: var(--cream);
       font-size: 15px;
       letter-spacing: 0.08em;
       font-weight: 700;
-      transition: color 0.05s;
     }
+    #loader.inverted .loader-pct { color: var(--blue); }
+
     .loader-tagline {
       position: absolute;
-      bottom: 48px;
-      left: 50%;
+      bottom: 48px; left: 50%;
       transform: translateX(-50%);
       color: var(--cream);
       font-size: 15px;
       text-align: center;
       line-height: 1.2;
       letter-spacing: 0.03em;
-      transition: color 0.05s;
       white-space: nowrap;
+      transition: opacity 0.5s ease;
     }
+    #loader.inverted .loader-tagline { color: var(--blue); }
 
-    /* ojo en el loader */
     #eye-container {
       width: 150px; height: 150px;
-      background: var(--cream);
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border-radius: 8px;
       overflow: hidden;
       position: relative;
       flex-shrink: 0;
     }
-    #loader.inverted #eye-container {
-      background: var(--blue);
-    }
     #eye-img {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       object-fit: cover;
       display: block;
-      border-radius: 16px;
+      border-radius: 8px;
     }
 
-    /* SVG del ojo */
-    #eye-svg {
-      width: 110px;
-      transform-origin: center;
-    }
-
-
-    /* slideshow de trabajos en el ojo */
-    #eye-slides {
-      position: absolute;
-      inset: 0;
-      display: none;
-      overflow: hidden;
-      border-radius: 14px;
-    }
-    #eye-slides.active { display: block; }
-    .eye-slide {
-      position: absolute;
-      inset: 0;
-      background-size: cover;
-      background-position: center;
-      opacity: 0;
-      transition: opacity 0.07s;
-    }
-    .eye-slide.visible { opacity: 1; }
-
-    /* ─── MAIN WRAPPER (hero + footer apilados) ──────────────── */
-    #main {
+    /* ── STAGE: todo pasa aquí después del loader ── */
+    #stage {
       position: fixed;
       inset: 0;
+      background: var(--cream);
       opacity: 0;
       pointer-events: none;
     }
-    #main.visible {
+    #stage.visible {
       opacity: 1;
       pointer-events: all;
     }
 
-    /* ─── HERO ───────────────────────────────────────────────── */
-    #hero {
+    /* ── TAGLINE en el stage ── */
+    #stage-tagline {
       position: absolute;
-      inset: 0;
-      background: var(--cream);
-      z-index: 2;
-      overflow: hidden;
-    }
-
-    /* nombre central que muta */
-    #hero-name {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 15px;
-      letter-spacing: 0.08em;
+      bottom: 48px; left: 50%;
+      transform: translateX(-50%);
       color: var(--blue);
-      font-weight: 400;
+      font-size: 15px;
       text-align: center;
-      z-index: 10;
+      line-height: 1.2;
+      letter-spacing: 0.03em;
       white-space: nowrap;
-      cursor: none;
-      line-height: 1.4;
-    }
-    #hero-name .sub {
-      display: block;
-      font-size: 13px;
-      letter-spacing: 0.05em;
-      color: var(--black);
-      opacity: 0.8;
+      opacity: 1;
+      transition: opacity 0.6s ease;
     }
 
-    /* cursor especial en el logo del cursor (la flechita) */
-    #cursor-arrow {
-      position: fixed;
-      top: 0; left: 0;
-      pointer-events: none;
-      z-index: 9998;
-      transform: translate(-50%, -50%);
-    }
-
-    /* ─── GRID DE PROYECTOS ──────────────────────────────────── */
-    #projects-grid {
+    /* ── IMAGEN CENTRAL ── */
+    #main-img {
       position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    }
-    .project-card {
-      position: absolute;
-      border-radius: 12px;
+      width: 150px; height: 150px;
+      border-radius: 8px;
       overflow: hidden;
-      cursor: none;
-      transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                  box-shadow 0.4s ease;
+      /* empieza centrada */
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
     }
-    .project-card:hover {
-      box-shadow: 0 20px 60px rgba(0,17,254,0.15);
-      z-index: 5;
+    #main-img img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      border-radius: 8px;
     }
-    .project-card img {
+
+    /* ── CARDS DE PROYECTOS (detrás de main-img) ── */
+    .proj-card {
+      position: absolute;
+      border-radius: 8px;
+      overflow: hidden;
+      z-index: 1;
+      /* todas empiezan en el centro, tamaño 150x150 */
+      width: 150px; height: 150px;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+    }
+    .proj-card img {
       width: 100%; height: 100%;
       object-fit: cover;
       display: block;
-      pointer-events: none;
     }
-    .project-card .project-info {
+    .proj-card .proj-info {
       position: absolute;
       inset: 0;
-      background: rgba(0,17,254,0.82);
+      background: rgba(0,17,254,0.85);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       opacity: 0;
       transition: opacity 0.25s ease;
-      gap: 6px;
+      gap: 5px;
     }
-    .project-card:hover .project-info { opacity: 1; }
-    .project-info span {
+    .proj-card:hover .proj-info { opacity: 1; }
+    .proj-info span {
       color: var(--cream);
       font-family: var(--font);
-      font-size: 12px;
+      font-size: 11px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
-    .project-info .p-name { font-weight: 700; font-size: 13px; }
+    .proj-info .pn { font-weight: 700; font-size: 12px; }
 
-    /* placeholder card (sin imagen) */
-    .project-card.placeholder {
-      background: #e8e7df;
-    }
-    .project-card.placeholder::after {
-      content: '';
+    /* ── NOMBRE CENTRAL ── */
+    #hero-name {
       position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, #dddcd4 0%, #e8e7df 100%);
+      /* empieza alineado a la izquierda, verticalmente centrado */
+      top: 50%;
+      left: 60px;
+      transform: translateY(-50%);
+      font-size: 15px;
+      letter-spacing: 0.08em;
+      color: var(--blue);
+      font-weight: 400;
+      white-space: nowrap;
+      z-index: 10;
+      cursor: none;
+      text-align: center;
+    }
+    #hero-name .sub {
+      display: block;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      color: var(--black);
+      opacity: 0;
+      margin-top: 4px;
     }
 
-    /* ─── FOOTER (persiana) ───────────────────────────────────── */
+    /* ── FOOTER ── */
     #footer {
       position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: 0; left: 0; right: 0;
       height: 100vh;
       transform: translateY(100%);
       z-index: 3;
       overflow: hidden;
     }
-
-    /* foto de cara como fondo */
     #footer-bg {
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       background-image: url('assets/CARITA.png');
       background-size: cover;
       background-position: center top;
       opacity: 0.8;
       filter: hue-rotate(200deg) saturate(0.3) brightness(0.7);
     }
-    /* overlay azul para el tinte */
     #footer-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 17, 254, 0.45);
+      position: absolute; inset: 0;
+      background: rgba(0,17,254,0.45);
       mix-blend-mode: multiply;
     }
-
-    /* CAMUXI SVG animado */
     #camuxi-svg-wrap {
       position: absolute;
-      top: 50%;
-      left: 50%;
+      top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 80vw;
-      max-width: 1100px;
+      width: 80vw; max-width: 1100px;
       mix-blend-mode: difference;
       pointer-events: none;
     }
-    #camuxi-svg-wrap svg {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-    /* los paths empiezan invisibles — JS los anima */
+    #camuxi-svg-wrap svg { width: 100%; height: auto; display: block; }
     #camuxi-svg-wrap path {
       fill: none;
       stroke: #F8F7EF;
@@ -319,81 +252,43 @@
       stroke-linecap: round;
       stroke-linejoin: round;
     }
-
-    /* nav superior del footer */
     #footer-nav {
-      position: absolute;
-      top: 24px;
-      left: 0; right: 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      position: absolute; top: 24px; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 0 60px;
     }
-    #footer-nav .fn-name {
-      color: var(--cream);
-      font-size: 14px;
-      letter-spacing: 0.08em;
-    }
-    #footer-nav .fn-links {
-      display: flex;
-      gap: 32px;
-    }
+    #footer-nav .fn-name { color: var(--cream); font-size: 14px; letter-spacing: 0.08em; }
+    #footer-nav .fn-links { display: flex; gap: 32px; }
     #footer-nav .fn-links a {
-      color: var(--cream);
-      text-decoration: none;
-      font-size: 14px;
-      letter-spacing: 0.08em;
-      border-bottom: 1px solid rgba(248,247,239,0.4);
-      padding-bottom: 2px;
-      cursor: none;
-      transition: border-color 0.2s;
+      color: var(--cream); text-decoration: none; font-size: 14px;
+      letter-spacing: 0.08em; border-bottom: 1px solid rgba(248,247,239,0.4);
+      padding-bottom: 2px; cursor: none; transition: border-color 0.2s;
     }
     #footer-nav .fn-links a:hover { border-color: var(--cream); }
-
-    /* barra inferior del footer */
     #footer-bar {
-      position: absolute;
-      bottom: 0;
-      left: 0; right: 0;
+      position: absolute; bottom: 0; left: 0; right: 0;
       padding: 20px 60px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
     }
     #footer-bar span, #footer-bar a {
-      color: rgba(248,247,239,0.6);
-      font-size: 12px;
-      letter-spacing: 0.06em;
-      text-decoration: none;
-      cursor: none;
+      color: rgba(248,247,239,0.6); font-size: 12px;
+      letter-spacing: 0.06em; text-decoration: none; cursor: none;
     }
     #footer-bar a:hover { color: var(--cream); }
 
-    /* selector de idioma */
+    /* ── LANG ── */
     #lang-toggle {
-      position: fixed;
-      top: 24px;
-      right: 60px;
-      z-index: 500;
-      display: flex;
-      gap: 12px;
+      position: fixed; top: 24px; right: 60px;
+      z-index: 500; display: flex; gap: 12px;
     }
     #lang-toggle button {
-      background: none;
-      border: none;
-      font-family: var(--font);
-      font-size: 13px;
-      letter-spacing: 0.08em;
-      color: var(--blue);
-      cursor: none;
-      padding: 0;
-      opacity: 0.4;
-      transition: opacity 0.2s;
+      background: none; border: none; font-family: var(--font);
+      font-size: 13px; letter-spacing: 0.08em; color: var(--blue);
+      cursor: none; padding: 0; opacity: 0.4; transition: opacity 0.2s;
     }
     #lang-toggle button.active { opacity: 1; font-weight: 700; }
 
-    /* ─── ANIMACIONES ─────────────────────────────────────────── */
+    /* ── GLITCH ── */
     @keyframes glitch-char {
       0%   { transform: translate(0); }
       20%  { transform: translate(-2px, 1px); }
@@ -403,117 +298,72 @@
       100% { transform: translate(0); }
     }
     .glitching { animation: glitch-char 0.08s steps(1) infinite; }
-
   </style>
 </head>
 <body>
 
-  <!-- ─── CUSTOM CURSOR ─────────────────────────────────── -->
-  <div id="cursor">
-    <img src="assets/cursor.svg" alt="" />
-  </div>
+  <div id="cursor"><img src="assets/cursor.svg" alt="" /></div>
 
-  <!-- ─── LOADER ────────────────────────────────────────── -->
+  <!-- LOADER -->
   <div id="loader">
     <span class="loader-name">CAMILA ARRIETA CRUZ</span>
     <span class="loader-pct" id="loader-pct">0%</span>
     <span class="loader-tagline">Universos visuales desde<br>Argentina hacia el mundo.</span>
-
     <div id="eye-container">
       <img id="eye-img" src="assets/ojito.gif" alt="" />
-      <!-- slideshow de trabajos (reemplaza el ojo) -->
-      <div id="eye-slides">
-        <div class="eye-slide" style="background-color:#1a1a2e;"></div>
-        <div class="eye-slide" style="background-color:#c8a94a;"></div>
-        <div class="eye-slide" style="background-color:#2d2d2d;"></div>
-        <div class="eye-slide" style="background-color:#8a6a3a;"></div>
-        <div class="eye-slide" style="background-color:#0011fe;"></div>
-        <div class="eye-slide" style="background-color:#3d3d3d;"></div>
-      </div>
     </div>
   </div>
 
-  <!-- ─── MAIN ──────────────────────────────────────────── -->
-  <div id="main">
+  <!-- STAGE -->
+  <div id="stage">
 
-    <!-- SELECTOR DE IDIOMA -->
     <div id="lang-toggle">
       <button class="active" data-lang="es">ES</button>
       <button data-lang="en">EN</button>
     </div>
 
-    <!-- ═══ HERO ═══════════════════════════════════════════ -->
-    <div id="hero">
-      <div id="projects-grid">
-        <!-- Las cards se posicionan via JS -->
-        <!-- Placeholders: en producción reemplazar src con imágenes reales -->
-        <div class="project-card placeholder" data-name="Habibi NY" data-year="2024" data-type="Branding">
-          <div class="project-info">
-            <span class="p-name">Habibi NY</span>
-            <span>2024</span>
-            <span>Branding</span>
-          </div>
-        </div>
-        <div class="project-card placeholder" data-name="Known" data-year="2024" data-type="Dirección Creativa">
-          <div class="project-info">
-            <span class="p-name">Known</span>
-            <span>2024</span>
-            <span>Dirección Creativa</span>
-          </div>
-        </div>
-        <div class="project-card placeholder" data-name="Glued" data-year="2023" data-type="UX/UI">
-          <div class="project-info">
-            <span class="p-name">Glued</span>
-            <span>2023</span>
-            <span>UX/UI</span>
-          </div>
-        </div>
-        <div class="project-card placeholder" data-name="FCM" data-year="2023" data-type="Branding">
-          <div class="project-info">
-            <span class="p-name">FCM</span>
-            <span>2023</span>
-            <span>Branding</span>
-          </div>
-        </div>
-        <div class="project-card placeholder" data-name="Blings" data-year="2024" data-type="Motion">
-          <div class="project-info">
-            <span class="p-name">Blings</span>
-            <span>2024</span>
-            <span>Motion</span>
-          </div>
-        </div>
-        <div class="project-card placeholder" data-name="Proyecto 6" data-year="2023" data-type="Editorial">
-          <div class="project-info">
-            <span class="p-name">Proyecto 6</span>
-            <span>2023</span>
-            <span>Editorial</span>
-          </div>
-        </div>
-      </div>
+    <div id="stage-tagline">Universos visuales desde<br>Argentina hacia el mundo.</div>
 
-      <!-- Nombre central -->
-      <div id="hero-name">
-        <span id="name-display">CAMILA ARRIETA CRUZ</span>
-        <span class="sub" id="sub-display" style="opacity:0;">Buenos Aires · Argentina</span>
-      </div>
+    <!-- Cards de proyectos (detrás) -->
+    <div class="proj-card" id="pc1" style="background:#d4cfc4;">
+      <div class="proj-info"><span class="pn">Habibi NY</span><span>2024</span><span>Branding</span></div>
+    </div>
+    <div class="proj-card" id="pc2" style="background:#c9cdd4;">
+      <div class="proj-info"><span class="pn">Known</span><span>2024</span><span>Dirección Creativa</span></div>
+    </div>
+    <div class="proj-card" id="pc3" style="background:#d4c9be;">
+      <div class="proj-info"><span class="pn">Glued</span><span>2023</span><span>UX/UI</span></div>
+    </div>
+    <div class="proj-card" id="pc4" style="background:#c4c9c4;">
+      <div class="proj-info"><span class="pn">FCM</span><span>2023</span><span>Branding</span></div>
+    </div>
+    <div class="proj-card" id="pc5" style="background:#cdc4c9;">
+      <div class="proj-info"><span class="pn">Blings</span><span>2024</span><span>Motion</span></div>
     </div>
 
-    <!-- ═══ FOOTER ══════════════════════════════════════════ -->
+    <!-- Imagen principal (encima de cards) -->
+    <div id="main-img">
+      <img src="assets/placeholder-main.png" alt="" style="border-radius:8px;" />
+    </div>
+
+    <!-- Nombre SIEMPRE por encima -->
+    <div id="hero-name">
+      <span id="name-display">CAMILA ARRIETA CRUZ</span>
+      <span class="sub" id="sub-display">Buenos Aires · Argentina</span>
+    </div>
+
+    <!-- Footer -->
     <div id="footer">
       <div id="footer-bg"></div>
       <div id="footer-overlay"></div>
-
-      <!-- Nav superior -->
       <div id="footer-nav">
         <span class="fn-name">CAMILA ARRIETA CRUZ</span>
         <div class="fn-links">
           <a href="mailto:hola@camilarrietacruz.com" id="say-hello">SAY HELLO</a>
-          <a href="https://instagram.com/" target="_blank" id="follow-link">FOLLOW</a>
-          <a href="https://wa.me/" target="_blank" id="talk-link">LET'S TALK</a>
+          <a href="https://instagram.com/" target="_blank">FOLLOW</a>
+          <a href="https://wa.me/" target="_blank">LET'S TALK</a>
         </div>
       </div>
-
-      <!-- CAMUXI SVG animado difference -->
       <div id="camuxi-svg-wrap">
         <svg id="camuxi-svg" viewBox="0 0 1503 443" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path id="cp1" d="M1307.07 240.676C1307.07 240.676 1304.68 237.666 1304.68 236.662C1312.86 230.976 1321.04 225.625 1328.88 219.605C1362.62 193.851 1429.76 138.998 1409.65 85.8178C1401.81 65.4153 1381.71 60.0638 1363.64 59.0604C1352.4 58.3915 1335.7 58.057 1324.79 59.0604C1322.4 59.0604 1317.29 60.0638 1319.68 64.0774C1321.38 66.7532 1340.13 65.4153 1344.22 66.0842C1362.62 68.091 1378.3 82.1386 1382.73 102.207C1391.93 144.015 1358.19 182.813 1330.92 206.56C1327.52 209.571 1301.96 229.639 1300.25 229.639C1299.23 229.639 1298.55 228.635 1297.87 227.966C1275.71 196.526 1249.81 167.428 1227.66 135.988C1212.32 114.582 1183.69 70.0978 1228.34 65.7498C1235.15 65.0808 1245.38 67.0876 1251.17 65.7498C1253.22 65.0808 1255.6 62.0706 1253.9 60.3983C1253.22 59.7294 1250.49 59.3949 1249.13 59.3949C1233.79 58.057 1210.62 58.3915 1195.28 59.3949C1148.59 62.0706 1167.67 110.903 1187.44 135.988L1272.64 250.71C1237.88 274.792 1200.05 302.218 1176.53 340.347C1160.86 365.767 1146.54 418.278 1182.67 429.984C1198.69 435.336 1237.2 435.336 1254.24 433.663C1256.63 433.663 1262.76 432.66 1260.38 428.646C1258.67 425.971 1244.36 427.309 1240.95 426.974C1201.41 423.964 1189.49 401.555 1199.37 359.412C1209.59 315.597 1244.36 280.478 1278.1 258.068L1362.62 372.456C1370.12 384.162 1380.34 398.544 1377.62 413.93C1374.21 433.998 1342.51 424.967 1329.9 427.309C1324.11 428.312 1325.47 433.329 1331.95 433.998C1348.31 435.336 1374.55 435.001 1391.25 433.998C1433.51 430.988 1418.17 391.186 1401.13 366.436C1371.82 323.958 1336.04 284.157 1306.73 241.345L1307.07 240.676Z"/>
@@ -521,168 +371,234 @@
           <path id="cp3" d="M1109.39 321.283C1105.64 393.862 1039.18 418.278 984.653 408.578C923.306 397.541 882.749 330.648 893.655 262.416C904.561 195.188 959.774 164.752 999.309 121.271C1018.74 99.8654 1017.71 69.0945 986.698 67.0877C956.706 65.0809 874.91 68.0911 830.945 67.4221C816.971 59.3949 800.271 57.0537 784.252 56.0503C764.144 55.0469 740.969 58.0571 726.995 73.777C694.958 109.899 722.564 156.725 732.107 196.192C743.695 244.021 751.534 304.894 747.785 353.726C746.422 372.456 735.516 409.582 710.977 410.92C697.344 411.923 687.801 403.227 683.37 392.19C664.625 346.368 696.662 281.815 702.797 234.99C709.954 183.148 713.022 46.0163 623.727 54.0435C555.564 60.0639 546.702 145.687 546.021 193.851C545.68 217.598 546.021 255.393 547.725 293.856L492.853 99.531C483.992 76.1183 471.382 56.3847 447.865 50.6988C383.792 34.9789 377.657 110.903 359.934 159.066C337.1 220.608 300.291 273.788 270.981 330.982C260.416 351.385 253.94 374.463 260.756 396.538C224.289 430.653 167.031 433.663 125.111 410.92C21.843 355.398 -4.3999 179.134 82.8494 93.845C122.725 54.7124 189.525 49.0265 235.195 79.1285C257.007 93.5106 275.412 123.947 264.165 152.711C252.236 183.148 224.97 164.752 204.521 166.424C192.593 167.428 172.144 174.786 160.897 180.472C159.193 181.141 151.695 184.82 156.466 187.161C157.829 187.83 178.96 178.8 182.368 177.796C205.203 171.441 212.701 177.796 233.15 184.151C283.591 199.202 322.444 144.684 285.636 98.5276C259.393 65.4154 206.225 46.6852 167.372 48.692C42.6329 55.3813 -40.1858 210.574 20.139 335.999C59.6738 417.944 155.103 459.752 233.832 427.978C241.671 424.967 254.281 417.944 265.187 409.582C288.363 450.387 344.598 442.694 367.092 404.565C387.2 370.115 404.581 316.266 443.094 302.218C489.786 285.495 521.823 330.648 538.523 371.787C546.362 391.521 552.496 412.258 557.949 432.995H608.731C606.686 429.984 604.982 426.64 603.278 423.295C587.26 388.845 585.215 347.037 583.17 309.911C581.466 282.15 581.125 254.724 581.807 226.963C582.148 200.54 582.488 173.114 585.897 146.691C588.282 127.626 594.076 109.565 607.709 95.1829C620.66 81.8042 639.405 68.0911 658.832 77.4562C693.254 93.845 694.958 175.12 692.913 205.891C688.823 267.768 644.858 352.388 677.236 409.247C702.797 454.066 768.234 432.326 788.683 393.527C821.742 329.979 792.432 220.274 774.028 154.049C767.212 129.299 754.261 108.227 765.167 81.4698C778.118 50.0299 825.491 68.0911 837.761 90.5004C843.896 101.538 843.896 114.582 845.259 126.957C846.281 138.329 846.281 150.035 846.281 161.407C846.281 182.479 845.6 203.885 844.918 224.956C843.214 282.819 839.806 362.422 809.132 413.595C805.042 420.285 800.612 427.309 796.522 433.329H856.165V191.509C856.165 177.796 857.528 163.749 856.847 150.035C856.165 136.657 857.869 123.278 856.506 109.899C854.802 95.8519 850.03 83.1421 840.487 74.1115C889.906 73.1081 1004.42 63.0741 981.927 122.275C973.747 144.015 937.28 171.441 920.92 188.499C881.045 229.973 858.21 290.846 872.865 353.057C899.79 467.445 1044.64 467.779 1100.53 379.48L1110.07 362.756V433.998H1143.47V59.0605H1110.07V321.283H1109.39ZM435.937 297.535C416.51 306.566 401.173 325.296 389.245 344.361C380.043 359.077 373.226 376.804 360.957 388.176C330.965 415.937 281.887 396.872 284.614 349.378C286.659 316.6 322.104 260.41 337.1 229.973C357.208 188.834 374.93 147.694 384.132 99.531C386.859 85.4834 396.402 72.7736 410.375 67.7566C440.367 57.0537 453.318 93.5106 462.52 117.927C481.265 182.144 498.988 246.362 516.711 310.914C496.261 290.846 461.157 285.829 436.278 297.201L435.937 297.535Z"/>
         </svg>
       </div>
-
-      <!-- Barra inferior -->
       <div id="footer-bar">
         <span>© 2026 — ALL RIGHTS RESERVED.</span>
         <span>BUENOS AIRES · ARGENTINA</span>
-        <a href="#">↑ SUBIME</a>
+        <a href="#" id="subime-btn">↑ SUBIME</a>
       </div>
     </div>
 
-  </div><!-- /#main -->
+  </div><!-- /#stage -->
 
 <script>
-/* ═══════════════════════════════════════════════════════════
-   CURSOR CUSTOM
-═══════════════════════════════════════════════════════════ */
+/* ── CURSOR ── */
 const cursor = document.getElementById('cursor');
 document.addEventListener('mousemove', e => {
   cursor.style.left = e.clientX + 'px';
   cursor.style.top  = e.clientY + 'px';
 });
 
-/* ═══════════════════════════════════════════════════════════
-   LOADER
-═══════════════════════════════════════════════════════════ */
+/* ── LOADER COUNTER ── */
 const loader    = document.getElementById('loader');
 const loaderPct = document.getElementById('loader-pct');
-const eyeSlides = document.getElementById('eye-slides');
-const slides    = document.querySelectorAll('.eye-slide');
-
 let pct = 0;
 let loaderDone = false;
-
-// Contador de progreso falso
 const pctInterval = setInterval(() => {
-  pct = Math.min(pct + Math.random() * 4 + 1, 99);
+  pct = Math.min(pct + Math.random() * 5 + 2, 99);
   loaderPct.textContent = Math.floor(pct) + '%';
-}, 60);
+}, 80);
 
-// Parpadeo simple: cierra → abre → invierte colores
-// El GIF empieza cuando carga la página y se reproduce UNA sola vez.
-// Dura 600ms. El cambio crema→azul ocurre a los 320ms.
-// No se reinicia nunca — la inversión y la expansión están sincronizadas
-// con el inicio del GIF, no con el loader.
-
-// A los 320ms desde que carga la página: invertir colores
-setTimeout(() => {
-  loader.classList.add('inverted');
-}, 320);
-
-// A los 700ms: arrancar expansión (el GIF ya terminó)
+/* ── GIF: empieza solo. 
+   Frame cambio crema→azul: 320ms
+   GIF termina: 600ms
+   Invertir loader: 320ms
+   Arrancar stage: 700ms ── */
+setTimeout(() => { loader.classList.add('inverted'); }, 320);
 setTimeout(() => {
   loaderDone = true;
   clearInterval(pctInterval);
   loaderPct.textContent = '100%';
-  startExpansion();
+  startStage();
 }, 700);
 
-/* ═══════════════════════════════════════════════════════════
-   POSICIONES DEL GRID
-═══════════════════════════════════════════════════════════ */
-// Posiciones finales (hero) — layout asimétrico inspirado en mockups
-const finalPositions = [
-  { left: '15%', top: '12%',  width: '22%', height: '32%' },  // top-left
-  { left: '44%', top: '6%',   width: '18%', height: '26%' },  // top-center
-  { left: '66%', top: '10%',  width: '20%', height: '30%' },  // top-right
-  { left: '10%', top: '52%',  width: '20%', height: '35%' },  // bottom-left
-  { left: '37%', top: '56%',  width: '18%', height: '32%' },  // bottom-center
-  { left: '62%', top: '50%',  width: '22%', height: '38%' },  // bottom-right
+/* ════════════════════════════════════════════
+   STAGE — secuencia de animación
+════════════════════════════════════════════ */
+const stage     = document.getElementById('stage');
+const heroName  = document.getElementById('hero-name');
+const nameDisp  = document.getElementById('name-display');
+const subDisp   = document.getElementById('sub-display');
+const mainImg   = document.getElementById('main-img');
+const stageLine = document.getElementById('stage-tagline');
+
+// Posiciones finales de las cards (% del viewport)
+const finalPos = [
+  { left: 12,  top: 10,  w: 22, h: 32 }, // top-left    (Habibi)
+  { left: 44,  top: 5,   w: 18, h: 26 }, // top-center  (Known)
+  { left: 66,  top: 9,   w: 20, h: 30 }, // top-right   (Glued)
+  { left: 9,   top: 52,  w: 20, h: 36 }, // bottom-left (FCM)
+  { left: 62,  top: 50,  w: 22, h: 38 }, // bottom-right(Blings)
 ];
 
-// Estado colapsado (todo en el centro, pequeño)
-const collapsedPositions = finalPositions.map(() => ({
-  left: '43%', top: '43%', width: '14%', height: '14%'
-}));
+const cards = document.querySelectorAll('.proj-card');
 
-const cards = document.querySelectorAll('.project-card');
+function lerp(a, b, t) { return a + (b - a) * t; }
+function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 
-function setCardPos(card, pos, opacity = 1) {
-  card.style.left    = pos.left;
-  card.style.top     = pos.top;
-  card.style.width   = pos.width;
-  card.style.height  = pos.height;
-  card.style.opacity = opacity;
-}
-
-// Inicializar cards en estado colapsado
-cards.forEach((card, i) => {
-  setCardPos(card, collapsedPositions[i], 0);
-  card.style.transition = 'none';
-});
-
-/* ═══════════════════════════════════════════════════════════
-   EXPANSIÓN (loader → hero)
-═══════════════════════════════════════════════════════════ */
-function startExpansion() {
-  const main = document.getElementById('main');
-  main.classList.add('visible');
-
-  // Fade out del loader
-  loader.style.transition = 'opacity 0.5s ease';
+function startStage() {
+  // Fade out loader
+  loader.style.transition = 'opacity 0.4s ease';
   loader.style.opacity = '0';
 
   setTimeout(() => {
     loader.style.display = 'none';
+    stage.classList.add('visible');
 
-    // Activar cards desde el centro
-    cards.forEach((card, i) => {
-      card.style.transition = `all 0.9s cubic-bezier(0.16, 1, 0.3, 1) ${i * 0.08}s`;
-      setCardPos(card, finalPositions[i], 1);
+    // Inicializar cards: todas en el centro, 150x150, opacity 0
+    cards.forEach(c => {
+      c.style.width  = '150px';
+      c.style.height = '150px';
+      c.style.top    = '50%';
+      c.style.left   = '50%';
+      c.style.transform = 'translate(-50%, -50%)';
+      c.style.opacity = '0';
+      c.style.transition = 'none';
     });
 
-    // Mutación del nombre
-    setTimeout(() => mutateName(), 600);
+    // Nombre empieza en la izquierda
+    heroName.style.left = '60px';
+    heroName.style.top  = '50%';
+    heroName.style.transform = 'translateY(-50%)';
+    heroName.style.transition = 'none';
 
-  }, 500);
+    // Fase 1: nombre viaja al centro (1s)
+    setTimeout(() => animateNameToCenter(), 100);
+
+  }, 400);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   MUTACIÓN DEL NOMBRE (glitch)
-═══════════════════════════════════════════════════════════ */
-const nameDisplay = document.getElementById('name-display');
-const subDisplay  = document.getElementById('sub-display');
+function animateNameToCenter() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
 
+  // Medir ancho del texto
+  const nameW = heroName.offsetWidth;
+  const targetLeft = (vw / 2) - (nameW / 2);
+
+  // Animar con JS para detectar colisión
+  const startLeft = 60;
+  const duration  = 1000;
+  const startTime = performance.now();
+
+  let collided = false;
+
+  function tick(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const eased = easeOut(t);
+    const currentLeft = lerp(startLeft, targetLeft, eased);
+
+    heroName.style.left      = currentLeft + 'px';
+    heroName.style.transform = 'translateY(-50%)';
+
+    // Detectar colisión: cuando el texto toca el borde izquierdo de la imagen
+    if (!collided) {
+      const imgLeft = vw / 2 - 75; // centro - mitad de 150px
+      if (currentLeft + nameW >= imgLeft - 10) {
+        collided = true;
+        startExpansion();
+      }
+    }
+
+    if (t < 1) requestAnimationFrame(tick);
+    else {
+      // Asegurar que quedó centrado
+      heroName.style.left      = targetLeft + 'px';
+      heroName.style.transform = 'translateY(-50%)';
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+function startExpansion() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const duration = 1200;
+
+  cards.forEach((card, i) => {
+    const fp = finalPos[i];
+    const finalL = (fp.left / 100) * vw;
+    const finalT = (fp.top  / 100) * vh;
+    const finalW = (fp.w    / 100) * vw;
+    const finalH = (fp.h    / 100) * vh;
+
+    // Posición inicial: centro, 150x150
+    const startL = vw / 2 - 75;
+    const startT = vh / 2 - 75;
+    const startW = 150;
+    const startH = 150;
+
+    const delay = i * 80;
+    const start = performance.now() + delay;
+
+    card.style.opacity = '0';
+
+    setTimeout(() => {
+      card.style.opacity = '1';
+    }, delay);
+
+    function animCard(now) {
+      const elapsed = Math.max(0, now - start);
+      const t = Math.min(elapsed / duration, 1);
+      const e = easeOut(t);
+
+      const l = lerp(startL, finalL, e);
+      const tp = lerp(startT, finalT, e);
+      const w = lerp(startW, finalW, e);
+      const hh = lerp(startH, finalH, e);
+
+      card.style.left   = l + 'px';
+      card.style.top    = tp + 'px';
+      card.style.width  = w + 'px';
+      card.style.height = hh + 'px';
+      card.style.transform = 'none';
+
+      if (t < 1) requestAnimationFrame(animCard);
+      else if (i === cards.length - 1) onExpansionDone();
+    }
+    requestAnimationFrame(animCard);
+  });
+
+  // La imagen principal también va a su posición final (centrada, mismo tamaño)
+  // Se queda en el centro pero sube un poco para estar en el grid visual
+}
+
+function onExpansionDone() {
+  // Fade out tagline
+  stageLine.style.opacity = '0';
+
+  // Mutación del nombre después de 400ms
+  setTimeout(() => mutateName(), 400);
+}
+
+/* ── MUTACIÓN GLITCH ── */
 const nameA = 'CAMILA ARRIETA CRUZ';
 const nameB = 'DIRECCIÓN CREATIVA';
 const chars  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&|>_';
+let isMutated  = false;
+let isMutating = false;
 
-let currentName = nameA;
-let targetName  = nameB;
-let isMutated   = false;
-let isMutating  = false;
-
-function randomChar() {
-  return chars[Math.floor(Math.random() * chars.length)];
-}
+function randomChar() { return chars[Math.floor(Math.random() * chars.length)]; }
 
 function mutateText(from, to, onDone) {
   isMutating = true;
   const maxLen = Math.max(from.length, to.length);
   let frame = 0;
   const totalFrames = 22;
-
   const tick = () => {
     let result = '';
     for (let i = 0; i < maxLen; i++) {
       const progress = frame / totalFrames;
-      const charProgress = i / maxLen;
-      if (charProgress < progress) {
-        result += to[i] || '';
-      } else {
-        result += randomChar();
-      }
+      if (i / maxLen < progress) result += to[i] || '';
+      else result += randomChar();
     }
-    nameDisplay.textContent = result;
-    nameDisplay.classList.add('glitching');
-
+    nameDisp.textContent = result;
+    nameDisp.classList.add('glitching');
     frame++;
-    if (frame <= totalFrames) {
-      requestAnimationFrame(tick);
-    } else {
-      nameDisplay.textContent = to;
-      nameDisplay.classList.remove('glitching');
+    if (frame <= totalFrames) requestAnimationFrame(tick);
+    else {
+      nameDisp.textContent = to;
+      nameDisp.classList.remove('glitching');
       isMutating = false;
       if (onDone) onDone();
     }
@@ -692,96 +608,41 @@ function mutateText(from, to, onDone) {
 
 function mutateName() {
   if (isMutating) return;
-
   if (!isMutated) {
     mutateText(nameA, nameB, () => {
       isMutated = true;
-      subDisplay.style.transition = 'opacity 0.4s ease';
-      subDisplay.style.opacity = '0.7';
+      subDisp.style.transition = 'opacity 0.4s ease';
+      subDisp.style.opacity = '0.8';
     });
   }
 }
 
-// Hover en el nombre: revierte a CAMILA ARRIETA CRUZ
-nameDisplay.addEventListener('mouseenter', () => {
-  if (isMutating) return;
-  if (isMutated) {
-    mutateText(nameB, nameA, () => {
-      isMutated = false;
-      subDisplay.style.opacity = '0';
-    });
-  }
+nameDisp.addEventListener('mouseenter', () => {
+  if (isMutating || !isMutated) return;
+  mutateText(nameB, nameA, () => {
+    isMutated = false;
+    subDisp.style.opacity = '0';
+  });
 });
-nameDisplay.addEventListener('mouseleave', () => {
+nameDisp.addEventListener('mouseleave', () => {
   if (isMutating) return;
-  if (!isMutated) {
-    setTimeout(() => mutateName(), 400);
-  }
+  if (!isMutated) setTimeout(() => mutateName(), 400);
 });
 
-/* ═══════════════════════════════════════════════════════════
-   SCROLL → PERSIANA (hero ↔ footer)
-═══════════════════════════════════════════════════════════ */
-const footer  = document.getElementById('footer');
-const hero    = document.getElementById('hero');
-let scrollY   = 0;
-let targetScrollY = 0;
-const maxScroll   = window.innerHeight;
+/* ── SCROLL PERSIANA ── */
+const footer = document.getElementById('footer');
+let scrollY = 0, targetScrollY = 0;
+const maxScroll = window.innerHeight;
 
-// Smooth scroll con wheel
 window.addEventListener('wheel', e => {
   targetScrollY = Math.max(0, Math.min(maxScroll, targetScrollY + e.deltaY));
 }, { passive: true });
 
-// Touch support
-let touchStartY = 0;
-window.addEventListener('touchstart', e => {
-  touchStartY = e.touches[0].clientY;
-}, { passive: true });
-window.addEventListener('touchmove', e => {
-  const dy = touchStartY - e.touches[0].clientY;
-  touchStartY = e.touches[0].clientY;
-  targetScrollY = Math.max(0, Math.min(maxScroll, targetScrollY + dy));
-}, { passive: true });
-
-let rafRunning = false;
+let camuxiStarted = false;
 function animateScroll() {
   scrollY += (targetScrollY - scrollY) * 0.1;
-
-  const progress = scrollY / maxScroll; // 0 → 1
-
-  // Footer sube desde abajo
+  const progress = scrollY / maxScroll;
   footer.style.transform = `translateY(${(1 - progress) * 100}%)`;
-
-  // Cards del hero se colapsan al ir al footer
-  if (progress > 0) {
-    cards.forEach((card, i) => {
-      const fp = finalPositions[i];
-      const cp = collapsedPositions[i];
-      const collapse = Math.min(progress * 2, 1); // colapsa en la primera mitad del scroll
-      const l = lerp(parseFloat(fp.left), parseFloat(cp.left), collapse);
-      const t = lerp(parseFloat(fp.top), parseFloat(cp.top), collapse);
-      const w = lerp(parseFloat(fp.width), parseFloat(cp.width), collapse);
-      const h = lerp(parseFloat(fp.height), parseFloat(cp.height), collapse);
-      card.style.transition = 'none';
-      card.style.left   = l + '%';
-      card.style.top    = t + '%';
-      card.style.width  = w + '%';
-      card.style.height = h + '%';
-      card.style.opacity = (1 - collapse * 0.6).toString();
-    });
-  } else {
-    // restaurar posiciones finales cuando está arriba
-    cards.forEach((card, i) => {
-      card.style.left   = finalPositions[i].left;
-      card.style.top    = finalPositions[i].top;
-      card.style.width  = finalPositions[i].width;
-      card.style.height = finalPositions[i].height;
-      card.style.opacity = '1';
-    });
-  }
-
-  // Animar CAMUXI cuando el footer aparece
   if (progress > 0.3 && !camuxiStarted) {
     camuxiStarted = true;
     animateCamuxi();
@@ -790,104 +651,44 @@ function animateScroll() {
     camuxiStarted = false;
     resetCamuxi();
   }
-
   requestAnimationFrame(animateScroll);
 }
 requestAnimationFrame(animateScroll);
 
-function lerp(a, b, t) { return a + (b - a) * t; }
+document.getElementById('subime-btn').addEventListener('click', e => {
+  e.preventDefault(); targetScrollY = 0;
+});
 
-/* ═══════════════════════════════════════════════════════════
-   CAMUXI — animación de escritura
-═══════════════════════════════════════════════════════════ */
-let camuxiStarted = false;
-
+/* ── CAMUXI SVG ── */
 function resetCamuxi() {
-  const paths = document.querySelectorAll('#camuxi-svg path');
-  paths.forEach(p => {
+  document.querySelectorAll('#camuxi-svg path').forEach(p => {
     const len = p.getTotalLength();
-    p.style.strokeDasharray = len;
-    p.style.strokeDashoffset = len;
-    p.style.transition = 'none';
-    p.style.opacity = '1';
-  });
-}
-
-function animateCamuxi() {
-  const paths = document.querySelectorAll('#camuxi-svg path');
-  const duration = 1800;
-  const stagger  = 200;
-
-  paths.forEach((p, i) => {
-    const len = p.getTotalLength();
-    // estado inicial
     p.style.strokeDasharray  = len;
     p.style.strokeDashoffset = len;
     p.style.transition = 'none';
-    p.style.opacity = '1';
-
-    // forzar reflow
+  });
+}
+function animateCamuxi() {
+  document.querySelectorAll('#camuxi-svg path').forEach((p, i) => {
+    const len = p.getTotalLength();
+    p.style.strokeDasharray  = len;
+    p.style.strokeDashoffset = len;
+    p.style.transition = 'none';
     p.getBoundingClientRect();
-
-    // animar con delay escalonado
     setTimeout(() => {
-      p.style.transition = `stroke-dashoffset ${duration}ms cubic-bezier(0.16, 1, 0.3, 1)`;
+      p.style.transition = `stroke-dashoffset 1800ms cubic-bezier(0.16,1,0.3,1)`;
       p.style.strokeDashoffset = '0';
-    }, i * stagger);
+    }, i * 200);
   });
 }
 
-/* ═══════════════════════════════════════════════════════════
-   SELECTOR DE IDIOMA
-═══════════════════════════════════════════════════════════ */
-const langBtns = document.querySelectorAll('#lang-toggle button');
-const texts = {
-  es: {
-    tagline: 'Universos visuales desde\nArgentina hacia el mundo.',
-    nameB: 'DIRECCIÓN CREATIVA',
-    subline: 'Buenos Aires · Argentina',
-    sayHello: 'HOLA',
-    follow: 'SEGUIR',
-    talk: 'HABLEMOS'
-  },
-  en: {
-    tagline: 'Visual universes from\nArgentina to the world.',
-    nameB: 'CREATIVE DIRECTION',
-    subline: 'Buenos Aires · Argentina',
-    sayHello: 'SAY HELLO',
-    follow: 'FOLLOW',
-    talk: "LET'S TALK"
-  }
-};
-let currentLang = 'es';
-
-langBtns.forEach(btn => {
+/* ── LANG ── */
+document.querySelectorAll('#lang-toggle button').forEach(btn => {
   btn.addEventListener('click', () => {
-    const lang = btn.dataset.lang;
-    if (lang === currentLang) return;
-    currentLang = lang;
-    langBtns.forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
-
-    const t = texts[lang];
-    document.querySelector('.loader-tagline').innerHTML = t.tagline.replace('\n', '<br>');
-    document.getElementById('say-hello').textContent = t.sayHello;
-    document.getElementById('follow-link').textContent = t.follow;
-    document.getElementById('talk-link').textContent = t.talk;
-    subDisplay.textContent = t.subline;
-
-    // Si el nombre ya mutó, actualizar nameB en memoria
-    if (isMutated) nameDisplay.textContent = t.nameB;
+    document.querySelectorAll('#lang-toggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
   });
 });
-
-/* ═══════════════════════════════════════════════════════════
-   SUBIME (scroll up button)
-═══════════════════════════════════════════════════════════ */
-document.querySelector('#footer-bar a').addEventListener('click', e => {
-  e.preventDefault();
-  targetScrollY = 0;
-});
-
 </script>
 </body>
 </html>
