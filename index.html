@@ -192,8 +192,7 @@
     /* ── NOMBRE CENTRAL ── */
     #hero-name {
       position: absolute;
-      /* top fijo — nunca cambia, solo se mueve left */
-      top: calc(50% - 10px);
+      top: calc(50% - 9px);
       left: 60px;
       transform: none;
       font-size: 15px;
@@ -203,18 +202,20 @@
       white-space: nowrap;
       z-index: 10;
       cursor: none;
-      text-align: left;
+      line-height: 1;
     }
-    #hero-name .sub {
-      display: block;
+    #sub-fixed {
+      position: absolute;
+      top: calc(50% + 16px);
+      left: 0; right: 0;
+      text-align: center;
       font-size: 13px;
       letter-spacing: 0.05em;
       color: var(--black);
       opacity: 0;
-      margin-top: 6px;
-      text-align: center;
-      width: 100%;
       pointer-events: none;
+      z-index: 10;
+      /* NUNCA se mueve — posición absoluta fija */
     }
 
     /* ── FOOTER ── */
@@ -349,11 +350,12 @@
       <img src="assets/placeholder-main.png" alt="" style="border-radius:8px;" />
     </div>
 
-    <!-- Nombre SIEMPRE por encima -->
+    <!-- Nombre: solo el texto, sin sub -->
     <div id="hero-name">
       <span id="name-display">CAMILA ARRIETA CRUZ</span>
-      <span class="sub" id="sub-display">Buenos Aires · Argentina</span>
     </div>
+    <!-- Sub: completamente independiente, fijo en el centro, nunca se mueve -->
+    <div id="sub-fixed">Buenos Aires · Argentina</div>
 
     <!-- Footer -->
     <div id="footer">
@@ -420,7 +422,7 @@ setTimeout(() => {
 const stage     = document.getElementById('stage');
 const heroName  = document.getElementById('hero-name');
 const nameDisp  = document.getElementById('name-display');
-const subDisp   = document.getElementById('sub-display');
+const subFixed  = document.getElementById('sub-fixed');
 const mainImg   = document.getElementById('main-img');
 const stageLine = document.getElementById('stage-tagline');
 
@@ -509,8 +511,8 @@ function animateNameToCenter() {
     if (t < 1) requestAnimationFrame(tick);
     else {
       heroName.style.left = targetLeft + 'px';
-      subDisp.style.transition = 'opacity 0.4s ease 0.1s';
-      subDisp.style.opacity = '0.8';
+      subFixed.style.transition = 'opacity 0.4s ease 0.1s';
+      subFixed.style.opacity = '0.8';
     }
   }
   requestAnimationFrame(tick);
