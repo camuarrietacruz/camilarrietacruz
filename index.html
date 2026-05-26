@@ -422,20 +422,22 @@ const mainImg   = document.getElementById('main-img');
 const stageLine = document.getElementById('stage-tagline');
 
 // Posiciones finales de las cards (% del viewport)
+// El nombre queda centrado horizontalmente en ~50% vertical
+// Las imágenes lo rodean sin quedar debajo de él
 const finalPos = [
-  { left: 12,  top: 10,  w: 22, h: 32 }, // top-left    (Habibi)
-  { left: 44,  top: 5,   w: 18, h: 26 }, // top-center  (Known)
-  { left: 66,  top: 9,   w: 20, h: 30 }, // top-right   (Glued)
-  { left: 9,   top: 52,  w: 20, h: 36 }, // bottom-left (FCM)
-  { left: 62,  top: 50,  w: 22, h: 38 }, // bottom-right(Blings)
+  { left: 14,  top: 8,   w: 22, h: 34 }, // top-left
+  { left: 44,  top: 4,   w: 17, h: 28 }, // top-center
+  { left: 65,  top: 8,   w: 20, h: 32 }, // top-right
+  { left: 8,   top: 52,  w: 20, h: 38 }, // bottom-left
+  { left: 63,  top: 52,  w: 21, h: 36 }, // bottom-right
 ];
-// Posición final de la imagen principal
-const mainImgFinal = { left: 36, top: 45, w: 18, h: 30 };
+// Imagen principal: abajo-centro pero SIN tocar el nombre (que está al 50%)
+const mainImgFinal = { left: 37, top: 53, w: 17, h: 32 };
 
 const cards = document.querySelectorAll('.proj-card');
 
 function lerp(a, b, t) { return a + (b - a) * t; }
-function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+function easeOut(t) { return 1 - Math.pow(1 - t, 4); } // easeOutQuart — más suave
 
 function startStage() {
   loader.style.display = 'none';
@@ -454,8 +456,8 @@ function startStage() {
       c.style.transition = 'none';
     });
 
-    // Sub siempre visible
-    subDisp.style.opacity = '0.8';
+    // Sub oculto al inicio — aparece después de que el nombre llega
+    subDisp.style.opacity = '0';
     // Nombre empieza en la izquierda
     heroName.style.left = '60px';
     heroName.style.top  = '50%';
@@ -494,7 +496,7 @@ function animateNameToCenter() {
 
     // Detectar colisión: cuando el texto toca el borde izquierdo de la imagen
     if (!collided) {
-      const imgLeft = vw / 2 - 75; // centro - mitad de 150px
+      const imgLeft = vw / 2 - 75;
       if (currentLeft + nameW >= imgLeft - 10) {
         collided = true;
         startExpansion();
@@ -503,9 +505,11 @@ function animateNameToCenter() {
 
     if (t < 1) requestAnimationFrame(tick);
     else {
-      // Asegurar que quedó centrado
+      // Llegó al centro: mostrar "Buenos Aires" debajo
       heroName.style.left      = targetLeft + 'px';
       heroName.style.transform = 'translateY(-50%)';
+      subDisp.style.transition = 'opacity 0.4s ease 0.1s';
+      subDisp.style.opacity    = '0.8';
     }
   }
   requestAnimationFrame(tick);
@@ -529,7 +533,7 @@ function startExpansion() {
     const startW = 150;
     const startH = 150;
 
-    const delay = i * 70 + 50; // asoman 50ms antes que mainImg
+    const delay = i * 90;  // escalonado suave
     const start = performance.now() + delay;
 
     card.style.opacity = '0';
@@ -570,7 +574,7 @@ function startExpansion() {
   const finalMH = (mf.h    / 100) * vh2;
   const startML = vw2 / 2 - 75;
   const startMT = vh2 / 2 - 75;
-  const mStart  = performance.now() + 120; // pequeño delay: primero asoman las otras
+  const mStart  = performance.now() + 60;  // mainImg arranca casi junto
 
   function animMain(now) {
     const elapsed = Math.max(0, now - mStart);
