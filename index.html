@@ -66,6 +66,8 @@
     #loader.inverted .loader-name,
     #loader.inverted .loader-pct,
     #loader.inverted .loader-tagline { color: var(--blue); }
+    #loader.inverted #eyelid-rect,
+    #loader.inverted #eyelid-top { background: var(--cream); }
 
     .loader-name {
       position: absolute;
@@ -105,17 +107,17 @@
 
     /* ojo en el loader */
     #eye-container {
-      width: 200px; height: 130px;
-      background: var(--cream);
-      border-radius: 14px;
+      width: 320px; height: 160px;
+      background: transparent;
+      border-radius: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
+      overflow: visible;
       position: relative;
     }
     #loader.inverted #eye-container {
-      background: var(--blue);
+      background: transparent;
     }
 
     /* SVG del ojo */
@@ -421,16 +423,33 @@
     <span class="loader-tagline">Universos visuales desde<br>Argentina hacia el mundo.</span>
 
     <div id="eye-container">
-      <!-- Ojo real con párpado animado encima -->
-      <div id="eye-img-wrap" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
-        <img id="eye-img" src="assets/ojo.png" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" />
+      <!-- Ojo real: el párpado es un clip que crece desde arriba -->
+      <div id="eye-img-wrap" style="position:relative;width:320px;height:160px;">
+        <img id="eye-img" src="assets/ojo.png" alt="" style="
+          width:320px;
+          height:160px;
+          object-fit:contain;
+          display:block;
+          mix-blend-mode:screen;
+        " />
+        <!-- Párpado: div que desciende desde el centro del ojo hacia abajo -->
         <div id="eyelid-rect" style="
           position:absolute;
-          inset:0;
-          background:#0011fe;
-          border-radius:14px;
+          left:0; right:0;
+          top:50%;
+          height:50%;
+          background:var(--blue);
           transform:scaleY(0);
           transform-origin:50% 0%;
+        "></div>
+        <div id="eyelid-top" style="
+          position:absolute;
+          left:0; right:0;
+          bottom:50%;
+          height:50%;
+          background:var(--blue);
+          transform:scaleY(0);
+          transform-origin:50% 100%;
         "></div>
       </div>
       <!-- slideshow de trabajos (reemplaza el ojo) -->
@@ -573,11 +592,15 @@ const pctInterval = setInterval(() => {
 }, 60);
 
 // Parpadeo simple: cierra → abre → invierte colores
+const eyelidTop = document.getElementById('eyelid-top');
+
 function closeLid(fast) {
   return new Promise(resolve => {
     const dur = fast ? 120 : 180;
     eyelidRect.style.transition = `transform ${dur}ms ease-in`;
     eyelidRect.style.transform = 'scaleY(1)';
+    eyelidTop.style.transition = `transform ${dur}ms ease-in`;
+    eyelidTop.style.transform = 'scaleY(1)';
     setTimeout(resolve, dur);
   });
 }
@@ -586,6 +609,8 @@ function openLid(fast) {
     const dur = fast ? 100 : 160;
     eyelidRect.style.transition = `transform ${dur}ms ease-out`;
     eyelidRect.style.transform = 'scaleY(0)';
+    eyelidTop.style.transition = `transform ${dur}ms ease-out`;
+    eyelidTop.style.transform = 'scaleY(0)';
     setTimeout(resolve, dur);
   });
 }
