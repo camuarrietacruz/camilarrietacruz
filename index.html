@@ -429,6 +429,8 @@ const finalPos = [
   { left: 9,   top: 52,  w: 20, h: 36 }, // bottom-left (FCM)
   { left: 62,  top: 50,  w: 22, h: 38 }, // bottom-right(Blings)
 ];
+// Posición final de la imagen principal
+const mainImgFinal = { left: 36, top: 45, w: 18, h: 30 };
 
 const cards = document.querySelectorAll('.proj-card');
 
@@ -436,13 +438,10 @@ function lerp(a, b, t) { return a + (b - a) * t; }
 function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 
 function startStage() {
-  // Fade out loader
-  loader.style.transition = 'opacity 0.4s ease';
-  loader.style.opacity = '0';
+  loader.style.display = 'none';
+  stage.classList.add('visible');
 
   setTimeout(() => {
-    loader.style.display = 'none';
-    stage.classList.add('visible');
 
     // Inicializar cards: todas en el centro, 150x150, opacity 0
     cards.forEach(c => {
@@ -455,6 +454,8 @@ function startStage() {
       c.style.transition = 'none';
     });
 
+    // Sub siempre visible
+    subDisp.style.opacity = '0.8';
     // Nombre empieza en la izquierda
     heroName.style.left = '60px';
     heroName.style.top  = '50%';
@@ -528,7 +529,7 @@ function startExpansion() {
     const startW = 150;
     const startH = 150;
 
-    const delay = i * 80;
+    const delay = i * 70 + 50; // asoman 50ms antes que mainImg
     const start = performance.now() + delay;
 
     card.style.opacity = '0';
@@ -559,8 +560,30 @@ function startExpansion() {
     requestAnimationFrame(animCard);
   });
 
-  // La imagen principal también va a su posición final (centrada, mismo tamaño)
-  // Se queda en el centro pero sube un poco para estar en el grid visual
+  // La imagen principal también se expande a su posición final
+  const vw2 = window.innerWidth;
+  const vh2 = window.innerHeight;
+  const mf = mainImgFinal;
+  const finalML = (mf.left / 100) * vw2;
+  const finalMT = (mf.top  / 100) * vh2;
+  const finalMW = (mf.w    / 100) * vw2;
+  const finalMH = (mf.h    / 100) * vh2;
+  const startML = vw2 / 2 - 75;
+  const startMT = vh2 / 2 - 75;
+  const mStart  = performance.now() + 120; // pequeño delay: primero asoman las otras
+
+  function animMain(now) {
+    const elapsed = Math.max(0, now - mStart);
+    const t  = Math.min(elapsed / 1200, 1);
+    const e  = easeOut(t);
+    mainImg.style.left      = lerp(startML, finalML, e) + 'px';
+    mainImg.style.top       = lerp(startMT, finalMT, e) + 'px';
+    mainImg.style.width     = lerp(150, finalMW, e) + 'px';
+    mainImg.style.height    = lerp(150, finalMH, e) + 'px';
+    mainImg.style.transform = 'none';
+    if (t < 1) requestAnimationFrame(animMain);
+  }
+  requestAnimationFrame(animMain);
 }
 
 function onExpansionDone() {
@@ -611,18 +634,13 @@ function mutateName() {
   if (!isMutated) {
     mutateText(nameA, nameB, () => {
       isMutated = true;
-      subDisp.style.transition = 'opacity 0.4s ease';
-      subDisp.style.opacity = '0.8';
     });
   }
 }
 
 nameDisp.addEventListener('mouseenter', () => {
   if (isMutating || !isMutated) return;
-  mutateText(nameB, nameA, () => {
-    isMutated = false;
-    subDisp.style.opacity = '0';
-  });
+  mutateText(nameB, nameA, () => { isMutated = false; });
 });
 nameDisp.addEventListener('mouseleave', () => {
   if (isMutating) return;
