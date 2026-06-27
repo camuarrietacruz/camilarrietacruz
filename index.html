@@ -105,17 +105,26 @@
       border-radius: 8px;
     }
 
-    /* ── STAGE: todo pasa aquí después del loader ── */
+    /* ── STAGE ── */
     #stage {
       position: fixed;
       inset: 0;
       background: var(--cream);
       opacity: 0;
       pointer-events: none;
+      z-index: 2;
     }
     #stage.visible {
       opacity: 1;
       pointer-events: all;
+    }
+    /* Hero: la persiana — se achica desde abajo */
+    #hero-panel {
+      position: absolute;
+      inset: 0;
+      background: var(--cream);
+      transform-origin: top center;
+      overflow: hidden;
     }
 
     /* ── TAGLINE en el stage ── */
@@ -218,13 +227,11 @@
       /* NUNCA se mueve — posición absoluta fija */
     }
 
-    /* ── FOOTER ── */
+    /* ── FOOTER: fijo abajo, siempre visible debajo del hero ── */
     #footer {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 100vh;
-      transform: translateY(100%);
-      z-index: 3;
+      position: fixed;
+      inset: 0;
+      z-index: 1;
       overflow: hidden;
     }
     #footer-bg {
@@ -320,6 +327,7 @@
 
   <!-- STAGE -->
   <div id="stage">
+    <div id="hero-panel">
 
     <div id="lang-toggle">
       <button class="active" data-lang="es">ES</button>
@@ -361,6 +369,8 @@
     </div>
     <!-- Sub: completamente independiente, fijo en el centro, nunca se mueve -->
     <div id="sub-fixed">Buenos Aires · Argentina</div>
+
+    </div><!-- /#hero-panel -->
 
     <!-- Footer -->
     <div id="footer">
@@ -652,7 +662,7 @@ nameDisp.addEventListener('mouseleave', () => {
 });
 
 /* ── SCROLL PERSIANA ── */
-const footer = document.getElementById('footer');
+const heroPanel = document.getElementById('hero-panel');
 let scrollY = 0, targetScrollY = 0;
 const maxScroll = window.innerHeight;
 
@@ -660,11 +670,33 @@ window.addEventListener('wheel', e => {
   targetScrollY = Math.max(0, Math.min(maxScroll, targetScrollY + e.deltaY));
 }, { passive: true });
 
+let touchStartY = 0;
+window.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
+window.addEventListener('touchmove', e => {
+  const dy = touchStartY - e.touches[0].clientY;
+  touchStartY = e.touches[0].clientY;
+  targetScrollY = Math.max(0, Math.min(maxScroll, targetScrollY + dy));
+}, { passive: true });
+
 let camuxiStarted = false;
+
 function animateScroll() {
   scrollY += (targetScrollY - scrollY) * 0.1;
-  const progress = scrollY / maxScroll;
-  footer.style.transform = `translateY(${(1 - progress) * 100}%)`;
+  const progress = scrollY / maxScroll; // 0→1
+
+  // Hero se achica desde abajo (clip desde bottom)
+  const heroH = 100 - (progress * 100);
+  heroPanel.style.clipPath = `inset(0 0 ${100 - heroH}% 0)`;
+
+  // Cards colapsan al scrollear
+  const collapse = Math.min(progress * 2, 1);
+  if (progress > 0.01) {
+    collapseCards(collapse);
+  } else {
+    restoreCards();
+  }
+
+  // CAMUXI
   if (progress > 0.3 && !camuxiStarted) {
     camuxiStarted = true;
     animateCamuxi();
@@ -673,12 +705,67 @@ function animateScroll() {
     camuxiStarted = false;
     resetCamuxi();
   }
+
   requestAnimationFrame(animateScroll);
 }
 requestAnimationFrame(animateScroll);
 
+// Cards colapsan al centro al scrollear
+let cardsCollapsed = false;
+function collapseCards(t) {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const cx = vw / 2 - 75;
+  const cy = vh / 2 - 75;
+  document.querySelectorAll('.proj-card').forEach((card, i) => {
+    const fp = finalPos[i];
+    const fl = (fp.left / 100) * vw;
+    const ft = (fp.top  / 100) * vh;
+    const fw = (fp.w   / 100) * vw;
+    const fh = (fp.h   / 100) * vh;
+    card.style.left   = lerp(fl, cx, t) + 'px';
+    card.style.top    = lerp(ft, cy, t) + 'px';
+    card.style.width  = lerp(fw, 150, t) + 'px';
+    card.style.height = lerp(fh, 150, t) + 'px';
+    card.style.opacity = (1 - t * 0.7).toString();
+    card.style.transform = 'none';
+  });
+  // mainImg también colapsa
+  const mf = mainImgFinal;
+  const ml = (mf.left / 100) * vw;
+  const mt = (mf.top  / 100) * vh;
+  const mw = (mf.w   / 100) * vw;
+  const mhh = (mf.h  / 100) * vh;
+  mainImg.style.left   = lerp(ml, cx, t) + 'px';
+  mainImg.style.top    = lerp(mt, cy, t) + 'px';
+  mainImg.style.width  = lerp(mw, 150, t) + 'px';
+  mainImg.style.height = lerp(mhh, 150, t) + 'px';
+  mainImg.style.transform = 'none';
+}
+function restoreCards() {
+  // restaurar a posiciones finales
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  document.querySelectorAll('.proj-card').forEach((card, i) => {
+    const fp = finalPos[i];
+    card.style.left   = (fp.left / 100) * vw + 'px';
+    card.style.top    = (fp.top  / 100) * vh + 'px';
+    card.style.width  = (fp.w   / 100) * vw + 'px';
+    card.style.height = (fp.h   / 100) * vh + 'px';
+    card.style.opacity = '1';
+    card.style.transform = 'none';
+  });
+  const mf = mainImgFinal;
+  mainImg.style.left   = (mf.left / 100) * vw + 'px';
+  mainImg.style.top    = (mf.top  / 100) * vh + 'px';
+  mainImg.style.width  = (mf.w   / 100) * vw + 'px';
+  mainImg.style.height = (mf.h  / 100) * vh + 'px';
+  mainImg.style.transform = 'none';
+}
+
 document.getElementById('subime-btn').addEventListener('click', e => {
-  e.preventDefault(); targetScrollY = 0;
+  e.preventDefault();
+  targetScrollY = 0;
 });
 
 /* ── CAMUXI SVG ── */
