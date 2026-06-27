@@ -705,10 +705,56 @@ function animateCamuxi() {
 }
 
 /* ── LANG ── */
+const langTexts = {
+  es: {
+    loaderName:  'CAMILA ARRIETA CRUZ',
+    tagline:     'Universos visuales desde<br>Argentina hacia el mundo.',
+    nameA:       'CAMILA ARRIETA CRUZ',
+    nameB:       'DIRECCIÓN CREATIVA',
+    sub:         'Buenos Aires · Argentina',
+    sayHello:    'SAY HELLO',
+    follow:      'FOLLOW',
+    talk:        "LET'S TALK",
+    copyright:   '© 2026 — ALL RIGHTS RESERVED.',
+    location:    'BUENOS AIRES · ARGENTINA',
+    subime:      '↑ SUBIME',
+  },
+  en: {
+    loaderName:  'CAMILA ARRIETA CRUZ',
+    tagline:     'Visual universes from<br>Argentina to the world.',
+    nameA:       'CAMILA ARRIETA CRUZ',
+    nameB:       'CREATIVE DIRECTION',
+    sub:         'Buenos Aires · Argentina',
+    sayHello:    'SAY HELLO',
+    follow:      'FOLLOW',
+    talk:        "LET'S TALK",
+    copyright:   '© 2026 — ALL RIGHTS RESERVED.',
+    location:    'BUENOS AIRES · ARGENTINA',
+    subime:      '↑ GO UP',
+  }
+};
+let currentLang = 'es';
+
 document.querySelectorAll('#lang-toggle button').forEach(btn => {
   btn.addEventListener('click', () => {
+    const lang = btn.dataset.lang;
+    if (lang === currentLang) return;
+    currentLang = lang;
     document.querySelectorAll('#lang-toggle button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    const t = langTexts[lang];
+    // Loader
+    document.querySelector('.loader-tagline').innerHTML = t.tagline;
+    // Stage tagline
+    document.getElementById('stage-tagline').innerHTML = t.tagline;
+    // Sub
+    document.getElementById('sub-fixed').textContent = t.sub;
+    // Footer
+    document.getElementById('say-hello').textContent = t.sayHello;
+    document.querySelector('#footer-bar a').textContent = t.subime;
+    // Nombre: si ya mutó, actualizar nameB en memoria
+    const nd = document.getElementById('name-display');
+    if (isMutated) nd.textContent = t.nameB;
   });
 });
 </script>
