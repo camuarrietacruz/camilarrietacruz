@@ -602,6 +602,7 @@ function startExpansion() {
 }
 
 function onExpansionDone() {
+  expansionDone = true;
   // Fade out tagline
   stageLine.style.opacity = '0';
 
@@ -680,6 +681,7 @@ window.addEventListener('touchmove', e => {
 }, { passive: true });
 
 let camuxiStarted = false;
+let expansionDone = false;
 
 function animateScroll() {
   scrollY += (targetScrollY - scrollY) * 0.1;
