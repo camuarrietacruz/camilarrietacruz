@@ -430,14 +430,14 @@ const stageLine = document.getElementById('stage-tagline');
 // El nombre queda centrado horizontalmente en ~50% vertical
 // Las imágenes lo rodean sin quedar debajo de él
 const finalPos = [
-  { left: 14,  top: 8,   w: 22, h: 34 }, // top-left
-  { left: 44,  top: 4,   w: 17, h: 28 }, // top-center
-  { left: 65,  top: 8,   w: 20, h: 32 }, // top-right
-  { left: 8,   top: 52,  w: 20, h: 38 }, // bottom-left
-  { left: 63,  top: 52,  w: 21, h: 36 }, // bottom-right
+  { left: 14,  top: 5,   w: 22, h: 34 }, // top-left
+  { left: 44,  top: 2,   w: 17, h: 34 }, // top-center — baja más para dar margen
+  { left: 65,  top: 5,   w: 20, h: 34 }, // top-right
+  { left: 8,   top: 57,  w: 20, h: 36 }, // bottom-left
+  { left: 63,  top: 57,  w: 21, h: 36 }, // bottom-right
 ];
-// Imagen principal: abajo-centro pero SIN tocar el nombre (que está al 50%)
-const mainImgFinal = { left: 37, top: 53, w: 17, h: 32 };
+// Imagen principal: abajo-centro con margen del nombre
+const mainImgFinal = { left: 37, top: 57, w: 17, h: 32 };
 
 const cards = document.querySelectorAll('.proj-card');
 
