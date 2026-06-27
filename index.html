@@ -347,7 +347,7 @@
 
     <!-- Imagen principal (encima de cards) -->
     <div id="main-img">
-      <img src="assets/placeholder-main.png" alt="" style="border-radius:8px;" />
+      <img src="assets/placeholder-main.png" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
     </div>
 
     <!-- Nombre: solo el texto, sin sub -->
@@ -478,7 +478,9 @@ function animateNameToCenter() {
   const vw = window.innerWidth;
   const nameSpan = document.getElementById('name-display');
   const nameW = nameSpan.offsetWidth;
-  const targetLeft = (vw / 2) - (nameW / 2);
+  // El nombre se detiene JUSTO antes de la imagen — no la solapa
+  const imgLeft = vw / 2 - 75; // borde izquierdo de la imagen (centro - mitad de 150px)
+  const targetLeft = imgLeft - nameW - 8; // 8px de margen antes del borde
   const startLeft = 60;
   const duration  = 900;
   const startTime = performance.now();
@@ -491,19 +493,25 @@ function animateNameToCenter() {
     const currentLeft = lerp(startLeft, targetLeft, eased);
     heroName.style.left = currentLeft + 'px';
 
-    // Colisión: cuando el nombre llega al 60% del recorrido
-    if (!expansionTriggered && t >= 0.6) {
+    // Colisión: cuando el borde derecho del nombre toca el borde izquierdo de la imagen
+    if (!expansionTriggered && currentLeft + nameW >= imgLeft - 8) {
       expansionTriggered = true;
-      startExpansion();
+      startExpansion(); // bang — inmediato
     }
 
     if (t < 1) {
       requestAnimationFrame(tick);
     } else {
-      heroName.style.left = targetLeft + 'px';
-      // Mostrar Buenos Aires cuando llega al centro
-      subFixed.style.transition = 'opacity 0.4s ease';
-      subFixed.style.opacity = '0.8';
+      // Una vez que la expansión terminó, centrar el nombre
+      setTimeout(() => {
+        heroName.style.transition = 'left 0.5s cubic-bezier(0.16,1,0.3,1)';
+        heroName.style.left = ((vw / 2) - (nameW / 2)) + 'px';
+        setTimeout(() => {
+          heroName.style.transition = '';
+          subFixed.style.transition = 'opacity 0.4s ease';
+          subFixed.style.opacity = '0.8';
+        }, 500);
+      }, 600); // espera que termine la expansión
     }
   }
   requestAnimationFrame(tick);
@@ -527,7 +535,7 @@ function startExpansion() {
     const startW = 150;
     const startH = 150;
 
-    const delay = i * 90;  // escalonado suave
+    const delay = i * 35;  // big bang
     const start = performance.now() + delay;
 
     card.style.opacity = '0';
