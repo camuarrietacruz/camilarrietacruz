@@ -227,7 +227,7 @@
       z-index: 3;
       overflow: hidden;
     }
-    #footer-bg { background-color: #0011fe;
+    #footer-bg {
       position: absolute; inset: 0;
       background-image: url('assets/CARITA.png');
       background-size: cover;
@@ -441,7 +441,7 @@ const finalPos = [
   { left: 9,   top: 58,  w: 17, h: 31 }, // bottom-left(-15%)
   { left: 64,  top: 58,  w: 18, h: 31 }, // bottom-right(-15%)
 ];
-const mainImgFinal = { left: 39, top: 68, w: 14, h: 27 };
+const mainImgFinal = { left: 39, top: 58, w: 14, h: 27 };
 
 const cards = document.querySelectorAll('.proj-card');
 
@@ -591,7 +591,6 @@ function startExpansion() {
 }
 
 function onExpansionDone() {
-  expansionDone = true;
   // Fade out tagline
   stageLine.style.opacity = '0';
 
@@ -662,7 +661,6 @@ window.addEventListener('wheel', e => {
 }, { passive: true });
 
 let camuxiStarted = false;
-let expansionDone = false;
 function animateScroll() {
   scrollY += (targetScrollY - scrollY) * 0.1;
   const progress = scrollY / maxScroll;
