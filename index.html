@@ -105,26 +105,17 @@
       border-radius: 8px;
     }
 
-    /* ── STAGE ── */
+    /* ── STAGE: todo pasa aquí después del loader ── */
     #stage {
       position: fixed;
       inset: 0;
-      background: transparent;
-      display: none;
+      background: var(--cream);
+      opacity: 0;
       pointer-events: none;
-      z-index: 3;
     }
     #stage.visible {
-      display: block;
+      opacity: 1;
       pointer-events: all;
-    }
-    /* Hero-panel: la persiana — se recorta desde abajo */
-    #hero-panel {
-      position: absolute;
-      inset: 0;
-      background: var(--cream);
-      overflow: hidden;
-      z-index: 3;
     }
 
     /* ── TAGLINE en el stage ── */
@@ -148,10 +139,10 @@
       width: 150px; height: 150px;
       border-radius: 8px;
       overflow: hidden;
+      /* empieza centrada */
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       z-index: 2;
-      visibility: hidden;
     }
     #main-img img {
       width: 100%; height: 100%;
@@ -165,11 +156,11 @@
       border-radius: 8px;
       overflow: hidden;
       z-index: 1;
+      /* todas empiezan en el centro, tamaño 150x150 */
       width: 150px; height: 150px;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       opacity: 0;
-      visibility: hidden;
     }
     .proj-card img {
       width: 100%; height: 100%;
@@ -227,15 +218,16 @@
       /* NUNCA se mueve — posición absoluta fija */
     }
 
-    /* ── FOOTER: fijo, detrás del hero ── */
+    /* ── FOOTER ── */
     #footer {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 100vh;
+      transform: translateY(100%);
+      z-index: 3;
       overflow: hidden;
-      background: var(--black);
     }
-    #footer-bg {
+    #footer-bg { background-color: #0011fe;
       position: absolute; inset: 0;
       background-image: url('assets/CARITA.png');
       background-size: cover;
@@ -328,7 +320,6 @@
 
   <!-- STAGE -->
   <div id="stage">
-    <div id="hero-panel">
 
     <div id="lang-toggle">
       <button class="active" data-lang="es">ES</button>
@@ -370,8 +361,6 @@
     </div>
     <!-- Sub: completamente independiente, fijo en el centro, nunca se mueve -->
     <div id="sub-fixed">Buenos Aires · Argentina</div>
-
-    </div><!-- /#hero-panel -->
 
     <!-- Footer -->
     <div id="footer">
@@ -460,37 +449,33 @@ function lerp(a, b, t) { return a + (b - a) * t; }
 function easeOut(t) { return 1 - Math.pow(1 - t, 4); } // easeOutQuart — más suave
 
 function startStage() {
-  // Inicializar todo ANTES de mostrar el stage
-  cards.forEach(c => {
-    c.style.width      = '150px';
-    c.style.height     = '150px';
-    c.style.top        = '50%';
-    c.style.left       = '50%';
-    c.style.transform  = 'translate(-50%, -50%)';
-    c.style.opacity    = '0';
-    c.style.transition = 'none';
-    c.style.visibility = 'visible';
-  });
-  mainImg.style.visibility = 'visible';
-  mainImg.style.width    = '150px';
-  mainImg.style.height   = '150px';
-  mainImg.style.top      = '50%';
-  mainImg.style.left     = '50%';
-  mainImg.style.transform = 'translate(-50%, -50%)';
-  subFixed.style.opacity = '0';
-  heroName.style.left    = '60px';
-  heroName.style.transition = 'none';
-
-  // Mostrar stage — ya todo está inicializado
   loader.style.display = 'none';
   stage.classList.add('visible');
-  // Forzar reflow para que el browser aplique los estilos antes de animar
-  stage.getBoundingClientRect();
 
-  // Arrancar animación en el próximo frame
-  requestAnimationFrame(() => {
-    setTimeout(() => animateNameToCenter(), 50);
-  });
+  setTimeout(() => {
+
+    // Inicializar cards: todas en el centro, 150x150, opacity 0
+    cards.forEach(c => {
+      c.style.width  = '150px';
+      c.style.height = '150px';
+      c.style.top    = '50%';
+      c.style.left   = '50%';
+      c.style.transform = 'translate(-50%, -50%)';
+      c.style.opacity = '0';
+      c.style.transition = 'none';
+    });
+
+    // Sub oculto al inicio — aparece después de que el nombre llega
+    subFixed.style.opacity = '0';
+    // Nombre empieza en la izquierda
+    heroName.style.left = '60px';
+    heroName.style.transition = 'none';
+    // top fijo, nunca se toca
+
+    // Fase 1: nombre viaja al centro (1s)
+    setTimeout(() => animateNameToCenter(), 100);
+
+  }, 400);
 }
 
 function animateNameToCenter() {
@@ -668,7 +653,7 @@ nameDisp.addEventListener('mouseleave', () => {
 });
 
 /* ── SCROLL PERSIANA ── */
-const heroPanel = document.getElementById('hero-panel');
+const footer = document.getElementById('footer');
 let scrollY = 0, targetScrollY = 0;
 const maxScroll = window.innerHeight;
 
@@ -676,36 +661,12 @@ window.addEventListener('wheel', e => {
   targetScrollY = Math.max(0, Math.min(maxScroll, targetScrollY + e.deltaY));
 }, { passive: true });
 
-let touchStartY = 0;
-window.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
-window.addEventListener('touchmove', e => {
-  const dy = touchStartY - e.touches[0].clientY;
-  touchStartY = e.touches[0].clientY;
-  targetScrollY = Math.max(0, Math.min(maxScroll, targetScrollY + dy));
-}, { passive: true });
-
 let camuxiStarted = false;
 let expansionDone = false;
-
 function animateScroll() {
   scrollY += (targetScrollY - scrollY) * 0.1;
-  const progress = scrollY / maxScroll; // 0→1
-
-  // Hero se achica desde abajo
-  const pct = Math.min(progress * 100, 100);
-  heroPanel.style.clipPath = `inset(0 0 ${pct}% 0)`;
-
-  // Cards colapsan solo DESPUÉS de que terminó la expansión inicial
-  if (expansionDone) {
-    const collapse = Math.min(progress * 2, 1);
-    if (progress > 0.01) {
-      collapseCards(collapse);
-    } else {
-      restoreCards();
-    }
-  }
-
-  // CAMUXI
+  const progress = scrollY / maxScroll;
+  footer.style.transform = `translateY(${(1 - progress) * 100}%)`;
   if (progress > 0.3 && !camuxiStarted) {
     camuxiStarted = true;
     animateCamuxi();
@@ -714,69 +675,12 @@ function animateScroll() {
     camuxiStarted = false;
     resetCamuxi();
   }
-
   requestAnimationFrame(animateScroll);
 }
 requestAnimationFrame(animateScroll);
-}
-requestAnimationFrame(animateScroll);
-
-// Cards colapsan al centro al scrollear
-let cardsCollapsed = false;
-function collapseCards(t) {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const cx = vw / 2 - 75;
-  const cy = vh / 2 - 75;
-  document.querySelectorAll('.proj-card').forEach((card, i) => {
-    const fp = finalPos[i];
-    const fl = (fp.left / 100) * vw;
-    const ft = (fp.top  / 100) * vh;
-    const fw = (fp.w   / 100) * vw;
-    const fh = (fp.h   / 100) * vh;
-    card.style.left   = lerp(fl, cx, t) + 'px';
-    card.style.top    = lerp(ft, cy, t) + 'px';
-    card.style.width  = lerp(fw, 150, t) + 'px';
-    card.style.height = lerp(fh, 150, t) + 'px';
-    card.style.opacity = (1 - t * 0.7).toString();
-    card.style.transform = 'none';
-  });
-  // mainImg también colapsa
-  const mf = mainImgFinal;
-  const ml = (mf.left / 100) * vw;
-  const mt = (mf.top  / 100) * vh;
-  const mw = (mf.w   / 100) * vw;
-  const mhh = (mf.h  / 100) * vh;
-  mainImg.style.left   = lerp(ml, cx, t) + 'px';
-  mainImg.style.top    = lerp(mt, cy, t) + 'px';
-  mainImg.style.width  = lerp(mw, 150, t) + 'px';
-  mainImg.style.height = lerp(mhh, 150, t) + 'px';
-  mainImg.style.transform = 'none';
-}
-function restoreCards() {
-  // restaurar a posiciones finales
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  document.querySelectorAll('.proj-card').forEach((card, i) => {
-    const fp = finalPos[i];
-    card.style.left   = (fp.left / 100) * vw + 'px';
-    card.style.top    = (fp.top  / 100) * vh + 'px';
-    card.style.width  = (fp.w   / 100) * vw + 'px';
-    card.style.height = (fp.h   / 100) * vh + 'px';
-    card.style.opacity = '1';
-    card.style.transform = 'none';
-  });
-  const mf = mainImgFinal;
-  mainImg.style.left   = (mf.left / 100) * vw + 'px';
-  mainImg.style.top    = (mf.top  / 100) * vh + 'px';
-  mainImg.style.width  = (mf.w   / 100) * vw + 'px';
-  mainImg.style.height = (mf.h  / 100) * vh + 'px';
-  mainImg.style.transform = 'none';
-}
 
 document.getElementById('subime-btn').addEventListener('click', e => {
-  e.preventDefault();
-  targetScrollY = 0;
+  e.preventDefault(); targetScrollY = 0;
 });
 
 /* ── CAMUXI SVG ── */
@@ -803,56 +707,10 @@ function animateCamuxi() {
 }
 
 /* ── LANG ── */
-const langTexts = {
-  es: {
-    loaderName:  'CAMILA ARRIETA CRUZ',
-    tagline:     'Universos visuales desde<br>Argentina hacia el mundo.',
-    nameA:       'CAMILA ARRIETA CRUZ',
-    nameB:       'DIRECCIÓN CREATIVA',
-    sub:         'Buenos Aires · Argentina',
-    sayHello:    'SAY HELLO',
-    follow:      'FOLLOW',
-    talk:        "LET'S TALK",
-    copyright:   '© 2026 — ALL RIGHTS RESERVED.',
-    location:    'BUENOS AIRES · ARGENTINA',
-    subime:      '↑ SUBIME',
-  },
-  en: {
-    loaderName:  'CAMILA ARRIETA CRUZ',
-    tagline:     'Visual universes from<br>Argentina to the world.',
-    nameA:       'CAMILA ARRIETA CRUZ',
-    nameB:       'CREATIVE DIRECTION',
-    sub:         'Buenos Aires · Argentina',
-    sayHello:    'SAY HELLO',
-    follow:      'FOLLOW',
-    talk:        "LET'S TALK",
-    copyright:   '© 2026 — ALL RIGHTS RESERVED.',
-    location:    'BUENOS AIRES · ARGENTINA',
-    subime:      '↑ GO UP',
-  }
-};
-let currentLang = 'es';
-
 document.querySelectorAll('#lang-toggle button').forEach(btn => {
   btn.addEventListener('click', () => {
-    const lang = btn.dataset.lang;
-    if (lang === currentLang) return;
-    currentLang = lang;
     document.querySelectorAll('#lang-toggle button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const t = langTexts[lang];
-    // Loader
-    document.querySelector('.loader-tagline').innerHTML = t.tagline;
-    // Stage tagline
-    document.getElementById('stage-tagline').innerHTML = t.tagline;
-    // Sub
-    document.getElementById('sub-fixed').textContent = t.sub;
-    // Footer
-    document.getElementById('say-hello').textContent = t.sayHello;
-    document.querySelector('#footer-bar a').textContent = t.subime;
-    // Nombre: si ya mutó, actualizar nameB en memoria
-    const nd = document.getElementById('name-display');
-    if (isMutated) nd.textContent = t.nameB;
   });
 });
 </script>
