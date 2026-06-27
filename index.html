@@ -329,25 +329,30 @@
     <div id="stage-tagline">Universos visuales desde<br>Argentina hacia el mundo.</div>
 
     <!-- Cards de proyectos (detrás) -->
-    <div class="proj-card" id="pc1" style="background:#d4cfc4;">
-      <div class="proj-info"><span class="pn">Habibi NY</span><span>2024</span><span>Branding</span></div>
+    <div class="proj-card" id="pc1">
+      <img src="assets/lacade.png" alt="Lacade" />
+      <div class="proj-info"><span class="pn">Lacade</span><span>2024</span><span>Branding</span></div>
     </div>
-    <div class="proj-card" id="pc2" style="background:#c9cdd4;">
-      <div class="proj-info"><span class="pn">Known</span><span>2024</span><span>Dirección Creativa</span></div>
+    <div class="proj-card" id="pc2">
+      <img src="assets/eclat.png" alt="Éclat" />
+      <div class="proj-info"><span class="pn">Éclat</span><span>2024</span><span>Dirección Creativa</span></div>
     </div>
-    <div class="proj-card" id="pc3" style="background:#d4c9be;">
-      <div class="proj-info"><span class="pn">Glued</span><span>2023</span><span>UX/UI</span></div>
+    <div class="proj-card" id="pc3">
+      <img src="assets/etrixia.png" alt="Etrixia" />
+      <div class="proj-info"><span class="pn">Etrixia</span><span>2024</span><span>Branding</span></div>
     </div>
-    <div class="proj-card" id="pc4" style="background:#c4c9c4;">
-      <div class="proj-info"><span class="pn">FCM</span><span>2023</span><span>Branding</span></div>
+    <div class="proj-card" id="pc4">
+      <img src="assets/magicstyler.png" alt="Magic Styler" />
+      <div class="proj-info"><span class="pn">Magic Styler</span><span>2023</span><span>Fotografía</span></div>
     </div>
-    <div class="proj-card" id="pc5" style="background:#cdc4c9;">
-      <div class="proj-info"><span class="pn">Blings</span><span>2024</span><span>Motion</span></div>
+    <div class="proj-card" id="pc5">
+      <img src="assets/templa.png" alt="Templa" />
+      <div class="proj-info"><span class="pn">Templa</span><span>2024</span><span>Branding</span></div>
     </div>
 
     <!-- Imagen principal (encima de cards) -->
     <div id="main-img">
-      <img src="assets/placeholder-main.png" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
+      <img src="assets/bestial.png" alt="Bestial" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />
     </div>
 
     <!-- Nombre: solo el texto, sin sub -->
@@ -430,14 +435,13 @@ const stageLine = document.getElementById('stage-tagline');
 // El nombre queda centrado horizontalmente en ~50% vertical
 // Las imágenes lo rodean sin quedar debajo de él
 const finalPos = [
-  { left: 14,  top: 5,   w: 22, h: 34 }, // top-left
-  { left: 44,  top: 2,   w: 17, h: 34 }, // top-center — baja más para dar margen
-  { left: 65,  top: 5,   w: 20, h: 34 }, // top-right
-  { left: 8,   top: 57,  w: 20, h: 36 }, // bottom-left
-  { left: 63,  top: 57,  w: 21, h: 36 }, // bottom-right
+  { left: 15,  top: 6,   w: 19, h: 29 }, // top-left   (-15%)
+  { left: 45,  top: 3,   w: 14, h: 29 }, // top-center (-15%)
+  { left: 66,  top: 6,   w: 17, h: 29 }, // top-right  (-15%)
+  { left: 9,   top: 58,  w: 17, h: 31 }, // bottom-left(-15%)
+  { left: 64,  top: 58,  w: 18, h: 31 }, // bottom-right(-15%)
 ];
-// Imagen principal: abajo-centro con margen del nombre
-const mainImgFinal = { left: 37, top: 57, w: 17, h: 32 };
+const mainImgFinal = { left: 39, top: 58, w: 14, h: 27 };
 
 const cards = document.querySelectorAll('.proj-card');
 
