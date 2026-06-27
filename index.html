@@ -109,22 +109,22 @@
     #stage {
       position: fixed;
       inset: 0;
-      background: var(--cream);
+      background: transparent;
       opacity: 0;
       pointer-events: none;
-      z-index: 2;
+      z-index: 3;
     }
     #stage.visible {
       opacity: 1;
       pointer-events: all;
     }
-    /* Hero: la persiana — se achica desde abajo */
+    /* Hero-panel: la persiana — se recorta desde abajo */
     #hero-panel {
       position: absolute;
       inset: 0;
       background: var(--cream);
-      transform-origin: top center;
       overflow: hidden;
+      z-index: 3;
     }
 
     /* ── TAGLINE en el stage ── */
@@ -227,12 +227,13 @@
       /* NUNCA se mueve — posición absoluta fija */
     }
 
-    /* ── FOOTER: fijo abajo, siempre visible debajo del hero ── */
+    /* ── FOOTER: fijo, detrás del hero ── */
     #footer {
       position: fixed;
       inset: 0;
       z-index: 1;
       overflow: hidden;
+      background: var(--black);
     }
     #footer-bg {
       position: absolute; inset: 0;
