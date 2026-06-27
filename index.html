@@ -460,35 +460,35 @@ function lerp(a, b, t) { return a + (b - a) * t; }
 function easeOut(t) { return 1 - Math.pow(1 - t, 4); } // easeOutQuart — más suave
 
 function startStage() {
+  // Inicializar todo ANTES de mostrar el stage
+  cards.forEach(c => {
+    c.style.width      = '150px';
+    c.style.height     = '150px';
+    c.style.top        = '50%';
+    c.style.left       = '50%';
+    c.style.transform  = 'translate(-50%, -50%)';
+    c.style.opacity    = '0';
+    c.style.transition = 'none';
+    c.style.visibility = 'visible';
+  });
+  mainImg.style.visibility = 'visible';
+  mainImg.style.width    = '150px';
+  mainImg.style.height   = '150px';
+  mainImg.style.top      = '50%';
+  mainImg.style.left     = '50%';
+  mainImg.style.transform = 'translate(-50%, -50%)';
+  subFixed.style.opacity = '0';
+  heroName.style.left    = '60px';
+  heroName.style.transition = 'none';
+
+  // Ahora mostrar el stage
   loader.style.display = 'none';
   stage.classList.add('visible');
 
-  setTimeout(() => {
-
-    // Inicializar cards: todas en el centro, 150x150, opacity 0
-    cards.forEach(c => {
-      c.style.width      = '150px';
-      c.style.height     = '150px';
-      c.style.top        = '50%';
-      c.style.left       = '50%';
-      c.style.transform  = 'translate(-50%, -50%)';
-      c.style.opacity    = '0';
-      c.style.transition = 'none';
-      c.style.visibility = 'visible';
-    });
-    mainImg.style.visibility = 'visible';
-
-    // Sub oculto al inicio — aparece después de que el nombre llega
-    subFixed.style.opacity = '0';
-    // Nombre empieza en la izquierda
-    heroName.style.left = '60px';
-    heroName.style.transition = 'none';
-    // top fijo, nunca se toca
-
-    // Fase 1: nombre viaja al centro (1s)
-    setTimeout(() => animateNameToCenter(), 100);
-
-  }, 400);
+  // Arrancar animación en el próximo frame
+  requestAnimationFrame(() => {
+    setTimeout(() => animateNameToCenter(), 50);
+  });
 }
 
 function animateNameToCenter() {
