@@ -110,12 +110,12 @@
       position: fixed;
       inset: 0;
       background: transparent;
-      opacity: 0;
+      display: none;
       pointer-events: none;
       z-index: 3;
     }
     #stage.visible {
-      opacity: 1;
+      display: block;
       pointer-events: all;
     }
     /* Hero-panel: la persiana — se recorta desde abajo */
@@ -481,9 +481,11 @@ function startStage() {
   heroName.style.left    = '60px';
   heroName.style.transition = 'none';
 
-  // Ahora mostrar el stage
+  // Mostrar stage — ya todo está inicializado
   loader.style.display = 'none';
   stage.classList.add('visible');
+  // Forzar reflow para que el browser aplique los estilos antes de animar
+  stage.getBoundingClientRect();
 
   // Arrancar animación en el próximo frame
   requestAnimationFrame(() => {
