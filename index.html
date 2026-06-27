@@ -478,11 +478,9 @@ function animateNameToCenter() {
   const vw = window.innerWidth;
   const nameSpan = document.getElementById('name-display');
   const nameW = nameSpan.offsetWidth;
-  // El nombre se detiene JUSTO antes de la imagen — no la solapa
-  const imgLeft = vw / 2 - 75; // borde izquierdo de la imagen (centro - mitad de 150px)
-  const targetLeft = imgLeft - nameW - 8; // 8px de margen antes del borde
+  const targetLeft = (vw / 2) - (nameW / 2); // destino: centrado
   const startLeft = 60;
-  const duration  = 900;
+  const duration  = 1100;
   const startTime = performance.now();
   let expansionTriggered = false;
 
@@ -493,25 +491,21 @@ function animateNameToCenter() {
     const currentLeft = lerp(startLeft, targetLeft, eased);
     heroName.style.left = currentLeft + 'px';
 
-    // Colisión: cuando el borde derecho del nombre toca el borde izquierdo de la imagen
-    if (!expansionTriggered && currentLeft + nameW >= imgLeft - 8) {
-      expansionTriggered = true;
-      startExpansion(); // bang — inmediato
+    // Bang: en cuanto el borde derecho del nombre alcanza el borde izquierdo de la imagen
+    if (!expansionTriggered) {
+      const imgLeft = vw / 2 - 75;
+      if (currentLeft + nameW >= imgLeft) {
+        expansionTriggered = true;
+        startExpansion();
+      }
     }
 
     if (t < 1) {
       requestAnimationFrame(tick);
     } else {
-      // Una vez que la expansión terminó, centrar el nombre
-      setTimeout(() => {
-        heroName.style.transition = 'left 0.5s cubic-bezier(0.16,1,0.3,1)';
-        heroName.style.left = ((vw / 2) - (nameW / 2)) + 'px';
-        setTimeout(() => {
-          heroName.style.transition = '';
-          subFixed.style.transition = 'opacity 0.4s ease';
-          subFixed.style.opacity = '0.8';
-        }, 500);
-      }, 600); // espera que termine la expansión
+      heroName.style.left = targetLeft + 'px';
+      subFixed.style.transition = 'opacity 0.4s ease';
+      subFixed.style.opacity = '0.8';
     }
   }
   requestAnimationFrame(tick);
