@@ -687,16 +687,18 @@ function animateScroll() {
   scrollY += (targetScrollY - scrollY) * 0.1;
   const progress = scrollY / maxScroll; // 0→1
 
-  // Hero se achica desde abajo (clip desde bottom)
-  const heroH = 100 - (progress * 100);
-  heroPanel.style.clipPath = `inset(0 0 ${100 - heroH}% 0)`;
+  // Hero se achica desde abajo
+  const pct = Math.min(progress * 100, 100);
+  heroPanel.style.clipPath = `inset(0 0 ${pct}% 0)`;
 
-  // Cards colapsan al scrollear
-  const collapse = Math.min(progress * 2, 1);
-  if (progress > 0.01) {
-    collapseCards(collapse);
-  } else {
-    restoreCards();
+  // Cards colapsan solo DESPUÉS de que terminó la expansión inicial
+  if (expansionDone) {
+    const collapse = Math.min(progress * 2, 1);
+    if (progress > 0.01) {
+      collapseCards(collapse);
+    } else {
+      restoreCards();
+    }
   }
 
   // CAMUXI
@@ -710,6 +712,8 @@ function animateScroll() {
   }
 
   requestAnimationFrame(animateScroll);
+}
+requestAnimationFrame(animateScroll);
 }
 requestAnimationFrame(animateScroll);
 
