@@ -190,32 +190,36 @@
     .proj-info .pn { font-weight: 700; font-size: 12px; }
 
     /* ── NOMBRE CENTRAL ── */
-    #hero-name {
+    #text-block {
       position: absolute;
-      top: calc(50% - 18px);
-      left: 60px;
-      transform: none;
+      top: 50%;
+      left: 0; right: 0;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+    #hero-name {
       font-size: 15px;
       letter-spacing: 0.08em;
       color: var(--blue);
       font-weight: 400;
       white-space: nowrap;
-      z-index: 10;
-      cursor: none;
       line-height: 1;
+      cursor: none;
+      pointer-events: all;
       text-align: center;
     }
     #sub-fixed {
-      position: absolute;
-      top: calc(50% + 10px);
-      left: 0; right: 0;
-      text-align: center;
       font-size: 13px;
       letter-spacing: 0.05em;
       color: var(--black);
       opacity: 0;
       pointer-events: none;
-      z-index: 10;
+      margin-top: 8px;
+      text-align: center;
     }
 
     /* ── FOOTER ── */
@@ -376,12 +380,11 @@
       <img src="assets/bestial.png" alt="Bestial" style="width:100%;height:100%;object-fit:cover;" />
     </div>
 
-    <!-- Nombre: solo el texto, sin sub -->
-    <div id="hero-name">
-      <span id="name-display">CAMILA ARRIETA CRUZ</span>
+    <!-- Bloque de texto central: nombre + sub juntos, siempre centrado -->
+    <div id="text-block">
+      <div id="hero-name"><span id="name-display">CAMILA ARRIETA CRUZ</span></div>
+      <div id="sub-fixed">Buenos Aires · Argentina</div>
     </div>
-    <!-- Sub: completamente independiente, fijo en el centro, nunca se mueve -->
-    <div id="sub-fixed">Buenos Aires · Argentina</div>
 
     <!-- Footer -->
     <div id="footer">
@@ -447,6 +450,7 @@ setTimeout(() => {
 ════════════════════════════════════════════ */
 const stage     = document.getElementById('stage');
 const heroName  = document.getElementById('hero-name');
+const textBlock = document.getElementById('text-block');
 const nameDisp  = document.getElementById('name-display');
 const subFixed  = document.getElementById('sub-fixed');
 const mainImg   = document.getElementById('main-img');
@@ -486,8 +490,10 @@ function startStage() {
   mainImg.style.height    = '108px';
   mainImg.style.transform = 'translate(-50%, -50%)';
   subFixed.style.opacity  = '0';
-  heroName.style.left     = '60px';
-  heroName.style.transition = 'none';
+  textBlock.style.left      = '0px';
+  textBlock.style.right     = 'auto';
+  textBlock.style.transform = 'translateY(-50%) translateX(calc(60px - 50%))';
+  textBlock.style.transition = 'none';
 
   // Ocultar tagline del stage desde el inicio
   document.getElementById('stage-tagline').style.opacity = '0';
