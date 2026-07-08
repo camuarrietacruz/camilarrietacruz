@@ -293,6 +293,21 @@
     #lang-toggle button.active { opacity: 1; font-weight: 700; }
 
     /* ── GLITCH ── */
+    @keyframes float-card {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      33%       { transform: translateY(-8px) rotate(0.4deg); }
+      66%       { transform: translateY(4px) rotate(-0.3deg); }
+    }
+    @keyframes float-card-b {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      33%       { transform: translateY(6px) rotate(-0.5deg); }
+      66%       { transform: translateY(-10px) rotate(0.3deg); }
+    }
+    @keyframes float-card-c {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50%       { transform: translateY(-6px) rotate(0.2deg); }
+    }
+
     @keyframes glitch-char {
       0%   { transform: translate(0); }
       20%  { transform: translate(-2px, 1px); }
@@ -302,6 +317,12 @@
       100% { transform: translate(0); }
     }
     .glitching { animation: glitch-char 0.08s steps(1) infinite; }
+    .floating-a { animation: float-card   4.2s ease-in-out infinite; }
+    .floating-b { animation: float-card-b 5.1s ease-in-out infinite; }
+    .floating-c { animation: float-card-c 3.8s ease-in-out infinite; }
+    .floating-d { animation: float-card   6.0s ease-in-out infinite; }
+    .floating-e { animation: float-card-b 4.7s ease-in-out infinite; }
+    .floating-m { animation: float-card-c 5.5s ease-in-out infinite; }
   </style>
 </head>
 <body>
