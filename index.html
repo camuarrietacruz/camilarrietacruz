@@ -287,7 +287,7 @@
     }
     #lang-toggle button {
       background: none; border: none; font-family: var(--font);
-      font-size: 13px; letter-spacing: 0.08em; color: var(--blue);
+      font-size: 13px; letter-spacing: 0.08em; color: var(--black);
       cursor: none; padding: 0; opacity: 0.4; transition: opacity 0.2s;
     }
     #lang-toggle button.active { opacity: 1; font-weight: 700; }
@@ -749,10 +749,26 @@ function animateCamuxi() {
 }
 
 /* ── LANG ── */
+let currentLang = 'es';
+const langTexts = {
+  es: { tagline: 'Universos visuales desde<br>Argentina hacia el mundo.', nameB: 'DIRECCIÓN CREATIVA', sub: 'Buenos Aires · Argentina', sayHello: 'SAY HELLO', subime: '↑ SUBIME' },
+  en: { tagline: 'Visual universes from<br>Argentina to the world.',    nameB: 'CREATIVE DIRECTION',  sub: 'Buenos Aires · Argentina', sayHello: 'SAY HELLO', subime: '↑ GO UP'  }
+};
 document.querySelectorAll('#lang-toggle button').forEach(btn => {
   btn.addEventListener('click', () => {
+    const lang = btn.dataset.lang;
+    if (lang === currentLang) return;
+    currentLang = lang;
     document.querySelectorAll('#lang-toggle button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    const t = langTexts[lang];
+    document.querySelector('.loader-tagline').innerHTML = t.tagline;
+    document.getElementById('stage-tagline').innerHTML = t.tagline;
+    document.getElementById('sub-fixed').textContent = t.sub;
+    document.getElementById('say-hello').textContent = t.sayHello;
+    document.getElementById('subime-btn').textContent = t.subime;
+    const nd = document.getElementById('name-display');
+    if (isMutated) nd.textContent = t.nameB;
   });
 });
 </script>
