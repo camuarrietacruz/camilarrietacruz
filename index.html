@@ -190,36 +190,32 @@
     .proj-info .pn { font-weight: 700; font-size: 12px; }
 
     /* ── NOMBRE CENTRAL ── */
-    #text-block {
-      position: absolute;
-      top: 50%;
-      left: 0; right: 0;
-      transform: translateY(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      z-index: 10;
-      pointer-events: none;
-    }
+    /* Nombre: viaja horizontalmente */
     #hero-name {
+      position: absolute;
+      top: calc(50% - 10px);
+      left: 60px;
       font-size: 15px;
       letter-spacing: 0.08em;
       color: var(--blue);
       font-weight: 400;
       white-space: nowrap;
       line-height: 1;
+      z-index: 10;
       cursor: none;
-      pointer-events: all;
-      text-align: center;
     }
+    /* Sub: centrado fijo, nunca se mueve */
     #sub-fixed {
+      position: absolute;
+      top: calc(50% + 14px);
+      left: 0; right: 0;
+      text-align: center;
       font-size: 13px;
       letter-spacing: 0.05em;
       color: var(--black);
       opacity: 0;
       pointer-events: none;
-      margin-top: 8px;
-      text-align: center;
+      z-index: 10;
     }
 
     /* ── FOOTER ── */
@@ -380,11 +376,10 @@
       <img src="assets/bestial.png" alt="Bestial" style="width:100%;height:100%;object-fit:cover;" />
     </div>
 
-    <!-- Bloque de texto central: nombre + sub juntos, siempre centrado -->
-    <div id="text-block">
-      <div id="hero-name"><span id="name-display">CAMILA ARRIETA CRUZ</span></div>
-      <div id="sub-fixed">Buenos Aires · Argentina</div>
-    </div>
+    <!-- Nombre: viaja desde izquierda al centro -->
+    <div id="hero-name"><span id="name-display">CAMILA ARRIETA CRUZ</span></div>
+    <!-- Sub: siempre centrado, nunca se mueve -->
+    <div id="sub-fixed">Buenos Aires · Argentina</div>
 
     <!-- Footer -->
     <div id="footer">
@@ -450,7 +445,6 @@ setTimeout(() => {
 ════════════════════════════════════════════ */
 const stage     = document.getElementById('stage');
 const heroName  = document.getElementById('hero-name');
-const textBlock = document.getElementById('text-block');
 const nameDisp  = document.getElementById('name-display');
 const subFixed  = document.getElementById('sub-fixed');
 const mainImg   = document.getElementById('main-img');
@@ -490,10 +484,8 @@ function startStage() {
   mainImg.style.height    = '108px';
   mainImg.style.transform = 'translate(-50%, -50%)';
   subFixed.style.opacity  = '0';
-  textBlock.style.left      = '0';
-  textBlock.style.right     = '0';
-  textBlock.style.transform = 'translateY(-50%) translateX(calc(60px - 50vw))';
-  textBlock.style.transition = 'none';
+  heroName.style.left     = '60px';
+  heroName.style.transition = 'none';
 
   // Ocultar tagline del stage desde el inicio
   document.getElementById('stage-tagline').style.opacity = '0';
@@ -508,27 +500,18 @@ function animateNameToCenter() {
   const vw = window.innerWidth;
   const nameSpan = document.getElementById('name-display');
   const nameW = nameSpan.offsetWidth;
-  const startLeft = 60; // px desde el borde izq de pantalla donde empieza el nombre
+  const targetLeft = (vw - nameW) / 2; // centrado exacto
+  const startLeft = 60;
   const duration  = 1100;
   const startTime = performance.now();
   let expansionTriggered = false;
-
-  // El text-block ocupa todo el ancho (left:0 right:0)
-  // Lo movemos horizontalmente con translateX
-  // translateY(-50%) se mantiene siempre para el centrado vertical
 
   function tick(now) {
     const elapsed = now - startTime;
     const t = Math.min(elapsed / duration, 1);
     const eased = easeOut(t);
-
-    // Cuánto hay que mover el bloque para que el nombre esté en currentLeft
-    // El bloque está centrado, el nombre dentro está centrado
-    // Desplazamiento = currentLeft - (vw/2 - nameW/2)
-    const centeredLeft = vw / 2 - nameW / 2;
-    const currentLeft = lerp(startLeft, centeredLeft, eased);
-    const offsetX = currentLeft - centeredLeft;
-    textBlock.style.transform = 'translateY(-50%) translateX(' + offsetX + 'px)';
+    const currentLeft = lerp(startLeft, targetLeft, eased);
+    heroName.style.left = currentLeft + 'px';
 
     // Bang
     if (!expansionTriggered) {
@@ -542,10 +525,7 @@ function animateNameToCenter() {
     if (t < 1) {
       requestAnimationFrame(tick);
     } else {
-      // Centrado perfecto: sin translateX
-      textBlock.style.transform = 'translateY(-50%)';
-      textBlock.style.left = '0';
-      textBlock.style.right = '0';
+      heroName.style.left = targetLeft + 'px';
       subFixed.style.transition = 'opacity 0.4s ease';
       subFixed.style.opacity = '0.8';
     }
