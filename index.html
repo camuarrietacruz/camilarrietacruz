@@ -508,22 +508,31 @@ function animateNameToCenter() {
   const vw = window.innerWidth;
   const nameSpan = document.getElementById('name-display');
   const nameW = nameSpan.offsetWidth;
-  const targetLeft = (vw / 2) - (nameW / 2); // destino: centrado
-  const startLeft = 60;
+  const startLeft = 60; // px desde el borde izq de pantalla donde empieza el nombre
   const duration  = 1100;
   const startTime = performance.now();
   let expansionTriggered = false;
+
+  // El text-block ocupa todo el ancho (left:0 right:0)
+  // Lo movemos horizontalmente con translateX
+  // translateY(-50%) se mantiene siempre para el centrado vertical
 
   function tick(now) {
     const elapsed = now - startTime;
     const t = Math.min(elapsed / duration, 1);
     const eased = easeOut(t);
-    const currentLeft = lerp(startLeft, targetLeft, eased);
-    heroName.style.left = currentLeft + 'px';
 
-    // Bang: en cuanto el borde derecho del nombre alcanza el borde izquierdo de la imagen
+    // Cuánto hay que mover el bloque para que el nombre esté en currentLeft
+    // El bloque está centrado, el nombre dentro está centrado
+    // Desplazamiento = currentLeft - (vw/2 - nameW/2)
+    const centeredLeft = vw / 2 - nameW / 2;
+    const currentLeft = lerp(startLeft, centeredLeft, eased);
+    const offsetX = currentLeft - centeredLeft;
+    textBlock.style.transform = 'translateY(-50%) translateX(' + offsetX + 'px)';
+
+    // Bang
     if (!expansionTriggered) {
-      const imgLeft = vw / 2 - 75;
+      const imgLeft = vw / 2 - 54;
       if (currentLeft + nameW >= imgLeft) {
         expansionTriggered = true;
         startExpansion();
@@ -533,7 +542,10 @@ function animateNameToCenter() {
     if (t < 1) {
       requestAnimationFrame(tick);
     } else {
-      heroName.style.left = targetLeft + 'px';
+      // Centrado perfecto: sin translateX
+      textBlock.style.transform = 'translateY(-50%)';
+      textBlock.style.left = '0';
+      textBlock.style.right = '0';
       subFixed.style.transition = 'opacity 0.4s ease';
       subFixed.style.opacity = '0.8';
     }
