@@ -468,6 +468,8 @@ function startStage() {
   heroName.style.left     = '60px';
   heroName.style.transition = 'none';
 
+  // Ocultar tagline del stage desde el inicio
+  document.getElementById('stage-tagline').style.opacity = '0';
   // Ahora mostrar — todo ya está en su lugar
   loader.style.display = 'none';
   stage.classList.add('visible');
@@ -598,7 +600,7 @@ function startExpansion() {
   const mfH = (mainImgFinal.h    / 100) * vh;
   // mainImg sale hacia abajo-centro
   const mosL = (42 / 100) * vw;
-  const mosT = (88 / 100) * vh;
+  const mosT = (95 / 100) * vh;
 
   const mStart = performance.now() + 30;
   function mPhase1(now) {
