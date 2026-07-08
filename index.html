@@ -515,76 +515,123 @@ function animateNameToCenter() {
 function startExpansion() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const duration = 1200;
+
+  // Fase 1: SALIDA VIOLENTA — van más allá de su posición final (overshoot)
+  // Cada card sale disparada a una posición exagerada fuera/al borde de pantalla
+  const overshoot = [
+    { left: -5,  top: -15,  w: 15, h: 23 }, // top-left — sale más arriba y a la izq
+    { left: 40,  top: -20,  w: 11, h: 23 }, // top-center — sale disparada arriba
+    { left: 82,  top: -15,  w: 14, h: 23 }, // top-right — arriba a la derecha
+    { left: -5,  top: 78,   w: 14, h: 25 }, // bottom-left — abajo a la izq
+    { left: 82,  top: 78,   w: 14, h: 25 }, // bottom-right — abajo a la derecha
+  ];
+
+  const cx = vw / 2 - 75;
+  const cy = vh / 2 - 75;
+  const durationOut = 350; // MUY rápido — salida violenta
+  const durationIn  = 900; // Más lento — retorno suave
 
   cards.forEach((card, i) => {
+    const os = overshoot[i];
     const fp = finalPos[i];
-    const finalL = (fp.left / 100) * vw;
-    const finalT = (fp.top  / 100) * vh;
-    const finalW = (fp.w    / 100) * vw;
-    const finalH = (fp.h    / 100) * vh;
 
-    // Posición inicial: centro, 150x150
-    const startL = vw / 2 - 75;
-    const startT = vh / 2 - 75;
-    const startW = 150;
-    const startH = 150;
+    // Fase 1: salida violenta al overshoot
+    const osL = (os.left / 100) * vw;
+    const osT = (os.top  / 100) * vh;
+    const osW = (os.w    / 100) * vw;
+    const osH = (os.h    / 100) * vh;
 
-    const delay = i * 35;  // big bang
-    const start = performance.now() + delay;
+    const startTime1 = performance.now() + i * 25; // casi simultáneo, 25ms entre cada una
 
-    card.style.opacity = '0';
+    card.style.opacity = '1';
 
-    setTimeout(() => {
-      card.style.opacity = '1';
-    }, delay);
-
-    function animCard(now) {
-      const elapsed = Math.max(0, now - start);
-      const t = Math.min(elapsed / duration, 1);
-      const e = easeOut(t);
-
-      const l = lerp(startL, finalL, e);
-      const tp = lerp(startT, finalT, e);
-      const w = lerp(startW, finalW, e);
-      const hh = lerp(startH, finalH, e);
-
-      card.style.left   = l + 'px';
-      card.style.top    = tp + 'px';
-      card.style.width  = w + 'px';
-      card.style.height = hh + 'px';
+    function phase1(now) {
+      const elapsed = Math.max(0, now - startTime1);
+      const t = Math.min(elapsed / durationOut, 1);
+      const e = 1 - Math.pow(1 - t, 2); // easeOutQuad — aceleración fuerte
+      card.style.left   = lerp(cx, osL, e) + 'px';
+      card.style.top    = lerp(cy, osT, e) + 'px';
+      card.style.width  = lerp(127, osW, e) + 'px';
+      card.style.height = lerp(127, osH, e) + 'px';
       card.style.transform = 'none';
+      if (t < 1) {
+        requestAnimationFrame(phase1);
+      } else {
+        // Fase 2: retorno suave a posición final
+        const startTime2 = performance.now();
+        const fpL = (fp.left / 100) * vw;
+        const fpT = (fp.top  / 100) * vh;
+        const fpW = (fp.w    / 100) * vw;
+        const fpH = (fp.h    / 100) * vh;
 
-      if (t < 1) requestAnimationFrame(animCard);
-      else if (i === cards.length - 1) onExpansionDone();
+        function phase2(now2) {
+          const el2 = now2 - startTime2;
+          const t2 = Math.min(el2 / durationIn, 1);
+          // easeOutBack — llega, se pasa un pelo y vuelve (efecto settle)
+          const c1 = 1.70158;
+          const c3 = c1 + 1;
+          const e2 = 1 + c3 * Math.pow(t2 - 1, 3) + c1 * Math.pow(t2 - 1, 2);
+          card.style.left   = lerp(osL, fpL, e2) + 'px';
+          card.style.top    = lerp(osT, fpT, e2) + 'px';
+          card.style.width  = lerp(osW, fpW, e2) + 'px';
+          card.style.height = lerp(osH, fpH, e2) + 'px';
+          if (t2 < 1) {
+            requestAnimationFrame(phase2);
+          } else {
+            card.style.left   = fpL + 'px';
+            card.style.top    = fpT + 'px';
+            card.style.width  = fpW + 'px';
+            card.style.height = fpH + 'px';
+            if (i === cards.length - 1) onExpansionDone();
+          }
+        }
+        requestAnimationFrame(phase2);
+      }
     }
-    requestAnimationFrame(animCard);
+    requestAnimationFrame(phase1);
   });
 
-  // La imagen principal también se expande a su posición final
-  const vw2 = window.innerWidth;
-  const vh2 = window.innerHeight;
-  const mf = mainImgFinal;
-  const finalML = (mf.left / 100) * vw2;
-  const finalMT = (mf.top  / 100) * vh2;
-  const finalMW = (mf.w    / 100) * vw2;
-  const finalMH = (mf.h    / 100) * vh2;
-  const startML = vw2 / 2 - 75;
-  const startMT = vh2 / 2 - 75;
-  const mStart  = performance.now() + 60;  // mainImg arranca casi junto
+  // mainImg: también sale violenta y vuelve suave
+  const mfL = (mainImgFinal.left / 100) * vw;
+  const mfT = (mainImgFinal.top  / 100) * vh;
+  const mfW = (mainImgFinal.w    / 100) * vw;
+  const mfH = (mainImgFinal.h    / 100) * vh;
+  // mainImg sale hacia abajo-centro
+  const mosL = (42 / 100) * vw;
+  const mosT = (88 / 100) * vh;
 
-  function animMain(now) {
+  const mStart = performance.now() + 30;
+  function mPhase1(now) {
     const elapsed = Math.max(0, now - mStart);
-    const t  = Math.min(elapsed / 1200, 1);
-    const e  = easeOut(t);
-    mainImg.style.left      = lerp(startML, finalML, e) + 'px';
-    mainImg.style.top       = lerp(startMT, finalMT, e) + 'px';
-    mainImg.style.width     = lerp(150, finalMW, e) + 'px';
-    mainImg.style.height    = lerp(150, finalMH, e) + 'px';
+    const t = Math.min(elapsed / 350, 1);
+    const e = 1 - Math.pow(1 - t, 2);
+    mainImg.style.left   = lerp(cx, mosL, e) + 'px';
+    mainImg.style.top    = lerp(cy, mosT, e) + 'px';
+    mainImg.style.width  = lerp(127, mfW, e) + 'px';
+    mainImg.style.height = lerp(127, mfH, e) + 'px';
     mainImg.style.transform = 'none';
-    if (t < 1) requestAnimationFrame(animMain);
+    if (t < 1) requestAnimationFrame(mPhase1);
+    else {
+      const mStart2 = performance.now();
+      function mPhase2(now2) {
+        const el2 = now2 - mStart2;
+        const t2 = Math.min(el2 / 900, 1);
+        const c1 = 1.70158, c3 = c1 + 1;
+        const e2 = 1 + c3 * Math.pow(t2-1,3) + c1 * Math.pow(t2-1,2);
+        mainImg.style.left   = lerp(mosL, mfL, e2) + 'px';
+        mainImg.style.top    = lerp(mosT, mfT, e2) + 'px';
+        mainImg.style.width  = lerp(mfW, mfW, e2) + 'px';
+        mainImg.style.height = lerp(mfH, mfH, e2) + 'px';
+        if (t2 < 1) requestAnimationFrame(mPhase2);
+        else {
+          mainImg.style.left = mfL + 'px';
+          mainImg.style.top  = mfT + 'px';
+        }
+      }
+      requestAnimationFrame(mPhase2);
+    }
   }
-  requestAnimationFrame(animMain);
+  requestAnimationFrame(mPhase1);
 }
 
 function onExpansionDone() {
