@@ -79,261 +79,68 @@
     line-height: 1.3;
     color: var(--cream);
     opacity:0;
-    transition: opacity 0.7s ease;
+    transition: opacity 0.7s ease, transform 0.5s ease;
   }
   /* al invertir: frase de abajo en dark al 60% de opacidad */
   #loader.inverted #tagline{ color: var(--black); opacity:0.6; }
+  /* al llegar a 100%: se va hacia abajo con fade */
+  #tagline.fade-down{ opacity:0 !important; transform: translateY(24px); }
 
+  #percent-text{ transition: opacity 0.4s ease; }
+  #percent-text.fade-out{ opacity:0; }
 
-    /* ── STAGE ── */
+  /* ── STAGE: arranca cuando el loader llega a 100% ── */
+  #stage{
+    position:fixed; inset:0; z-index:60;
+    background: var(--cream);
+    overflow:hidden;
+    display:none;
+  }
+  #stage.visible{ display:block; }
 
+  #cycler{
+    position:absolute; inset:0;
+    opacity:1;
+    transition: opacity 0.5s ease;
+  }
+  #cycler.fade-out{ opacity:0; }
+  /* las fotos NO cortan ni cross-fadean entre sí — se intercambian de
+     tamaño en un movimiento continuo: la que está grande se achica al
+     tamaño de thumbnail (al centro, que es donde arrancan) mientras la
+     que era chica crece a pantalla completa. Efecto morph, no flash. */
+  .morph-img{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover;
+    transform-origin: 50% 50%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    transition: transform 0.65s cubic-bezier(.65,0,.35,1);
+  }
+  .morph-img.big{ transform: scale(1); z-index:2; }
+  .morph-img.small{ transform: scale(0.115); z-index:1; }
+  #cycler img.active{ opacity:1; }
 
-    
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      width: 100%; height: 100%;
-      overflow: hidden;
-      background: var(--cream);
-      font-family: var(--font);
-      cursor: none;
-    }
-
-    /* ── CURSOR ── */
-    #cursor {
-      position: fixed;
-      top: 0; left: 0;
-      width: 22px; height: 22px;
-      pointer-events: none;
-      z-index: 9999;
-      transform: translate(-2px, -2px);
-    }
-    #cursor img { width: 100%; height: 100%; }
-
-    /* ── STAGE: todo pasa aquí después del loader ── */
-    #stage {
-      position: fixed;
-      inset: 0;
-      background: var(--cream);
-      opacity: 0;
-      pointer-events: none;
-    }
-    #stage.visible {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    /* ── TAGLINE en el stage ── */
-    #stage-tagline {
-      position: absolute;
-      bottom: 48px; left: 50%;
-      transform: translateX(-50%);
-      color: var(--blue);
-      font-size: 15px;
-      text-align: center;
-      line-height: 1.2;
-      letter-spacing: 0.03em;
-      white-space: nowrap;
-      opacity: 1;
-      transition: opacity 0.6s ease;
-    }
-
-    /* ── IMAGEN CENTRAL ── */
-    #main-img {
-      position: absolute;
-      width: 150px; height: 150px;
-      border-radius: 0;
-      overflow: hidden;
-      /* empieza centrada */
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 2;
-    }
-    #main-img img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      border-radius: 0;
-    }
-
-    /* ── CARDS DE PROYECTOS (detrás de main-img) ── */
-    .proj-card {
-      position: absolute;
-      border-radius: 0;
-      overflow: hidden;
-      z-index: 1;
-      /* todas empiezan en el centro, tamaño 150x150 */
-      width: 150px; height: 150px;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      opacity: 0;
-    }
-    .proj-card img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .proj-card .proj-info {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,17,254,0.85);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.25s ease;
-      gap: 5px;
-    }
-    .proj-card:hover .proj-info { opacity: 1; }
-    .proj-info span {
-      color: var(--cream);
-      font-family: var(--font);
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-    .proj-info .pn { font-weight: 700; font-size: 12px; }
-
-    /* ── NOMBRE CENTRAL ── */
-    /* Nombre: viaja horizontalmente */
-    #hero-name {
-      position: absolute;
-      top: calc(50% - 10px);
-      left: 60px;
-      font-size: 15px;
-      letter-spacing: 0.08em;
-      color: var(--blue);
-      font-weight: 400;
-      white-space: nowrap;
-      line-height: 1;
-      z-index: 10;
-      cursor: none;
-    }
-    /* Sub: centrado fijo, nunca se mueve */
-    #sub-fixed {
-      position: absolute;
-      top: calc(50% + 14px);
-      left: 0; right: 0;
-      text-align: center;
-      font-size: 13px;
-      letter-spacing: 0.05em;
-      color: var(--black);
-      opacity: 0;
-      pointer-events: none;
-      z-index: 10;
-    }
-
-    /* ── FOOTER ── */
-    #footer {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 100vh;
-      transform: translateY(100%);
-      z-index: 3;
-      overflow: hidden;
-    }
-    #footer-bg {
-      position: absolute; inset: 0;
-      background-image: url('assets/CARITA.png');
-      background-size: cover;
-      background-position: center top;
-      opacity: 0.8;
-      filter: hue-rotate(200deg) saturate(0.3) brightness(0.7);
-    }
-    #footer-overlay {
-      position: absolute; inset: 0;
-      background: rgba(0,17,254,0.45);
-      mix-blend-mode: multiply;
-    }
-    #camuxi-svg-wrap {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 80vw; max-width: 1100px;
-      mix-blend-mode: difference;
-      pointer-events: none;
-    }
-    #camuxi-svg-wrap svg { width: 100%; height: auto; display: block; }
-    #camuxi-svg-wrap path {
-      fill: none;
-      stroke: #F8F7EF;
-      stroke-width: 8;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-    #footer-nav {
-      position: absolute; top: 24px; left: 0; right: 0;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 60px;
-    }
-    #footer-nav .fn-name { color: var(--cream); font-size: 14px; letter-spacing: 0.08em; }
-    #footer-nav .fn-links { display: flex; gap: 32px; }
-    #footer-nav .fn-links a {
-      color: var(--cream); text-decoration: none; font-size: 14px;
-      letter-spacing: 0.08em; border-bottom: 1px solid rgba(248,247,239,0.4);
-      padding-bottom: 2px; cursor: none; transition: border-color 0.2s;
-    }
-    #footer-nav .fn-links a:hover { border-color: var(--cream); }
-    #footer-bar {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 20px 60px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    #footer-bar span, #footer-bar a {
-      color: rgba(248,247,239,0.6); font-size: 12px;
-      letter-spacing: 0.06em; text-decoration: none; cursor: none;
-    }
-    #footer-bar a:hover { color: var(--cream); }
-
-    /* ── LANG ── */
-    #lang-toggle {
-      position: fixed; top: 24px; right: 60px;
-      z-index: 500; display: flex; gap: 12px;
-    }
-    #lang-toggle button {
-      background: none; border: none; font-family: var(--font);
-      font-size: 13px; letter-spacing: 0.08em; color: var(--black);
-      cursor: none; padding: 0; opacity: 0.4; transition: opacity 0.2s;
-    }
-    #lang-toggle button.active { opacity: 1; font-weight: 700; }
-
-    /* ── GLITCH ── */
-    @keyframes float-card {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      33%       { transform: translateY(-8px) rotate(0.4deg); }
-      66%       { transform: translateY(4px) rotate(-0.3deg); }
-    }
-    @keyframes float-card-b {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      33%       { transform: translateY(6px) rotate(-0.5deg); }
-      66%       { transform: translateY(-10px) rotate(0.3deg); }
-    }
-    @keyframes float-card-c {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50%       { transform: translateY(-6px) rotate(0.2deg); }
-    }
-
-    @keyframes glitch-char {
-      0%   { transform: translate(0); }
-      20%  { transform: translate(-2px, 1px); }
-      40%  { transform: translate(2px, -1px); }
-      60%  { transform: translate(-1px, 2px); }
-      80%  { transform: translate(1px, -2px); }
-      100% { transform: translate(0); }
-    }
-    .glitching { animation: glitch-char 0.08s steps(1) infinite; }
-    .floating-a { animation: float-card   4.2s ease-in-out infinite; }
-    .floating-b { animation: float-card-b 5.1s ease-in-out infinite; }
-    .floating-c { animation: float-card-c 3.8s ease-in-out infinite; }
-    .floating-d { animation: float-card   6.0s ease-in-out infinite; }
-    .floating-e { animation: float-card-b 4.7s ease-in-out infinite; }
-    .floating-m { animation: float-card-c 5.5s ease-in-out infinite; }
+  #hero-name{
+    position:absolute; top:50%; left:60px;
+    transform: translateY(-50%);
+    font-family: var(--font);
+    font-weight:400;
+    font-size: clamp(20px, 3vw, 40px);
+    color: var(--cream);
+    white-space: nowrap;
+    text-transform: uppercase;
+    z-index: 10;
+    text-shadow: 0 1px 10px rgba(0,0,0,0.5);
+  }
+  /* cuando el cycler ya se apagó y queda el fondo crema, el nombre vuelve a azul */
+  #stage.settled #hero-name{
+    color: var(--blue);
+    text-shadow: none;
+  }
 
   </style>
 </head>
 <body>
-
-  <div id="cursor"><img src="assets/cursor.svg" alt="" /></div>
 
   <!-- LOADER -->
   <div id="loader">
@@ -364,88 +171,18 @@
 
   <!-- STAGE -->
   <div id="stage">
-
-    <div id="lang-toggle">
-      <button class="active" data-lang="es">ES</button>
-      <button data-lang="en">EN</button>
-    </div>
-
-    <div id="stage-tagline">Universos visuales desde<br>Argentina hacia el mundo.</div>
-
-    <!-- Cards de proyectos (detrás) -->
-    <div class="proj-card" id="pc1" style="opacity:0;width:108px;height:108px;top:50%;left:50%;transform:translate(-50%,-50%);">
-      <img src="assets/lacade.png" alt="Lacade" />
-      <div class="proj-info"><span class="pn">Lacade</span><span>2024</span><span>Branding</span></div>
-    </div>
-    <div class="proj-card" id="pc2" style="opacity:0;width:108px;height:108px;top:50%;left:50%;transform:translate(-50%,-50%);">
-      <img src="assets/eclat.png" alt="Éclat" />
-      <div class="proj-info"><span class="pn">Éclat</span><span>2024</span><span>Dirección Creativa</span></div>
-    </div>
-    <div class="proj-card" id="pc3" style="opacity:0;width:108px;height:108px;top:50%;left:50%;transform:translate(-50%,-50%);">
-      <img src="assets/etrixia.png" alt="Etrixia" />
-      <div class="proj-info"><span class="pn">Etrixia</span><span>2024</span><span>Branding</span></div>
-    </div>
-    <div class="proj-card" id="pc4" style="opacity:0;width:108px;height:108px;top:50%;left:50%;transform:translate(-50%,-50%);">
-      <img src="assets/magicstyler.png" alt="Magic Styler" />
-      <div class="proj-info"><span class="pn">Magic Styler</span><span>2023</span><span>Fotografía</span></div>
-    </div>
-    <div class="proj-card" id="pc5" style="opacity:0;width:108px;height:108px;top:50%;left:50%;transform:translate(-50%,-50%);">
-      <img src="assets/templa.png" alt="Templa" />
-      <div class="proj-info"><span class="pn">Templa</span><span>2024</span><span>Branding</span></div>
-    </div>
-
-    <!-- Imagen principal (encima de cards) -->
-    <div id="main-img" style="width:108px;height:108px;top:50%;left:50%;transform:translate(-50%,-50%);">
-      <img src="assets/bestial.png" alt="Bestial" style="width:100%;height:100%;object-fit:cover;" />
-    </div>
-
-    <!-- Nombre: viaja desde izquierda al centro -->
+    <div id="cycler"></div>
     <div id="hero-name"><span id="name-display">CAMILA ARRIETA CRUZ</span></div>
-    <!-- Sub: siempre centrado, nunca se mueve -->
-    <div id="sub-fixed">Buenos Aires · Argentina</div>
-
-    <!-- Footer -->
-    <div id="footer">
-      <div id="footer-bg"></div>
-      <div id="footer-overlay"></div>
-      <div id="footer-nav">
-        <span class="fn-name">CAMILA ARRIETA CRUZ</span>
-        <div class="fn-links">
-          <a href="mailto:hola@camilarrietacruz.com" id="say-hello">SAY HELLO</a>
-          <a href="https://instagram.com/" target="_blank">FOLLOW</a>
-          <a href="https://wa.me/" target="_blank">LET'S TALK</a>
-        </div>
-      </div>
-      <div id="camuxi-svg-wrap">
-        <svg id="camuxi-svg" viewBox="0 0 1503 443" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path id="cp1" d="M1307.07 240.676C1307.07 240.676 1304.68 237.666 1304.68 236.662C1312.86 230.976 1321.04 225.625 1328.88 219.605C1362.62 193.851 1429.76 138.998 1409.65 85.8178C1401.81 65.4153 1381.71 60.0638 1363.64 59.0604C1352.4 58.3915 1335.7 58.057 1324.79 59.0604C1322.4 59.0604 1317.29 60.0638 1319.68 64.0774C1321.38 66.7532 1340.13 65.4153 1344.22 66.0842C1362.62 68.091 1378.3 82.1386 1382.73 102.207C1391.93 144.015 1358.19 182.813 1330.92 206.56C1327.52 209.571 1301.96 229.639 1300.25 229.639C1299.23 229.639 1298.55 228.635 1297.87 227.966C1275.71 196.526 1249.81 167.428 1227.66 135.988C1212.32 114.582 1183.69 70.0978 1228.34 65.7498C1235.15 65.0808 1245.38 67.0876 1251.17 65.7498C1253.22 65.0808 1255.6 62.0706 1253.9 60.3983C1253.22 59.7294 1250.49 59.3949 1249.13 59.3949C1233.79 58.057 1210.62 58.3915 1195.28 59.3949C1148.59 62.0706 1167.67 110.903 1187.44 135.988L1272.64 250.71C1237.88 274.792 1200.05 302.218 1176.53 340.347C1160.86 365.767 1146.54 418.278 1182.67 429.984C1198.69 435.336 1237.2 435.336 1254.24 433.663C1256.63 433.663 1262.76 432.66 1260.38 428.646C1258.67 425.971 1244.36 427.309 1240.95 426.974C1201.41 423.964 1189.49 401.555 1199.37 359.412C1209.59 315.597 1244.36 280.478 1278.1 258.068L1362.62 372.456C1370.12 384.162 1380.34 398.544 1377.62 413.93C1374.21 433.998 1342.51 424.967 1329.9 427.309C1324.11 428.312 1325.47 433.329 1331.95 433.998C1348.31 435.336 1374.55 435.001 1391.25 433.998C1433.51 430.988 1418.17 391.186 1401.13 366.436C1371.82 323.958 1336.04 284.157 1306.73 241.345L1307.07 240.676Z"/>
-          <path id="cp2" d="M1502.01 2.2011C1498.27 -6.16057 1498.27 11.9006 1497.93 13.2385C1494.86 38.3235 1456 35.9823 1443.74 53.3745C1436.92 63.0741 1437.26 77.7906 1435.9 89.497V433.663H1468.27V76.1183C1468.27 68.76 1471.68 56.7192 1475.77 50.6988C1482.59 40.6648 1495.2 37.3201 1499.63 24.2759C1500.99 20.2623 1503.38 5.88024 1502.01 2.53557V2.2011Z"/>
-          <path id="cp3" d="M1109.39 321.283C1105.64 393.862 1039.18 418.278 984.653 408.578C923.306 397.541 882.749 330.648 893.655 262.416C904.561 195.188 959.774 164.752 999.309 121.271C1018.74 99.8654 1017.71 69.0945 986.698 67.0877C956.706 65.0809 874.91 68.0911 830.945 67.4221C816.971 59.3949 800.271 57.0537 784.252 56.0503C764.144 55.0469 740.969 58.0571 726.995 73.777C694.958 109.899 722.564 156.725 732.107 196.192C743.695 244.021 751.534 304.894 747.785 353.726C746.422 372.456 735.516 409.582 710.977 410.92C697.344 411.923 687.801 403.227 683.37 392.19C664.625 346.368 696.662 281.815 702.797 234.99C709.954 183.148 713.022 46.0163 623.727 54.0435C555.564 60.0639 546.702 145.687 546.021 193.851C545.68 217.598 546.021 255.393 547.725 293.856L492.853 99.531C483.992 76.1183 471.382 56.3847 447.865 50.6988C383.792 34.9789 377.657 110.903 359.934 159.066C337.1 220.608 300.291 273.788 270.981 330.982C260.416 351.385 253.94 374.463 260.756 396.538C224.289 430.653 167.031 433.663 125.111 410.92C21.843 355.398 -4.3999 179.134 82.8494 93.845C122.725 54.7124 189.525 49.0265 235.195 79.1285C257.007 93.5106 275.412 123.947 264.165 152.711C252.236 183.148 224.97 164.752 204.521 166.424C192.593 167.428 172.144 174.786 160.897 180.472C159.193 181.141 151.695 184.82 156.466 187.161C157.829 187.83 178.96 178.8 182.368 177.796C205.203 171.441 212.701 177.796 233.15 184.151C283.591 199.202 322.444 144.684 285.636 98.5276C259.393 65.4154 206.225 46.6852 167.372 48.692C42.6329 55.3813 -40.1858 210.574 20.139 335.999C59.6738 417.944 155.103 459.752 233.832 427.978C241.671 424.967 254.281 417.944 265.187 409.582C288.363 450.387 344.598 442.694 367.092 404.565C387.2 370.115 404.581 316.266 443.094 302.218C489.786 285.495 521.823 330.648 538.523 371.787C546.362 391.521 552.496 412.258 557.949 432.995H608.731C606.686 429.984 604.982 426.64 603.278 423.295C587.26 388.845 585.215 347.037 583.17 309.911C581.466 282.15 581.125 254.724 581.807 226.963C582.148 200.54 582.488 173.114 585.897 146.691C588.282 127.626 594.076 109.565 607.709 95.1829C620.66 81.8042 639.405 68.0911 658.832 77.4562C693.254 93.845 694.958 175.12 692.913 205.891C688.823 267.768 644.858 352.388 677.236 409.247C702.797 454.066 768.234 432.326 788.683 393.527C821.742 329.979 792.432 220.274 774.028 154.049C767.212 129.299 754.261 108.227 765.167 81.4698C778.118 50.0299 825.491 68.0911 837.761 90.5004C843.896 101.538 843.896 114.582 845.259 126.957C846.281 138.329 846.281 150.035 846.281 161.407C846.281 182.479 845.6 203.885 844.918 224.956C843.214 282.819 839.806 362.422 809.132 413.595C805.042 420.285 800.612 427.309 796.522 433.329H856.165V191.509C856.165 177.796 857.528 163.749 856.847 150.035C856.165 136.657 857.869 123.278 856.506 109.899C854.802 95.8519 850.03 83.1421 840.487 74.1115C889.906 73.1081 1004.42 63.0741 981.927 122.275C973.747 144.015 937.28 171.441 920.92 188.499C881.045 229.973 858.21 290.846 872.865 353.057C899.79 467.445 1044.64 467.779 1100.53 379.48L1110.07 362.756V433.998H1143.47V59.0605H1110.07V321.283H1109.39ZM435.937 297.535C416.51 306.566 401.173 325.296 389.245 344.361C380.043 359.077 373.226 376.804 360.957 388.176C330.965 415.937 281.887 396.872 284.614 349.378C286.659 316.6 322.104 260.41 337.1 229.973C357.208 188.834 374.93 147.694 384.132 99.531C386.859 85.4834 396.402 72.7736 410.375 67.7566C440.367 57.0537 453.318 93.5106 462.52 117.927C481.265 182.144 498.988 246.362 516.711 310.914C496.261 290.846 461.157 285.829 436.278 297.201L435.937 297.535Z"/>
-        </svg>
-      </div>
-      <div id="footer-bar">
-        <span>© 2026 — ALL RIGHTS RESERVED.</span>
-        <span>BUENOS AIRES · ARGENTINA</span>
-        <a href="#" id="subime-btn">↑ SUBIME</a>
-      </div>
-    </div>
-
-  </div><!-- /#stage -->
+  </div>
 
 <script>
-/* ── CURSOR ── */
-const cursor = document.getElementById('cursor');
-document.addEventListener('mousemove', e => {
-  cursor.style.left = e.clientX + 'px';
-  cursor.style.top  = e.clientY + 'px';
-});
-
 /* ════════════════════════════════════════════
    LOADER — ojito.gif + stack estilo Cappen (v6 aprobado)
 ════════════════════════════════════════════ */
 const loader      = document.getElementById('loader');
 const ojito       = document.getElementById('ojito');
 const percentText = document.getElementById('percent-text');
+const tagline     = document.getElementById('tagline');
 const stackImgs   = Array.from(document.querySelectorAll('.stack-img'));
 
 function finalTransform(i){
@@ -458,6 +195,8 @@ function finalTransform(i){
 
 function runLoader(){
   loader.classList.remove('inverted');
+  tagline.classList.remove('fade-down');
+  percentText.classList.remove('fade-out');
   percentText.textContent = '0%';
   ojito.style.opacity = '1';
 
@@ -508,371 +247,123 @@ function runLoader(){
     if (t < 1) {
       requestAnimationFrame(tickPercent);
     } else {
-      // llega a 100% y se congela un instante — después pasa al stage
-      setTimeout(handOffToStage, 300);
+      setTimeout(finishLoader, 200);
     }
   }
   requestAnimationFrame(tickPercent);
 }
 
-function handOffToStage(){
-  loader.style.display = 'none';
-  startStage();
+/* ════════════════════════════════════════════
+   100% → arranca la salida del loader:
+   1) la frase de abajo se va con fade hacia abajo
+   2) el % desaparece
+   3) el nombre viaja al centro mientras las cards
+      hacen un flash rápido a pantalla completa
+      (estilo carrusel OTHR.AI, referencia de Cami)
+════════════════════════════════════════════ */
+function finishLoader(){
+  tagline.classList.add('fade-down');
+  percentText.classList.add('fade-out');
+  setTimeout(() => {
+    loader.style.display = 'none';
+    startHero();
+  }, 550);
+}
+
+/* ── STAGE / HERO ── */
+const stage    = document.getElementById('stage');
+const cycler   = document.getElementById('cycler');
+const heroName = document.getElementById('hero-name');
+const nameDisp = document.getElementById('name-display');
+
+function lerp(a, b, t){ return a + (b - a) * t; }
+function easeOut(t){ return 1 - Math.pow(1 - t, 4); }
+
+function startHero(){
+  stage.classList.remove('settled');
+  stage.classList.add('visible');
+
+  // reset nombre a la izquierda, listo para viajar
+  heroName.style.left = '60px';
+  heroName.style.transition = 'none';
+
+  animateNameToCenter();
+  runCycler();
+}
+
+function animateNameToCenter(){
+  const vw = window.innerWidth;
+  const nameW = nameDisp.offsetWidth;
+  const targetLeft = (vw - nameW) / 2;
+  const startLeft = 60;
+  const duration = 1100;
+  const t0 = performance.now();
+
+  function tick(now){
+    const t = Math.min((now - t0) / duration, 1);
+    heroName.style.left = lerp(startLeft, targetLeft, easeOut(t)) + 'px';
+    if (t < 1) requestAnimationFrame(tick);
+    else heroName.style.left = targetLeft + 'px';
+  }
+  requestAnimationFrame(tick);
+}
+
+function runCycler(){
+  // las fotos del loader están repetidas (10 elementos, 5 únicas) —
+  // se reusan los mismos base64 para armar el efecto, sin duplicar peso
+  const uniqueSrcs = [...new Set(stackImgs.map(img => img.getAttribute('src')))];
+  let qi = 0;
+  const nextSrc = () => uniqueSrcs[(qi++) % uniqueSrcs.length];
+
+  cycler.innerHTML = '';
+  // dos capas nomás: una GRANDE (pantalla completa) y una CHICA (donde
+  // arrancan las cards, al centro) — se van intercambiando de tamaño
+  // en un movimiento continuo (morph), nunca cortan ni cross-fadean
+  const slotA = document.createElement('img');
+  const slotB = document.createElement('img');
+  slotA.className = 'morph-img big';
+  slotB.className = 'morph-img small';
+  slotA.src = nextSrc();
+  slotB.src = nextSrc();
+  cycler.appendChild(slotA);
+  cycler.appendChild(slotB);
+
+  const swapDuration  = 650;  // ms que tarda cada intercambio grande↔chica
+  const totalDuration = 2000; // total pedido por Cami
+  let elapsed = 0;
+  let bigIsA = true;
+
+  function swap(){
+    if (bigIsA) {
+      slotA.classList.remove('big'); slotA.classList.add('small');
+      slotB.classList.remove('small'); slotB.classList.add('big');
+    } else {
+      slotB.classList.remove('big'); slotB.classList.add('small');
+      slotA.classList.remove('small'); slotA.classList.add('big');
+    }
+    bigIsA = !bigIsA;
+
+    // la que se acaba de achicar recibe la próxima foto de la cola,
+    // lista para cuando le toque volver a crecer
+    setTimeout(() => {
+      const shrunk = bigIsA ? slotB : slotA;
+      shrunk.src = nextSrc();
+    }, swapDuration);
+
+    elapsed += swapDuration;
+    if (elapsed < totalDuration) {
+      setTimeout(swap, swapDuration);
+    } else {
+      cycler.classList.add('fade-out');
+      setTimeout(() => {
+        stage.classList.add('settled');
+      }, 500);
+    }
+  }
+  setTimeout(swap, swapDuration);
 }
 
 runLoader();
-
-/* ════════════════════════════════════════════
-   STAGE — secuencia de animación
-════════════════════════════════════════════ */
-const stage     = document.getElementById('stage');
-const heroName  = document.getElementById('hero-name');
-const nameDisp  = document.getElementById('name-display');
-const subFixed  = document.getElementById('sub-fixed');
-const mainImg   = document.getElementById('main-img');
-const stageLine = document.getElementById('stage-tagline');
-
-// Posiciones finales de las cards (% del viewport)
-// El nombre queda centrado horizontalmente en ~50% vertical
-// Las imágenes lo rodean sin quedar debajo de él
-const finalPos = [
-  { left: 16,  top: 6,   w: 16, h: 25 }, // top-left
-  { left: 46,  top: 3,   w: 12, h: 25 }, // top-center
-  { left: 67,  top: 6,   w: 14, h: 25 }, // top-right
-  { left: 10,  top: 59,  w: 14, h: 26 }, // bottom-left
-  { left: 65,  top: 59,  w: 15, h: 26 }, // bottom-right
-];
-const mainImgFinal = { left: 40, top: 72, w: 12, h: 23 };
-
-const cards = document.querySelectorAll('.proj-card');
-
-function lerp(a, b, t) { return a + (b - a) * t; }
-function easeOut(t) { return 1 - Math.pow(1 - t, 4); } // easeOutQuart — más suave
-
-function startStage() {
-  // Inicializar TODO antes de mostrar nada
-  cards.forEach(c => {
-    c.style.width     = '150px';
-    c.style.height    = '150px';
-    c.style.top       = '50%';
-    c.style.left      = '50%';
-    c.style.transform = 'translate(-50%, -50%)';
-    c.style.opacity   = '0';
-    c.style.transition = 'none';
-  });
-  mainImg.style.top       = '50%';
-  mainImg.style.left      = '50%';
-  mainImg.style.width     = '108px';
-  mainImg.style.height    = '108px';
-  mainImg.style.transform = 'translate(-50%, -50%)';
-  subFixed.style.opacity  = '0';
-  heroName.style.left     = '60px';
-  heroName.style.transition = 'none';
-
-  // Ocultar tagline del stage desde el inicio
-  document.getElementById('stage-tagline').style.opacity = '0';
-  // Ahora mostrar — todo ya está en su lugar
-  stage.classList.add('visible');
-
-  setTimeout(() => animateNameToCenter(), 100);
-}
-
-function animateNameToCenter() {
-  const vw = window.innerWidth;
-  const nameSpan = document.getElementById('name-display');
-  const nameW = nameSpan.offsetWidth;
-  const targetLeft = (vw - nameW) / 2; // centrado exacto
-  const startLeft = 60;
-  const duration  = 1100;
-  const startTime = performance.now();
-  let expansionTriggered = false;
-
-  function tick(now) {
-    const elapsed = now - startTime;
-    const t = Math.min(elapsed / duration, 1);
-    const eased = easeOut(t);
-    const currentLeft = lerp(startLeft, targetLeft, eased);
-    heroName.style.left = currentLeft + 'px';
-
-    // Bang
-    if (!expansionTriggered) {
-      const imgLeft = vw / 2 - 54;
-      if (currentLeft + nameW >= imgLeft) {
-        expansionTriggered = true;
-        startExpansion();
-      }
-    }
-
-    if (t < 1) {
-      requestAnimationFrame(tick);
-    } else {
-      heroName.style.left = targetLeft + 'px';
-      subFixed.style.transition = 'opacity 0.4s ease';
-      subFixed.style.opacity = '0.8';
-    }
-  }
-  requestAnimationFrame(tick);
-}
-
-function startExpansion() {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-
-  // Fase 1: SALIDA VIOLENTA — van más allá de su posición final (overshoot)
-  // Cada card sale disparada a una posición exagerada fuera/al borde de pantalla
-  const overshoot = [
-    { left: -5,  top: -15,  w: 15, h: 23 }, // top-left — sale más arriba y a la izq
-    { left: 40,  top: -20,  w: 11, h: 23 }, // top-center — sale disparada arriba
-    { left: 82,  top: -15,  w: 14, h: 23 }, // top-right — arriba a la derecha
-    { left: -5,  top: 78,   w: 14, h: 25 }, // bottom-left — abajo a la izq
-    { left: 82,  top: 78,   w: 14, h: 25 }, // bottom-right — abajo a la derecha
-  ];
-
-  const cx = vw / 2 - 54;
-  const cy = vh / 2 - 54;
-  const durationOut = 350; // MUY rápido — salida violenta
-  const durationIn  = 900; // Más lento — retorno suave
-
-  cards.forEach((card, i) => {
-    const os = overshoot[i];
-    const fp = finalPos[i];
-
-    // Fase 1: salida violenta al overshoot
-    const osL = (os.left / 100) * vw;
-    const osT = (os.top  / 100) * vh;
-    const osW = (os.w    / 100) * vw;
-    const osH = (os.h    / 100) * vh;
-
-    const startTime1 = performance.now() + i * 25; // casi simultáneo, 25ms entre cada una
-
-    card.style.opacity = '1';
-
-    function phase1(now) {
-      const elapsed = Math.max(0, now - startTime1);
-      const t = Math.min(elapsed / durationOut, 1);
-      const e = 1 - Math.pow(1 - t, 2); // easeOutQuad — aceleración fuerte
-      card.style.left   = lerp(cx, osL, e) + 'px';
-      card.style.top    = lerp(cy, osT, e) + 'px';
-      card.style.width  = lerp(108, osW, e) + 'px';
-      card.style.height = lerp(108, osH, e) + 'px';
-      card.style.transform = 'none';
-      if (t < 1) {
-        requestAnimationFrame(phase1);
-      } else {
-        // Fase 2: retorno suave a posición final
-        const startTime2 = performance.now();
-        const fpL = (fp.left / 100) * vw;
-        const fpT = (fp.top  / 100) * vh;
-        const fpW = (fp.w    / 100) * vw;
-        const fpH = (fp.h    / 100) * vh;
-
-        function phase2(now2) {
-          const el2 = now2 - startTime2;
-          const t2 = Math.min(el2 / durationIn, 1);
-          // easeOutBack — llega, se pasa un pelo y vuelve (efecto settle)
-          const c1 = 1.70158;
-          const c3 = c1 + 1;
-          const e2 = 1 + c3 * Math.pow(t2 - 1, 3) + c1 * Math.pow(t2 - 1, 2);
-          card.style.left   = lerp(osL, fpL, e2) + 'px';
-          card.style.top    = lerp(osT, fpT, e2) + 'px';
-          card.style.width  = lerp(osW, fpW, e2) + 'px';
-          card.style.height = lerp(osH, fpH, e2) + 'px';
-          if (t2 < 1) {
-            requestAnimationFrame(phase2);
-          } else {
-            card.style.left   = fpL + 'px';
-            card.style.top    = fpT + 'px';
-            card.style.width  = fpW + 'px';
-            card.style.height = fpH + 'px';
-            if (i === cards.length - 1) onExpansionDone();
-          }
-        }
-        requestAnimationFrame(phase2);
-      }
-    }
-    requestAnimationFrame(phase1);
-  });
-
-  // mainImg: también sale violenta y vuelve suave
-  const mfL = (mainImgFinal.left / 100) * vw;
-  const mfT = (mainImgFinal.top  / 100) * vh;
-  const mfW = (mainImgFinal.w    / 100) * vw;
-  const mfH = (mainImgFinal.h    / 100) * vh;
-  // mainImg sale hacia abajo-centro
-  const mosL = (42 / 100) * vw;
-  const mosT = (95 / 100) * vh;
-
-  const mStart = performance.now() + 30;
-  function mPhase1(now) {
-    const elapsed = Math.max(0, now - mStart);
-    const t = Math.min(elapsed / 350, 1);
-    const e = 1 - Math.pow(1 - t, 2);
-    mainImg.style.left   = lerp(cx, mosL, e) + 'px';
-    mainImg.style.top    = lerp(cy, mosT, e) + 'px';
-    mainImg.style.width  = lerp(108, mfW, e) + 'px';
-    mainImg.style.height = lerp(108, mfH, e) + 'px';
-    mainImg.style.transform = 'none';
-    if (t < 1) requestAnimationFrame(mPhase1);
-    else {
-      const mStart2 = performance.now();
-      function mPhase2(now2) {
-        const el2 = now2 - mStart2;
-        const t2 = Math.min(el2 / 900, 1);
-        const c1 = 1.70158, c3 = c1 + 1;
-        const e2 = 1 + c3 * Math.pow(t2-1,3) + c1 * Math.pow(t2-1,2);
-        mainImg.style.left   = lerp(mosL, mfL, e2) + 'px';
-        mainImg.style.top    = lerp(mosT, mfT, e2) + 'px';
-        mainImg.style.width  = lerp(mfW, mfW, e2) + 'px';
-        mainImg.style.height = lerp(mfH, mfH, e2) + 'px';
-        if (t2 < 1) requestAnimationFrame(mPhase2);
-        else {
-          mainImg.style.left = mfL + 'px';
-          mainImg.style.top  = mfT + 'px';
-        }
-      }
-      requestAnimationFrame(mPhase2);
-    }
-  }
-  requestAnimationFrame(mPhase1);
-}
-
-function onExpansionDone() {
-  // Fade out tagline
-  stageLine.style.opacity = '0';
-
-  // Mutación del nombre después de 400ms
-  setTimeout(() => mutateName(), 400);
-}
-
-/* ── MUTACIÓN GLITCH ── */
-const nameA = 'CAMILA ARRIETA CRUZ';
-const nameB = 'DIRECCIÓN CREATIVA';
-const chars  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&|>_';
-let isMutated  = false;
-let isMutating = false;
-
-function randomChar() { return chars[Math.floor(Math.random() * chars.length)]; }
-
-function mutateText(from, to, onDone) {
-  isMutating = true;
-  const maxLen = Math.max(from.length, to.length);
-  let frame = 0;
-  const totalFrames = 22;
-  const tick = () => {
-    let result = '';
-    for (let i = 0; i < maxLen; i++) {
-      const progress = frame / totalFrames;
-      if (i / maxLen < progress) result += to[i] || '';
-      else result += randomChar();
-    }
-    nameDisp.textContent = result;
-    nameDisp.classList.add('glitching');
-    frame++;
-    if (frame <= totalFrames) requestAnimationFrame(tick);
-    else {
-      nameDisp.textContent = to;
-      nameDisp.classList.remove('glitching');
-      isMutating = false;
-      if (onDone) onDone();
-    }
-  };
-  requestAnimationFrame(tick);
-}
-
-function mutateName() {
-  if (isMutating) return;
-  if (!isMutated) {
-    mutateText(nameA, nameB, () => {
-      isMutated = true;
-    });
-  }
-}
-
-nameDisp.addEventListener('mouseenter', () => {
-  if (isMutating || !isMutated) return;
-  mutateText(nameB, nameA, () => { isMutated = false; });
-});
-nameDisp.addEventListener('mouseleave', () => {
-  if (isMutating) return;
-  if (!isMutated) setTimeout(() => mutateName(), 400);
-});
-
-/* ── SCROLL PERSIANA ── */
-const footer = document.getElementById('footer');
-let scrollY = 0, targetScrollY = 0;
-const maxScroll = window.innerHeight;
-
-window.addEventListener('wheel', e => {
-  targetScrollY = Math.max(0, Math.min(maxScroll, targetScrollY + e.deltaY));
-}, { passive: true });
-
-let camuxiStarted = false;
-function animateScroll() {
-  scrollY += (targetScrollY - scrollY) * 0.1;
-  const progress = scrollY / maxScroll;
-  footer.style.transform = `translateY(${(1 - progress) * 100}%)`;
-  if (progress > 0.3 && !camuxiStarted) {
-    camuxiStarted = true;
-    animateCamuxi();
-  }
-  if (progress < 0.1) {
-    camuxiStarted = false;
-    resetCamuxi();
-  }
-  requestAnimationFrame(animateScroll);
-}
-requestAnimationFrame(animateScroll);
-
-document.getElementById('subime-btn').addEventListener('click', e => {
-  e.preventDefault(); targetScrollY = 0;
-});
-
-/* ── CAMUXI SVG ── */
-function resetCamuxi() {
-  document.querySelectorAll('#camuxi-svg path').forEach(p => {
-    const len = p.getTotalLength();
-    p.style.strokeDasharray  = len;
-    p.style.strokeDashoffset = len;
-    p.style.transition = 'none';
-  });
-}
-function animateCamuxi() {
-  document.querySelectorAll('#camuxi-svg path').forEach((p, i) => {
-    const len = p.getTotalLength();
-    p.style.strokeDasharray  = len;
-    p.style.strokeDashoffset = len;
-    p.style.transition = 'none';
-    p.getBoundingClientRect();
-    setTimeout(() => {
-      p.style.transition = `stroke-dashoffset 1800ms cubic-bezier(0.16,1,0.3,1)`;
-      p.style.strokeDashoffset = '0';
-    }, i * 200);
-  });
-}
-
-/* ── LANG ── */
-let currentLang = 'es';
-const langTexts = {
-  es: { tagline: 'Universos visuales desde<br>Argentina hacia el mundo.', nameB: 'DIRECCIÓN CREATIVA', sub: 'Buenos Aires · Argentina', sayHello: 'SAY HELLO', subime: '↑ SUBIME' },
-  en: { tagline: 'Visual universes from<br>Argentina to the world.',    nameB: 'CREATIVE DIRECTION',  sub: 'Buenos Aires · Argentina', sayHello: 'SAY HELLO', subime: '↑ GO UP'  }
-};
-document.querySelectorAll('#lang-toggle button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const lang = btn.dataset.lang;
-    if (lang === currentLang) return;
-    currentLang = lang;
-    document.querySelectorAll('#lang-toggle button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const t = langTexts[lang];
-    document.getElementById('tagline').innerHTML = t.tagline;
-    document.getElementById('stage-tagline').innerHTML = t.tagline;
-    document.getElementById('sub-fixed').textContent = t.sub;
-    document.getElementById('say-hello').textContent = t.sayHello;
-    document.getElementById('subime-btn').textContent = t.subime;
-    const nd = document.getElementById('name-display');
-    if (isMutated) nd.textContent = t.nameB;
-  });
-});
 </script>
 </body>
 </html>
