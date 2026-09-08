@@ -289,6 +289,17 @@ const percentText = document.getElementById('percent-text');
 const tagline     = document.getElementById('tagline');
 const stackImgs   = Array.from(document.querySelectorAll('.stack-img'));
 
+/* -------- referencias para el efecto de scroll (implosión + freeze
+   del nombre + fade del subtítulo) -- se miden ACA, apenas carga la
+   página y antes de que nada se mueva, porque tanto el centrado
+   vertical del nombre (top:50% + translateY(-50%)) como la posición
+   de los links del footer son fijos y no cambian con el intro. */
+const subLocationEl = document.getElementById('sub-location');
+const footerLinksEl = document.querySelector('.footer-links');
+let scrollP = 0; // 0..1, progreso de scroll — lo lee también startOrbit()
+const nameStartTop  = nameText.getBoundingClientRect().top;
+const footerLinksTop = footerLinksEl ? footerLinksEl.getBoundingClientRect().top : null;
+
 function finalTransformValues(i){
   // todas las cards caen derechas, centradas, en la misma posición
   // exacta (sin offset diagonal ni rotación)
@@ -933,14 +944,30 @@ function startOrbit(cards, ringPoint, angleAtArc, ringTotal){
     last = now;
     arcRotation += speed * dt;
 
-    cards.forEach(c => {
+    // implosión: 0 = anillo normal (scroll arriba del todo), 1 = todas
+    // apiladas en el centro exacto (misma pose que al terminar el
+    // loader) — atado 1 a 1 al scroll, reversible en cualquier punto
+    const ip = 1 - Math.pow(1 - scrollP, 2);
+
+    cards.forEach((c, i) => {
       const angle = angleAtArc(c.arcPos + arcRotation);
       const p = ringPoint(angle);
       c.hoverScale += ((c.hovering ? 1.12 : 1) - c.hoverScale) * 0.2;
-      const scale = p.scale * c.hoverScale;
-      const transformStr = `translate(${p.dx}px, ${p.dy}px) rotate(0deg) scale(${scale})`;
+      const ringScale = p.scale * c.hoverScale;
+
+      const tx    = lerp(p.dx, 0, ip);
+      const ty    = lerp(p.dy, 0, ip);
+      const scale = lerp(ringScale, 1, ip);
+      const z     = lerp(p.z, (i + 1) * 40, ip);
+
+      const transformStr = `translate(${tx}px, ${ty}px) rotate(0deg) scale(${scale})`;
       c.img.style.transform = transformStr;
-      c.img.style.zIndex = c.hovering ? 9998 : p.z;
+      // en vez de opacity (que hace que se transparenten entre sí y se
+      // vea el solape), las oscurecemos hasta volverse del mismo negro
+      // que el fondo del loader (#111) — desaparecen "fundiéndose" con
+      // el fondo, no viéndose unas a través de otras
+      c.img.style.filter = 'brightness(' + (1 - ip) + ')';
+      c.img.style.zIndex = c.hovering ? 9998 : z;
       // el canvas del efecto líquido copia EXACTO el mismo transform de
       // la card que tiene encima, así queda pegado pixel a pixel
       if (LiquidDistort.isAttached(c)) LiquidDistort.syncTransform(transformStr, 9999);
@@ -960,15 +987,37 @@ const footerShadowEl = document.getElementById('footerShadow');
 const backToTopEl = document.getElementById('backToTop');
 const FOOTER_START_OPACITY = 0.55;
 const FOOTER_FADE_END = 0.65;
+const SUBTITLE_FADE_END = 0.18; // se apaga rápido, bien al principio del scroll
 
 function updateFooterScroll(){
   if (!document.body.classList.contains('stage-active')) return;
   const vh = window.innerHeight;
   const p = Math.max(0, Math.min(1, window.scrollY / vh));
+  scrollP = p; // lo lee startOrbit() para blendear la implosión de las cards
   loader.style.transform = 'translateY(' + (-p * 100) + '%)';
+
   const t = Math.min(1, p / FOOTER_FADE_END);
   const eased = 1 - Math.pow(1 - t, 2);
   if (footerShadowEl) footerShadowEl.style.opacity = FOOTER_START_OPACITY * (1 - eased);
+
+  // "Buenos Aires — Argentina": arranca a desvanecerse en el mismo
+  // momento que las cards empiezan a implosionar, pero termina rápido
+  // (bien al principio del scroll) para que ya esté invisible antes
+  // de que las imágenes lleguen a superponerse con el texto
+  const subT = Math.min(1, p / SUBTITLE_FADE_END);
+  const subEase = 1 - Math.pow(1 - subT, 2);
+  if (subLocationEl) subLocationEl.style.opacity = String(0.5 * (1 - subEase));
+
+  // el nombre viaja pegado al resto del bloque hasta tocar la altura
+  // de la fila SAY HELLO / FOLLOW / LET'S TALK del footer — ahí se
+  // frena (aunque el bloque siga subiendo detrás) sin perder su
+  // centrado horizontal, que sigue viniendo del "left" propio
+  if (footerLinksTop !== null){
+    const rawTop = nameStartTop - p * vh;
+    const clampedTop = Math.max(footerLinksTop, rawTop);
+    const compensation = clampedTop - rawTop;
+    nameText.style.transform = 'translateY(calc(-50% + ' + compensation + 'px))';
+  }
 }
 document.addEventListener('scroll', () => requestAnimationFrame(updateFooterScroll), { passive:true });
 
