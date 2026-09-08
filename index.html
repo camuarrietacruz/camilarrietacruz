@@ -289,6 +289,200 @@ function tickCursor(){
 }
 requestAnimationFrame(tickCursor);
 
+/* ================================================================
+   PRUEBA hover "líquido": distorsión tipo agua/vidrio sobre la card,
+   como cappen.com/works — una malla que se ondea según la velocidad
+   del cursor. Un solo canvas WebGL compartido (no uno por card, para
+   no abrir 15 contextos) que se posiciona exacto sobre la card que
+   tiene el cursor encima. Se suma al hover "masa" que ya existe, no
+   lo reemplaza.
+
+   Cómo funciona en criollo:
+   - Mientras movés el mouse adentro de una card, vamos "pintando" un
+     canvas 2D chiquito (el "trail") con manchitas suaves en la
+     posición del cursor — más rápido te movés, más grande y más
+     brillante la mancha.
+     el trail se va borrando solo un poco en cada frame (decae).
+   - Ese trail se usa como mapa de altura: el shader mira cuánto
+     cambia el brillo del trail de un pixel al de al lado (el
+     gradiente) y usa eso para correr la imagen real un poquito para
+     cada lado — ahí es donde aparece el efecto de agua/vidrio.
+   ================================================================ */
+const LiquidDistort = (() => {
+  // el canvas vive DENTRO de #center-wrap, como una card más — así hereda
+  // el mismo tamaño base (140x140) y, sobre todo, podemos copiarle EXACTO
+  // el mismo transform (traslado + tilt 3D + escala) que usa la card real
+  // cada frame. La v1 posicionaba el canvas con getBoundingClientRect,
+  // que da el rectángulo SIN inclinar de una card inclinada en 3D — por
+  // eso se veía "la card deformándose": el canvas plano no coincidía con
+  // el dibujo tilteado de abajo. Corregido acá.
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'pointer-events:none; opacity:0; transition:opacity 0.25s ease;';
+  centerWrap.appendChild(canvas);
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(140 * DPR);
+  canvas.height = Math.round(140 * DPR);
+
+  const gl = canvas.getContext('webgl', { premultipliedAlpha: false, alpha: true });
+  if (!gl) return { attach(){}, move(){}, leave(){}, isAttached(){ return false; }, syncTransform(){} };
+
+  const vsSrc = `
+    attribute vec2 aPos;
+    varying vec2 vUv;
+    void main(){
+      vUv = aPos * 0.5 + 0.5;
+      gl_Position = vec4(aPos, 0.0, 1.0);
+    }
+  `;
+  // remolino real centrado en el cursor (como cappen.com): cada fragmento
+  // se rota alrededor del punto del mouse, con el ángulo cayendo con la
+  // distancia (gaussiana) — un segundo centro, más retrasado y suave,
+  // le da sensación de "estela líquida" en vez de un giro seco y único
+  const fsSrc = `
+    precision mediump float;
+    varying vec2 vUv;
+    uniform sampler2D uImage;
+    uniform vec2 uMouse;
+    uniform vec2 uMouseTrail;
+    uniform float uAngle;
+
+    vec2 swirl(vec2 uv, vec2 center, float angle, float radius){
+      vec2 d = uv - center;
+      float dist = length(d);
+      float falloff = exp(-(dist*dist) / (2.0 * radius * radius));
+      float a = angle * falloff;
+      float s = sin(a), c = cos(a);
+      mat2 rot = mat2(c, -s, s, c);
+      return center + rot * d;
+    }
+
+    void main(){
+      vec2 uv = vUv;
+      uv = swirl(uv, uMouse, uAngle, 0.34);
+      uv = swirl(uv, uMouseTrail, uAngle * 0.55, 0.42);
+
+      vec2 d = (uv - vUv) * 0.06;
+      float r = texture2D(uImage, uv + d).r;
+      float g = texture2D(uImage, uv).g;
+      float b = texture2D(uImage, uv - d).b;
+      gl_FragColor = vec4(r, g, b, 1.0);
+    }
+  `;
+
+  function compile(type, src){
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vsSrc));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fsSrc));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  const quad = new Float32Array([-1,-1, 1,-1, -1,1, 1,1]);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(prog, 'aPos');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  const uImage = gl.getUniformLocation(prog, 'uImage');
+  const uMouse = gl.getUniformLocation(prog, 'uMouse');
+  const uMouseTrail = gl.getUniformLocation(prog, 'uMouseTrail');
+  const uAngle = gl.getUniformLocation(prog, 'uAngle');
+
+  const imageTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, imageTex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+  let attachedCard = null;
+  let active = false;
+  let mouseU = 0.5, mouseV = 0.5;       // target crudo del cursor (0..1)
+  let smU = 0.5, smV = 0.5;             // suavizado, centro principal del remolino
+  let trailU = 0.5, trailV = 0.5;       // más retrasado, segundo centro (estela)
+  let lastX = 0, lastY = 0, lastT = 0, haveLast = false;
+  let smoothVel = 0;
+
+  let rafId = null;
+  function frame(){
+    rafId = null;
+    if (!attachedCard) return;
+
+    smU += (mouseU - smU) * 0.22;
+    smV += (mouseV - smV) * 0.22;
+    trailU += (smU - trailU) * 0.07;
+    trailV += (smV - trailV) * 0.07;
+    smoothVel += (0 - smoothVel) * 0.06; // si no hay movimiento nuevo, decae y el remolino se relaja
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, imageTex);
+    gl.uniform1i(uImage, 0);
+    gl.uniform2f(uMouse, smU, smV);
+    gl.uniform2f(uMouseTrail, trailU, trailV);
+    gl.uniform1f(uAngle, Math.min(1.15, smoothVel * 1.7)); // más velocidad = más giro
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    const stillMoving = smoothVel > 0.02 || Math.hypot(smU - trailU, smV - trailV) > 0.01;
+    if (active || stillMoving){
+      rafId = requestAnimationFrame(frame);
+    } else {
+      canvas.style.opacity = '0';
+      attachedCard = null;
+    }
+  }
+  function ensureLoop(){ if (!rafId) rafId = requestAnimationFrame(frame); }
+
+  return {
+    attach(card){
+      attachedCard = card;
+      active = true;
+      haveLast = false;
+      mouseU = smU = trailU = 0.5;
+      mouseV = smV = trailV = 0.5;
+      smoothVel = 0;
+      gl.bindTexture(gl.TEXTURE_2D, imageTex);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, card.img); } catch(e){}
+      canvas.style.opacity = '1';
+      ensureLoop();
+    },
+    move(clientX, clientY){
+      if (!attachedCard || !active) return;
+      const r = attachedCard.img.getBoundingClientRect();
+      mouseU = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+      mouseV = Math.min(1, Math.max(0, (clientY - r.top) / r.height));
+      const now = performance.now();
+      if (haveLast){
+        const dt = Math.max(1, now - lastT);
+        const dist = Math.hypot(clientX - lastX, clientY - lastY);
+        smoothVel = Math.max(smoothVel, Math.min(1, (dist / dt) * 0.6));
+      }
+      lastX = clientX; lastY = clientY; lastT = now; haveLast = true;
+      ensureLoop();
+    },
+    leave(){
+      active = false;
+      ensureLoop();
+    },
+    isAttached(card){ return attachedCard === card; },
+    syncTransform(transformStr, z){
+      canvas.style.transform = transformStr;
+      canvas.style.zIndex = z;
+    }
+  };
+})();
+
 function lerp(a, b, t){ return a + (b - a) * t; }
 function easeOut(t){ return 1 - Math.pow(1 - t, 4); }
 function easeOutBack(t, s = 1.7){
@@ -460,24 +654,21 @@ function explodeCards(){
     };
   });
 
-  /* hover "masa" (aprobado): la card se inclina en 3D hacia donde está
-     el cursor adentro suyo, se agranda un poco y se despega con sombra —
-     como si el cursor tuviera gravedad propia y la card reaccionara */
+  /* VARIANTE A — sin tilt: solo el efecto líquido + escala/sombra.
+     No hay inclinación 3D en absoluto, ni fija ni dinámica. */
   cards.forEach((c) => {
     c.img.addEventListener('mousemove', (e) => {
-      const r = c.img.getBoundingClientRect();
-      const nx = ((e.clientX - r.left) / r.width) * 2 - 1;  // -1..1
-      const ny = ((e.clientY - r.top) / r.height) * 2 - 1;  // -1..1
-      c.tiltTX = nx; c.tiltTY = ny;
+      LiquidDistort.move(e.clientX, e.clientY);
     });
     c.img.addEventListener('mouseenter', () => {
       c.hovering = true;
       c.img.classList.add('hover-mass');
+      LiquidDistort.attach(c);
     });
     c.img.addEventListener('mouseleave', () => {
-      c.tiltTX = 0; c.tiltTY = 0;
       c.hovering = false;
       c.img.classList.remove('hover-mass');
+      LiquidDistort.leave();
     });
   });
 
@@ -522,8 +713,6 @@ function startOrbit(cards, ringPoint, angleAtArc, ringTotal){
   const speed = ringTotal / 60000; // una vuelta completa (todo el perímetro) cada 60s
   let arcRotation = 0;
   let last = performance.now();
-  const MAX_TILT = 26; // grados
-  const PERSPECTIVE = 420;
 
   function frame(now){
     const dt = now - last;
@@ -533,14 +722,14 @@ function startOrbit(cards, ringPoint, angleAtArc, ringTotal){
     cards.forEach(c => {
       const angle = angleAtArc(c.arcPos + arcRotation);
       const p = ringPoint(angle);
-      c.tiltX += (c.tiltTX - c.tiltX) * 0.28;
-      c.tiltY += (c.tiltTY - c.tiltY) * 0.28;
       c.hoverScale += ((c.hovering ? 1.12 : 1) - c.hoverScale) * 0.2;
-      const rx = -c.tiltY * MAX_TILT;
-      const ry =  c.tiltX * MAX_TILT;
       const scale = p.scale * c.hoverScale;
-      c.img.style.transform = `translate(${p.dx}px, ${p.dy}px) rotate(0deg) perspective(${PERSPECTIVE}px) rotateX(${rx}deg) rotateY(${ry}deg) scale(${scale})`;
+      const transformStr = `translate(${p.dx}px, ${p.dy}px) rotate(0deg) scale(${scale})`;
+      c.img.style.transform = transformStr;
       c.img.style.zIndex = c.hovering ? 9998 : p.z;
+      // el canvas del efecto líquido copia EXACTO el mismo transform de
+      // la card que tiene encima, así queda pegado pixel a pixel
+      if (LiquidDistort.isAttached(c)) LiquidDistort.syncTransform(transformStr, 9999);
     });
     requestAnimationFrame(frame);
   }
