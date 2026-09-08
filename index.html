@@ -67,6 +67,13 @@
     transition: transform 0.32s cubic-bezier(.22,1.12,.4,1), opacity 0.14s linear;
   }
 
+  /* hover "masa": la card se levanta con sombra al pasar el cursor,
+     vendiendo el tilt 3D como si tuviera peso propio (aprobado) */
+  .stack-img{ transition: box-shadow 0.25s ease; }
+  .stack-img.hover-mass{
+    box-shadow: 0 22px 40px -8px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,18,255,0.25);
+  }
+
   #tagline{
     position:absolute; bottom: 9vh; left:0; right:0;
     text-align:center;
@@ -87,20 +94,27 @@
   #percent-text{ transition: opacity 0.4s ease; }
   #percent-text.fade-out{ opacity:0; }
 
-  /* cursor custom: circulito azul con una estela sutil de puntitos
-     que van quedando un poco atrás al moverse (lightweight, sin libs) */
+  /* cursor custom: circulito azul con glow sutil + una estela que es
+     más glow difuminado que puntos planos (da sensación de profundidad),
+     lightweight: unos pocos divs y un solo rAF, sin canvas ni libs */
   .cursor-dot{
     position:fixed; top:0; left:0;
-    width:10px; height:10px;
+    width:14px; height:14px;
     border-radius:50%;
-    background: var(--blue);
+    background: radial-gradient(circle, rgba(0,18,255,0.95) 0%, rgba(0,18,255,0.55) 42%, rgba(0,18,255,0) 72%);
+    box-shadow: 0 0 10px 2px rgba(0,18,255,0.45);
+    mix-blend-mode: screen;
     pointer-events:none;
     z-index:999;
     opacity:0;
     transition: opacity 0.2s ease;
   }
   .cursor-dot.visible{ opacity:1; }
-  body.stage-active, body.stage-active *{ cursor:none !important; }
+  /* cursor nativo oculto SIEMPRE (loader incluido) — el custom (glow +
+     estela) recién empieza a seguir el mouse cuando termina el loader,
+     así que durante el loader no se ve ningún cursor, y después solo
+     se ve el nuestro */
+  body, body *{ cursor:none !important; }
 
   </style>
 </head>
@@ -260,11 +274,15 @@ function tickCursor(){
     const ease = i === 0 ? 0.55 : 0.4; // el punto principal sigue más de cerca
     d.x += (px - d.x) * ease;
     d.y += (py - d.y) * ease;
-    const scale = 1 - i * 0.18;
-    d.el.style.width  = (10 * scale) + 'px';
-    d.el.style.height = (10 * scale) + 'px';
-    d.el.style.opacity = i === 0 ? 1 : (0.45 - i * 0.09);
-    d.el.style.transform = `translate(${d.x - 5 * scale}px, ${d.y - 5 * scale}px)`;
+    // la estela crece y se desenfoca en vez de solo achicarse: eso es lo
+    // que la hace leer como glow con profundidad y no como puntos planos
+    const size = 14 * (1 + i * 0.32);
+    const blur = i * 2.4;
+    d.el.style.width  = size + 'px';
+    d.el.style.height = size + 'px';
+    d.el.style.opacity = i === 0 ? 1 : (0.5 - i * 0.09);
+    d.el.style.filter  = blur > 0 ? `blur(${blur}px)` : 'none';
+    d.el.style.transform = `translate(${d.x - size / 2}px, ${d.y - size / 2}px)`;
     px = d.x; py = d.y;
   });
   requestAnimationFrame(tickCursor);
@@ -367,15 +385,17 @@ function explodeCards(){
   const N  = stackImgs.length;
   const cx = window.innerWidth / 2;
   const cy = window.innerHeight / 2;
-  const rx = window.innerWidth * 0.30;
-  const ry = window.innerHeight * 0.25;
+  // ring 10% más amplio que antes: da lugar a que las cards "de adelante"
+  // puedan crecer sin que el espaciado se rompa — de paso se siente más
+  // vasto y profundo, como pidió Cami
+  const rx = window.innerWidth * 0.33;
+  const ry = window.innerHeight * 0.275;
   const tilt = -0.5;
-  // rango de escala por profundidad: moderado a propósito — un rango muy
-  // amplio (cerca MUY grande / lejos MUY chica) hace que, al orbitar, en
-  // ciertos momentos dos cards grandes vecinas casi se toquen mientras
-  // otras chicas dejan un hueco enorme; este rango mantiene el efecto de
-  // profundidad bien visible sin que el espaciado se vea desparejo
-  const minScale = 0.75, maxScale = 0.97;
+  // rango de escala por profundidad: las de atrás quedan igual que antes
+  // (0.75), las de adelante ahora un 10% más grandes (0.97 → 1.067) para
+  // acentuar la diferencia cerca/lejos — el ring se agrandó (arriba) para
+  // que ese crecimiento no genere solapamiento entre cards vecinas
+  const minScale = 0.75, maxScale = 1.067;
   const CARD_SIZE = 140; // px, mismo tamaño que #center-wrap
 
   // fase de la profundidad alineada a donde la elipse tiene MÁS espacio
@@ -434,8 +454,31 @@ function explodeCards(){
       delay:  Math.random() * 90, // sale cada una en un instante propio, no en barrido
       start:  finalTransformValues(i),
       bounce: marginPoint(angle, margin),
-      target: ringPoint(angle)
+      target: ringPoint(angle),
+      tiltX: 0, tiltY: 0, tiltTX: 0, tiltTY: 0,
+      hoverScale: 1, hovering: false
     };
+  });
+
+  /* hover "masa" (aprobado): la card se inclina en 3D hacia donde está
+     el cursor adentro suyo, se agranda un poco y se despega con sombra —
+     como si el cursor tuviera gravedad propia y la card reaccionara */
+  cards.forEach((c) => {
+    c.img.addEventListener('mousemove', (e) => {
+      const r = c.img.getBoundingClientRect();
+      const nx = ((e.clientX - r.left) / r.width) * 2 - 1;  // -1..1
+      const ny = ((e.clientY - r.top) / r.height) * 2 - 1;  // -1..1
+      c.tiltTX = nx; c.tiltTY = ny;
+    });
+    c.img.addEventListener('mouseenter', () => {
+      c.hovering = true;
+      c.img.classList.add('hover-mass');
+    });
+    c.img.addEventListener('mouseleave', () => {
+      c.tiltTX = 0; c.tiltTY = 0;
+      c.hovering = false;
+      c.img.classList.remove('hover-mass');
+    });
   });
 
   function tick(now){
@@ -472,11 +515,15 @@ function explodeCards(){
    su eje para siempre, dando una mejor vista de todos los proyectos --------
    avanza en ARCO real (no en ángulo): así la distancia geométrica entre
    cada card y la siguiente queda exactamente igual todo el tiempo, en
-   vez de apretarse o abrirse a medida que gira */
+   vez de apretarse o abrirse a medida que gira.
+   Suma el hover "masa" (aprobado): tilt 3D + escala + z-index elevado
+   sobre la card bajo el cursor. */
 function startOrbit(cards, ringPoint, angleAtArc, ringTotal){
   const speed = ringTotal / 60000; // una vuelta completa (todo el perímetro) cada 60s
   let arcRotation = 0;
   let last = performance.now();
+  const MAX_TILT = 26; // grados
+  const PERSPECTIVE = 420;
 
   function frame(now){
     const dt = now - last;
@@ -486,8 +533,14 @@ function startOrbit(cards, ringPoint, angleAtArc, ringTotal){
     cards.forEach(c => {
       const angle = angleAtArc(c.arcPos + arcRotation);
       const p = ringPoint(angle);
-      c.img.style.transform = `translate(${p.dx}px, ${p.dy}px) rotate(0deg) scale(${p.scale})`;
-      c.img.style.zIndex = p.z;
+      c.tiltX += (c.tiltTX - c.tiltX) * 0.28;
+      c.tiltY += (c.tiltTY - c.tiltY) * 0.28;
+      c.hoverScale += ((c.hovering ? 1.12 : 1) - c.hoverScale) * 0.2;
+      const rx = -c.tiltY * MAX_TILT;
+      const ry =  c.tiltX * MAX_TILT;
+      const scale = p.scale * c.hoverScale;
+      c.img.style.transform = `translate(${p.dx}px, ${p.dy}px) rotate(0deg) perspective(${PERSPECTIVE}px) rotateX(${rx}deg) rotateY(${ry}deg) scale(${scale})`;
+      c.img.style.zIndex = c.hovering ? 9998 : p.z;
     });
     requestAnimationFrame(frame);
   }
