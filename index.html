@@ -27,7 +27,7 @@
     position:fixed; inset:0; z-index:100;
     background: var(--blue);
   }
-  #loader.inverted{ background: var(--cream); }
+  #loader.inverted{ background: var(--black); }
 
   .side-text{
     position:absolute; top:50%; transform:translateY(-50%);
@@ -39,10 +39,9 @@
     white-space: nowrap;
     text-transform: uppercase;
   }
-  #name-text{ left:6vw; }
+  #name-text{ left:6vw; z-index:9999; }
   #percent-text{ right:6vw; }
-  /* al invertir: fondo crema, nombre y % pasan a AZUL (no negro) */
-  #loader.inverted .side-text{ color: var(--blue); }
+  /* al invertir a fondo oscuro: nombre y % se mantienen en light */
 
   /* mismo cuadro 127x127 para el ojo y para cada foto, perfectamente
      centrado en el viewport (independiente del ancho de los textos) */
@@ -80,13 +79,28 @@
     opacity:0;
     transition: opacity 0.7s ease, transform 0.5s ease;
   }
-  /* al invertir: frase de abajo en dark al 60% de opacidad */
-  #loader.inverted #tagline{ color: var(--black); opacity:0.6; }
+  /* al invertir a fondo oscuro: frase de abajo en light al 60% de opacidad */
+  #loader.inverted #tagline{ color: var(--cream); opacity:0.6; }
   /* al llegar a 100%: se va hacia abajo con fade */
   #tagline.fade-down{ opacity:0 !important; transform: translateY(24px); }
 
   #percent-text{ transition: opacity 0.4s ease; }
   #percent-text.fade-out{ opacity:0; }
+
+  /* cursor custom: circulito azul con una estela sutil de puntitos
+     que van quedando un poco atrás al moverse (lightweight, sin libs) */
+  .cursor-dot{
+    position:fixed; top:0; left:0;
+    width:10px; height:10px;
+    border-radius:50%;
+    background: var(--blue);
+    pointer-events:none;
+    z-index:999;
+    opacity:0;
+    transition: opacity 0.2s ease;
+  }
+  .cursor-dot.visible{ opacity:1; }
+  body.stage-active, body.stage-active *{ cursor:none !important; }
 
   </style>
 </head>
@@ -119,22 +133,26 @@
     <div id="tagline">Universos visuales desde<br>Argentina hacia el mundo.</div>
   </div>
 
+
 <script>
 /* ════════════════════════════════════════════
    LOADER — ojito.gif + stack estilo Cappen (v6 aprobado)
 ════════════════════════════════════════════ */
 const loader      = document.getElementById('loader');
 const ojito       = document.getElementById('ojito');
+const nameText    = document.getElementById('name-text');
 const percentText = document.getElementById('percent-text');
 const tagline     = document.getElementById('tagline');
 const stackImgs   = Array.from(document.querySelectorAll('.stack-img'));
 
+function finalTransformValues(i){
+  // todas las cards caen derechas, centradas, en la misma posición
+  // exacta (sin offset diagonal ni rotación)
+  return { tx: 0, ty: 0, rot: 0 };
+}
 function finalTransform(i){
-  if (i === 0) return 'translateY(0) rotate(0deg)';
-  const rot = ((i % 5) - 2) * 5;
-  const tx  = ((i % 5) - 2) * 5;
-  const ty  = (i % 2 === 0 ? -1 : 1) * 3;
-  return `translate(${tx}px, ${ty}px) rotate(${rot}deg)`;
+  const v = finalTransformValues(i);
+  return `translate(${v.tx}px, ${v.ty}px) rotate(${v.rot}deg)`;
 }
 
 function runLoader(){
@@ -200,11 +218,280 @@ function runLoader(){
 /* ════════════════════════════════════════════
    100% → 1) la frase de abajo se va con fade hacia abajo
           2) el % desaparece
-   (lo que sigue después del loader se define más adelante)
+          3) el nombre (el mismo elemento del loader, mismo tamaño)
+             se desplaza hacia el centro
+          4) aparece el cursor custom
+          5) las cards (las mismas del loader, desde donde quedaron)
+             salen disparadas en explosión, con rebote, hacia su
+             posición final
+   Nada se oculta ni se vuelve a crear: son siempre los mismos
+   elementos del loader, solo se les anima transform/left.
 ════════════════════════════════════════════ */
 function finishLoader(){
   tagline.classList.add('fade-down');
   percentText.classList.add('fade-out');
+  setTimeout(startNameTravel, 550);
+}
+
+const centerWrap = document.getElementById('center-wrap');
+
+/* cursor custom: circulito + estela corta de puntitos (lightweight:
+   unos pocos divs y un solo rAF, sin canvas ni librerías) */
+const CURSOR_TRAIL = 4;
+const cursorDots = [];
+for (let i = 0; i <= CURSOR_TRAIL; i++){
+  const d = document.createElement('div');
+  d.className = 'cursor-dot';
+  document.body.appendChild(d);
+  cursorDots.push({ el: d, x: 0, y: 0, init: false });
+}
+let mouseX = 0, mouseY = 0;
+
+function onMouseMove(e){
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  cursorDots.forEach(d => d.el.classList.add('visible'));
+}
+
+function tickCursor(){
+  let px = mouseX, py = mouseY;
+  cursorDots.forEach((d, i) => {
+    if (!d.init){ d.x = px; d.y = py; d.init = true; }
+    const ease = i === 0 ? 0.55 : 0.4; // el punto principal sigue más de cerca
+    d.x += (px - d.x) * ease;
+    d.y += (py - d.y) * ease;
+    const scale = 1 - i * 0.18;
+    d.el.style.width  = (10 * scale) + 'px';
+    d.el.style.height = (10 * scale) + 'px';
+    d.el.style.opacity = i === 0 ? 1 : (0.45 - i * 0.09);
+    d.el.style.transform = `translate(${d.x - 5 * scale}px, ${d.y - 5 * scale}px)`;
+    px = d.x; py = d.y;
+  });
+  requestAnimationFrame(tickCursor);
+}
+requestAnimationFrame(tickCursor);
+
+function lerp(a, b, t){ return a + (b - a) * t; }
+function easeOut(t){ return 1 - Math.pow(1 - t, 4); }
+function easeOutBack(t, s = 1.7){
+  return 1 + (s + 1) * Math.pow(t - 1, 3) + s * Math.pow(t - 1, 2);
+}
+
+function startNameTravel(){
+  const rect = nameText.getBoundingClientRect();
+  const startLeft = rect.left;
+  const nameW = rect.width;
+  const targetLeft = (window.innerWidth - nameW) / 2;
+
+  // el borde izquierdo de la pila de fotos (center-wrap) — apenas la
+  // "Z" de CRUZ (el borde derecho del nombre) lo toca, dispara la
+  // explosión. El nombre sigue viajando igual hasta el centro.
+  const pileLeft = centerWrap.getBoundingClientRect().left;
+  let exploded = false;
+
+  nameText.style.left = startLeft + 'px';
+
+  const duration = 650;
+  const t0 = performance.now();
+
+  function tick(now){
+    const t = Math.min((now - t0) / duration, 1);
+    const left = lerp(startLeft, targetLeft, easeOut(t));
+    nameText.style.left = left + 'px';
+
+    if (!exploded && left + nameW >= pileLeft){
+      exploded = true;
+      onNameHitsPile();
+    }
+
+    if (t < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      nameText.style.left = targetLeft + 'px';
+      if (!exploded){ exploded = true; onNameHitsPile(); }
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+function onNameHitsPile(){
+  document.body.classList.add('stage-active');
+  document.addEventListener('mousemove', onMouseMove);
+  explodeCards();
+}
+
+/* -------- explosión: las mismas 15 cards del loader, desde la
+   posición en la que quedaron (finalTransform de runLoader), salen
+   disparadas con rebote hacia una posición final distribuida en
+   anillo (elipse inclinada) -------- */
+/* easings para la explosión:
+   fase 1 (centro → margen): acelera (arranca lento, termina rápido)
+   fase 2 (margen → posición final): va rápido casi todo el tramo y
+   recién desacelera cerca del final (no antes) */
+function easeInQuad(t){ return t * t; }
+function easeArriveLate(t){
+  const cut = 0.72;
+  if (t < cut) return (t / cut) * 0.82;
+  const localT = (t - cut) / (1 - cut);
+  return 0.82 + (1 - Math.pow(1 - localT, 3)) * 0.18;
+}
+
+/* arma una tabla de longitud de arco real de la elipse (0..2π → 0..perímetro)
+   y devuelve helpers para pasar de arco a ángulo y viceversa */
+function buildArcTable(rx, ry){
+  const steps = 720;
+  const cum = [0];
+  let prevX = rx, prevY = 0;
+  for (let s = 1; s <= steps; s++){
+    const th = (s / steps) * Math.PI * 2;
+    const x = rx * Math.cos(th), y = ry * Math.sin(th);
+    cum.push(cum[s - 1] + Math.hypot(x - prevX, y - prevY));
+    prevX = x; prevY = y;
+  }
+  const total = cum[steps];
+  function angleAtArc(target){
+    const t = ((target % total) + total) % total;
+    let lo = 0, hi = steps;
+    while (lo < hi){
+      const mid = (lo + hi) >> 1;
+      if (cum[mid] < t) lo = mid + 1; else hi = mid;
+    }
+    const idx = Math.max(1, lo);
+    const segT = cum[idx] > cum[idx - 1] ? (t - cum[idx - 1]) / (cum[idx] - cum[idx - 1]) : 0;
+    return lerp((idx - 1) / steps * Math.PI * 2, idx / steps * Math.PI * 2, segT);
+  }
+  return { total, angleAtArc };
+}
+
+function explodeCards(){
+  const N  = stackImgs.length;
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+  const rx = window.innerWidth * 0.30;
+  const ry = window.innerHeight * 0.25;
+  const tilt = -0.5;
+  // rango de escala por profundidad: moderado a propósito — un rango muy
+  // amplio (cerca MUY grande / lejos MUY chica) hace que, al orbitar, en
+  // ciertos momentos dos cards grandes vecinas casi se toquen mientras
+  // otras chicas dejan un hueco enorme; este rango mantiene el efecto de
+  // profundidad bien visible sin que el espaciado se vea desparejo
+  const minScale = 0.75, maxScale = 0.97;
+  const CARD_SIZE = 140; // px, mismo tamaño que #center-wrap
+
+  // fase de la profundidad alineada a donde la elipse tiene MÁS espacio
+  // natural entre puntos (eje corto), así las cards más grandes caen
+  // justo donde más lugar hay para ellas
+  function depthAt(angle){ return (1 + Math.sin(angle)) / 2; } // 0 lejos, 1 cerca
+  function scaleAt(angle){ return minScale + depthAt(angle) * (maxScale - minScale); }
+
+  function ringPoint(angle){
+    const ux = Math.cos(angle) * rx;
+    const uy = Math.sin(angle) * ry;
+    const dx = ux * Math.cos(tilt) - uy * Math.sin(tilt);
+    const dy = ux * Math.sin(tilt) + uy * Math.cos(tilt);
+    const scale = scaleAt(angle);
+    return { dx, dy, scale, z: Math.round(depthAt(angle) * 500) };
+  }
+
+  // posiciones EQUIDISTANTES en arco real de la elipse (no en ángulo, que
+  // quedaría más junto de un lado que del otro) — el anillo orbita
+  // avanzando también en arco (ver startOrbit), así el espaciado entre
+  // cards se mantiene constante todo el tiempo, no solo al asentarse
+  const { total: ringTotal, angleAtArc } = buildArcTable(rx, ry);
+  const arcPositions = [];
+  for (let i = 0; i < N; i++) arcPositions.push((i / N) * ringTotal);
+  const ringAngles = arcPositions.map(angleAtArc);
+
+  // punto del margen contra el que rebota cada card: sale disparada en
+  // una dirección PROPIA y random (no la de su posición final — eso es
+  // lo que hacía que se viera como espiral prolija) hasta pegar contra
+  // el borde de pantalla, con un margen también random por card para
+  // que no lleguen todas sincronizadas.
+  function marginPoint(angle, margin){
+    const dx = Math.cos(angle), dy = Math.sin(angle);
+    let t = Infinity;
+    if (dx >  0.0001) t = Math.min(t, (window.innerWidth  - margin - cx) / dx);
+    else if (dx < -0.0001) t = Math.min(t, (margin - cx) / dx);
+    if (dy >  0.0001) t = Math.min(t, (window.innerHeight - margin - cy) / dy);
+    else if (dy < -0.0001) t = Math.min(t, (margin - cy) / dy);
+    return { x: dx * t, y: dy * t };
+  }
+
+  const duration = 560;
+  const bounceT  = 0.22; // % del recorrido hasta pegar en el margen — bien cortito, tipo BUM
+  const t0 = performance.now();
+
+  const cards = stackImgs.map((img, i) => {
+    // dispara SIEMPRE hacia el mismo lado en el que va a quedar —
+    // así no cruzan la pantalla de punta a punta — pero con algo de
+    // margen random para que no lleguen todas sincronizadas
+    const angle  = ringAngles[i];
+    const margin = 15 + Math.random() * 50;
+    return {
+      img,
+      angle,
+      arcPos: arcPositions[i],
+      delay:  Math.random() * 90, // sale cada una en un instante propio, no en barrido
+      start:  finalTransformValues(i),
+      bounce: marginPoint(angle, margin),
+      target: ringPoint(angle)
+    };
+  });
+
+  function tick(now){
+    let allDone = true;
+    cards.forEach((c) => {
+      const localT = Math.min(1, Math.max(0, (now - t0 - c.delay) / duration));
+      if (localT < 1) allDone = false;
+
+      let tx, ty;
+      if (localT < bounceT){
+        const e = easeInQuad(localT / bounceT);
+        tx = lerp(c.start.tx, c.bounce.x, e);
+        ty = lerp(c.start.ty, c.bounce.y, e);
+      } else {
+        const e = easeArriveLate((localT - bounceT) / (1 - bounceT));
+        tx = lerp(c.bounce.x, c.target.dx, e);
+        ty = lerp(c.bounce.y, c.target.dy, e);
+      }
+
+      const eFull = easeArriveLate(localT);
+      const rot   = lerp(c.start.rot, 0, eFull);
+      const scale = lerp(1, c.target.scale, eFull);
+
+      c.img.style.transform = `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(${scale})`;
+      c.img.style.zIndex = c.target.z;
+    });
+    if (!allDone) requestAnimationFrame(tick);
+    else startOrbit(cards, ringPoint, angleAtArc, ringTotal);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* -------- una vez asentadas, el anillo entero orbita despacio sobre
+   su eje para siempre, dando una mejor vista de todos los proyectos --------
+   avanza en ARCO real (no en ángulo): así la distancia geométrica entre
+   cada card y la siguiente queda exactamente igual todo el tiempo, en
+   vez de apretarse o abrirse a medida que gira */
+function startOrbit(cards, ringPoint, angleAtArc, ringTotal){
+  const speed = ringTotal / 60000; // una vuelta completa (todo el perímetro) cada 60s
+  let arcRotation = 0;
+  let last = performance.now();
+
+  function frame(now){
+    const dt = now - last;
+    last = now;
+    arcRotation += speed * dt;
+
+    cards.forEach(c => {
+      const angle = angleAtArc(c.arcPos + arcRotation);
+      const p = ringPoint(angle);
+      c.img.style.transform = `translate(${p.dx}px, ${p.dy}px) rotate(0deg) scale(${p.scale})`;
+      c.img.style.zIndex = p.z;
+    });
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
 }
 
 runLoader();
