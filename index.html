@@ -151,6 +151,14 @@
     transition: opacity 0.2s ease;
   }
   .cursor-dot.visible{ opacity:1; }
+  /* variante oscura: se activa cuando el cursor está sobre el footer
+     (fondo azul) — ahí el glow azul con "screen" se pierde, así que
+     pasa a un punto oscuro con blend "multiply" para que se note */
+  .cursor-dot.dark{
+    background: radial-gradient(circle, rgba(17,17,17,0.95) 0%, rgba(17,17,17,0.6) 42%, rgba(17,17,17,0) 72%);
+    box-shadow: 0 0 10px 2px rgba(17,17,17,0.5);
+    mix-blend-mode: multiply;
+  }
   /* cursor nativo oculto SIEMPRE (loader incluido) — el custom (glow +
      estela) recién empieza a seguir el mouse cuando termina el loader,
      así que durante el loader no se ve ningún cursor, y después solo
@@ -410,6 +418,12 @@ function onMouseMove(e){
 
 function tickCursor(){
   let px = mouseX, py = mouseY;
+  // el footer (fondo azul) va destapándose de abajo hacia arriba a
+  // medida que avanza scrollP — el límite visible está a esta altura
+  // de pantalla. Si el cursor está por debajo, ya está sobre el
+  // footer y necesita la variante oscura para no perderse en el azul.
+  const footerBoundary = window.innerHeight * (1 - scrollP);
+  const overFooter = mouseY > footerBoundary;
   cursorDots.forEach((d, i) => {
     if (!d.init){ d.x = px; d.y = py; d.init = true; }
     const ease = i === 0 ? 0.55 : 0.4; // el punto principal sigue más de cerca
@@ -424,6 +438,7 @@ function tickCursor(){
     d.el.style.opacity = i === 0 ? 1 : (0.5 - i * 0.09);
     d.el.style.filter  = blur > 0 ? `blur(${blur}px)` : 'none';
     d.el.style.transform = `translate(${d.x - size / 2}px, ${d.y - size / 2}px)`;
+    d.el.classList.toggle('dark', overFooter);
     px = d.x; py = d.y;
   });
   requestAnimationFrame(tickCursor);
