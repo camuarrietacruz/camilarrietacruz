@@ -63,7 +63,6 @@
     opacity:0;
     z-index:0;
     transform: translateY(-46px) rotate(0deg);
-    box-shadow: 0 8px 22px rgba(0,0,0,0.16);
   }
   .stack-img.fall{
     transition: transform 0.32s cubic-bezier(.22,1.12,.4,1), opacity 0.14s linear;
@@ -88,55 +87,6 @@
 
   #percent-text{ transition: opacity 0.4s ease; }
   #percent-text.fade-out{ opacity:0; }
-
-  /* ── STAGE: arranca cuando el loader llega a 100% ── */
-  #stage{
-    position:fixed; inset:0; z-index:60;
-    background: var(--cream);
-    overflow:hidden;
-    display:none;
-  }
-  #stage.visible{ display:block; }
-
-  #cycler{
-    position:absolute; inset:0;
-    opacity:1;
-    transition: opacity 0.5s ease;
-  }
-  #cycler.fade-out{ opacity:0; }
-  /* las fotos NO cortan ni cross-fadean entre sí — se intercambian de
-     tamaño en un movimiento continuo: la que está grande se achica al
-     tamaño de thumbnail (al centro, que es donde arrancan) mientras la
-     que era chica crece a pantalla completa. Efecto morph, no flash. */
-  .morph-img{
-    position:absolute; inset:0;
-    width:100%; height:100%;
-    object-fit:cover;
-    transform-origin: 50% 50%;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    transition: transform 0.65s cubic-bezier(.65,0,.35,1);
-  }
-  .morph-img.big{ transform: scale(1); z-index:2; }
-  .morph-img.small{ transform: scale(0.115); z-index:1; }
-  #cycler img.active{ opacity:1; }
-
-  #hero-name{
-    position:absolute; top:50%; left:60px;
-    transform: translateY(-50%);
-    font-family: var(--font);
-    font-weight:400;
-    font-size: clamp(20px, 3vw, 40px);
-    color: var(--cream);
-    white-space: nowrap;
-    text-transform: uppercase;
-    z-index: 10;
-    text-shadow: 0 1px 10px rgba(0,0,0,0.5);
-  }
-  /* cuando el cycler ya se apagó y queda el fondo crema, el nombre vuelve a azul */
-  #stage.settled #hero-name{
-    color: var(--blue);
-    text-shadow: none;
-  }
 
   </style>
 </head>
@@ -167,12 +117,6 @@
 
     <div class="side-text" id="percent-text">0%</div>
     <div id="tagline">Universos visuales desde<br>Argentina hacia el mundo.</div>
-  </div>
-
-  <!-- STAGE -->
-  <div id="stage">
-    <div id="cycler"></div>
-    <div id="hero-name"><span id="name-display">CAMILA ARRIETA CRUZ</span></div>
   </div>
 
 <script>
@@ -254,113 +198,13 @@ function runLoader(){
 }
 
 /* ════════════════════════════════════════════
-   100% → arranca la salida del loader:
-   1) la frase de abajo se va con fade hacia abajo
-   2) el % desaparece
-   3) el nombre viaja al centro mientras las cards
-      hacen un flash rápido a pantalla completa
-      (estilo carrusel OTHR.AI, referencia de Cami)
+   100% → 1) la frase de abajo se va con fade hacia abajo
+          2) el % desaparece
+   (lo que sigue después del loader se define más adelante)
 ════════════════════════════════════════════ */
 function finishLoader(){
   tagline.classList.add('fade-down');
   percentText.classList.add('fade-out');
-  setTimeout(() => {
-    loader.style.display = 'none';
-    startHero();
-  }, 550);
-}
-
-/* ── STAGE / HERO ── */
-const stage    = document.getElementById('stage');
-const cycler   = document.getElementById('cycler');
-const heroName = document.getElementById('hero-name');
-const nameDisp = document.getElementById('name-display');
-
-function lerp(a, b, t){ return a + (b - a) * t; }
-function easeOut(t){ return 1 - Math.pow(1 - t, 4); }
-
-function startHero(){
-  stage.classList.remove('settled');
-  stage.classList.add('visible');
-
-  // reset nombre a la izquierda, listo para viajar
-  heroName.style.left = '60px';
-  heroName.style.transition = 'none';
-
-  animateNameToCenter();
-  runCycler();
-}
-
-function animateNameToCenter(){
-  const vw = window.innerWidth;
-  const nameW = nameDisp.offsetWidth;
-  const targetLeft = (vw - nameW) / 2;
-  const startLeft = 60;
-  const duration = 1100;
-  const t0 = performance.now();
-
-  function tick(now){
-    const t = Math.min((now - t0) / duration, 1);
-    heroName.style.left = lerp(startLeft, targetLeft, easeOut(t)) + 'px';
-    if (t < 1) requestAnimationFrame(tick);
-    else heroName.style.left = targetLeft + 'px';
-  }
-  requestAnimationFrame(tick);
-}
-
-function runCycler(){
-  // las fotos del loader están repetidas (10 elementos, 5 únicas) —
-  // se reusan los mismos base64 para armar el efecto, sin duplicar peso
-  const uniqueSrcs = [...new Set(stackImgs.map(img => img.getAttribute('src')))];
-  let qi = 0;
-  const nextSrc = () => uniqueSrcs[(qi++) % uniqueSrcs.length];
-
-  cycler.innerHTML = '';
-  // dos capas nomás: una GRANDE (pantalla completa) y una CHICA (donde
-  // arrancan las cards, al centro) — se van intercambiando de tamaño
-  // en un movimiento continuo (morph), nunca cortan ni cross-fadean
-  const slotA = document.createElement('img');
-  const slotB = document.createElement('img');
-  slotA.className = 'morph-img big';
-  slotB.className = 'morph-img small';
-  slotA.src = nextSrc();
-  slotB.src = nextSrc();
-  cycler.appendChild(slotA);
-  cycler.appendChild(slotB);
-
-  const swapDuration  = 650;  // ms que tarda cada intercambio grande↔chica
-  const totalDuration = 2000; // total pedido por Cami
-  let elapsed = 0;
-  let bigIsA = true;
-
-  function swap(){
-    if (bigIsA) {
-      slotA.classList.remove('big'); slotA.classList.add('small');
-      slotB.classList.remove('small'); slotB.classList.add('big');
-    } else {
-      slotB.classList.remove('big'); slotB.classList.add('small');
-      slotA.classList.remove('small'); slotA.classList.add('big');
-    }
-    bigIsA = !bigIsA;
-
-    // la que se acaba de achicar recibe la próxima foto de la cola,
-    // lista para cuando le toque volver a crecer
-    setTimeout(() => {
-      const shrunk = bigIsA ? slotB : slotA;
-      shrunk.src = nextSrc();
-    }, swapDuration);
-
-    elapsed += swapDuration;
-    if (elapsed < totalDuration) {
-      setTimeout(swap, swapDuration);
-    } else {
-      cycler.classList.add('fade-out');
-      setTimeout(() => {
-        stage.classList.add('settled');
-      }, 500);
-    }
-  }
-  setTimeout(swap, swapDuration);
 }
 
 runLoader();
