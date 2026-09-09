@@ -312,8 +312,20 @@ const stackImgs   = Array.from(document.querySelectorAll('.stack-img'));
 const subLocationEl = document.getElementById('sub-location');
 const footerLinksEl = document.querySelector('.footer-links');
 let scrollP = 0; // 0..1, progreso de scroll — lo lee también startOrbit()
-const nameStartTop  = nameText.getBoundingClientRect().top;
-const footerLinksTop = footerLinksEl ? footerLinksEl.getBoundingClientRect().top : null;
+let nameStartTop  = (window.innerHeight - nameText.offsetHeight) / 2;
+let footerLinksTop = footerLinksEl ? footerLinksEl.getBoundingClientRect().top : null;
+
+// estos dos dependen del tamaño de viewport, asi que se recalculan en
+// cada resize (ver el addEventListener('resize', ...) mas abajo, junto
+// con el recentrado horizontal del nombre). nameStartTop se calcula con
+// la formula del CSS (top:50% - mitad de su alto) y no con
+// getBoundingClientRect(), porque en el momento del resize el nombre
+// puede estar a mitad de camino del "freeze" del scroll — leer su
+// posición actual ahí daría un valor contaminado por ese transform.
+function refreshScrollLayoutRefs(){
+  nameStartTop = (window.innerHeight - nameText.offsetHeight) / 2;
+  footerLinksTop = footerLinksEl ? footerLinksEl.getBoundingClientRect().top : null;
+}
 
 function finalTransformValues(i){
   // todas las cards caen derechas, centradas, en la misma posición
@@ -1046,6 +1058,17 @@ document.addEventListener('scroll', () => requestAnimationFrame(updateFooterScro
 if (backToTopEl){
   backToTopEl.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
 }
+
+// re-centrar el nombre y recalcular las referencias de layout cuando
+// cambia el tamaño del viewport (responsive resize, no solo el resize
+// real de la ventana) — si no, el nombre queda con el "left" fijo que
+// calculó la última vez y se desalinea del centro
+window.addEventListener('resize', () => {
+  if (!document.body.classList.contains('stage-active')) return;
+  centerNameText();
+  refreshScrollLayoutRefs();
+  updateFooterScroll();
+});
 </script>
 </body>
 </html>
