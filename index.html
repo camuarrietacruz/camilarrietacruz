@@ -595,11 +595,81 @@ for (let i = 0; i <= CURSOR_TRAIL; i++){
   cursorDots.push({ el: d, x: 0, y: 0, init: false });
 }
 let mouseX = 0, mouseY = 0;
+let mouseSeen = false; // recién true con el primer mousemove post-loader (lo usa también el magnetismo de las cards)
 
 function onMouseMove(e){
   mouseX = e.clientX;
   mouseY = e.clientY;
+  mouseSeen = true;
   cursorDots.forEach(d => d.el.classList.add('visible'));
+}
+
+/* estela de partículas "cósmicas": polvo muy chico que va quedando
+   atrás del punto principal mientras se mueve y se apaga solo. Un
+   canvas 2D fijo a pantalla completa (debajo del punto), sin eventos.
+   Se emite por distancia recorrida, no por frame: quieto no suelta
+   nada, y moverse rápido deja una cola más larga. Azul sobre el hero,
+   amarillo (mismo complementario que el punto) sobre el footer. */
+const SPARK_EVERY_PX = 12;   // una partícula cada tantos px de recorrido
+const SPARK_MAX = 50;       // tope de partículas vivas a la vez
+const sparkCanvas = document.createElement('canvas');
+sparkCanvas.style.cssText = 'position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:998;';
+document.body.appendChild(sparkCanvas);
+const sparkCtx = sparkCanvas.getContext('2d');
+const sparks = [];
+let sparkLastX = null, sparkLastY = null, sparkAccum = 0, sparkLastT = performance.now();
+function sizeSparkCanvas(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  sparkCanvas.width = Math.round(window.innerWidth * dpr);
+  sparkCanvas.height = Math.round(window.innerHeight * dpr);
+  sparkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+sizeSparkCanvas();
+window.addEventListener('resize', sizeSparkCanvas);
+
+function tickSparks(x, y, overFooter){
+  const now = performance.now();
+  const dt = Math.min(50, now - sparkLastT);
+  sparkLastT = now;
+  if (mouseSeen){
+    if (sparkLastX === null){ sparkLastX = x; sparkLastY = y; }
+    const dx = x - sparkLastX, dy = y - sparkLastY;
+    const dist = Math.hypot(dx, dy);
+    sparkAccum += dist;
+    // reparte las partículas a lo largo del tramo recorrido este frame
+    while (sparkAccum >= SPARK_EVERY_PX && sparks.length < SPARK_MAX){
+      sparkAccum -= SPARK_EVERY_PX;
+      const k = dist > 0 ? sparkAccum / dist : 0;
+      const a = Math.random() * Math.PI * 2;
+      const v = 0.006 + Math.random() * 0.018; // px por ms: deriva muy lenta
+      sparks.push({
+        x: x - dx * k + (Math.random() - 0.5) * 6,
+        y: y - dy * k + (Math.random() - 0.5) * 6,
+        vx: Math.cos(a) * v, vy: Math.sin(a) * v,
+        r: 0.4 + Math.random() * 0.7,
+        life: 0, ttl: 300 + Math.random() * 400,
+        footer: overFooter
+      });
+    }
+    if (sparks.length >= SPARK_MAX) sparkAccum = 0;
+    sparkLastX = x; sparkLastY = y;
+  }
+  sparkCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  for (let i = sparks.length - 1; i >= 0; i--){
+    const s = sparks[i];
+    s.life += dt;
+    if (s.life >= s.ttl){ sparks.splice(i, 1); continue; }
+    s.x += s.vx * dt; s.y += s.vy * dt;
+    const t = s.life / s.ttl;
+    // aparece rápido y se apaga lento (titila apenas, como polvo)
+    const alpha = Math.min(1, t * 6) * Math.pow(1 - t, 1.6) * (0.75 + 0.25 * Math.sin(s.life * 0.03 + i));
+    sparkCtx.fillStyle = s.footer
+      ? 'rgba(245,205,10,' + (alpha * 0.6) + ')'
+      : 'rgba(110,130,255,' + (alpha * 0.55) + ')';
+    sparkCtx.beginPath();
+    sparkCtx.arc(s.x, s.y, s.r * (1 - t * 0.4), 0, Math.PI * 2);
+    sparkCtx.fill();
+  }
 }
 
 function tickCursor(){
@@ -627,6 +697,7 @@ function tickCursor(){
     d.el.classList.toggle('dark', overFooter);
     px = d.x; py = d.y;
   });
+  tickSparks(cursorDots[0].x, cursorDots[0].y, overFooter);
   requestAnimationFrame(tickCursor);
 }
 requestAnimationFrame(tickCursor);
@@ -1325,6 +1396,9 @@ function explodeCards(){
    vez de apretarse o abrirse a medida que gira.
    Suma el hover "masa" (aprobado): tilt 3D + escala + z-index elevado
    sobre la card bajo el cursor. */
+const CARD_MAGNET_RADIUS = 280; // px alrededor del cursor donde las cards sienten la atracción
+const CARD_MAGNET_PX = 12;      // corrimiento máximo hacia el cursor
+
 function startOrbit(cards, ringPoint, angleAtArc, ringTotal){
   const speed = ringTotal / 60000; // una vuelta completa (todo el perímetro) cada 60s
   let arcRotation = 0;
@@ -1340,14 +1414,40 @@ function startOrbit(cards, ringPoint, angleAtArc, ringTotal){
     // loader) — atado 1 a 1 al scroll, reversible en cualquier punto
     const ip = 1 - Math.pow(1 - scrollP, 2);
 
+    // "gravedad": centro de #center-wrap en pantalla, para saber dónde
+    // está cada card respecto del cursor (se mueve con el scroll)
+    const wrapRect = centerWrap.getBoundingClientRect();
+    const wrapCX = wrapRect.left + wrapRect.width / 2;
+    const wrapCY = wrapRect.top + wrapRect.height / 2;
+
     cards.forEach((c, i) => {
       const angle = angleAtArc(c.arcPos + arcRotation);
       const p = ringPoint(angle);
       c.hoverScale += ((c.hovering ? 1.12 : 1) - c.hoverScale) * 0.2;
       const ringScale = p.scale * c.hoverScale;
 
-      const tx    = lerp(p.dx, 0, ip);
-      const ty    = lerp(p.dy, 0, ip);
+      // magnetismo sutil: las cards cerca del cursor se corren unos px
+      // hacia él. La fuerza es 0 pegado al cursor y en el borde del
+      // radio, y máxima a mitad de camino: así la card que está justo
+      // debajo no tiembla, y las de alrededor se inclinan hacia ella.
+      // Se apaga con la implosión del scroll. Solo transform, no layout.
+      let magTX = 0, magTY = 0;
+      if (mouseSeen && ip < 1){
+        const cx = wrapCX + p.dx, cy = wrapCY + p.dy;
+        const mdx = mouseX - cx, mdy = mouseY - cy;
+        const d = Math.hypot(mdx, mdy);
+        if (d > 0 && d < CARD_MAGNET_RADIUS){
+          const u = d / CARD_MAGNET_RADIUS;
+          const pull = CARD_MAGNET_PX * 4 * u * (1 - u) * (1 - ip);
+          magTX = (mdx / d) * pull;
+          magTY = (mdy / d) * pull;
+        }
+      }
+      c.magX = (c.magX || 0) + (magTX - (c.magX || 0)) * 0.08;
+      c.magY = (c.magY || 0) + (magTY - (c.magY || 0)) * 0.08;
+
+      const tx    = lerp(p.dx, 0, ip) + c.magX;
+      const ty    = lerp(p.dy, 0, ip) + c.magY;
       const scale = lerp(ringScale, 1, ip);
       const z     = lerp(p.z, (i + 1) * 40, ip);
 
