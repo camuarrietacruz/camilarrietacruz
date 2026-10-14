@@ -73,7 +73,9 @@
   html,body{ width:100%; height:100%; background:var(--cream); font-family:var(--font); overflow:hidden; }
 
   #loader{
-    position:fixed; inset:0; z-index:100;
+    /* alto = --app-h (alto estable medido en JS, ver "base responsive"),
+       no inset:0 — en mobile el alto real cambia con la barra del navegador */
+    position:fixed; top:0; left:0; right:0; height:var(--app-h, 100vh); z-index:100;
     background: var(--blue);
   }
   #loader.inverted{
@@ -245,7 +247,7 @@
      así la cortina se siente elástica. Es una extensión y no un
      recorte del hero para no cortar el nombre, que se queda frenado
      sobre el footer. background:inherit copia el negro + el grano, y
-     el -100vh alinea el tile del grano con el del hero.
+     el -alto del hero alinea el tile del grano con el del hero.
      El arco no es un corte nítido: una máscara radial lo deja sólido
      hasta el arco y lo desvanece hacia afuera a lo largo de
      --curve-blur, así el negro se funde con el azul. El desvanecido
@@ -256,16 +258,16 @@
     content:''; position:absolute; left:0; right:0; top:100%;
     height:calc(var(--curve, 0px) + var(--curve-blur));
     background:inherit;
-    background-position:0 -100vh;
+    background-position:0 calc(var(--app-h, 100vh) * -1);
     -webkit-mask-image:radial-gradient(circle var(--curve-r, 0px) at 50% calc(var(--curve, 0px) - var(--curve-r, 0px)), #000 calc(var(--curve-r, 0px) - 1px), transparent calc(var(--curve-r, 0px) + var(--curve-blur)));
             mask-image:radial-gradient(circle var(--curve-r, 0px) at 50% calc(var(--curve, 0px) - var(--curve-r, 0px)), #000 calc(var(--curve-r, 0px) - 1px), transparent calc(var(--curve-r, 0px) + var(--curve-blur)));
     z-index:-1; pointer-events:none;
   }
 
-  .footer-scroll-track{ height:200vh; }
+  .footer-scroll-track{ height:calc(var(--app-h, 100vh) * 2); }
 
   .footer-fixed{
-    position:fixed; inset:0; z-index:50;
+    position:fixed; top:0; left:0; right:0; height:var(--app-h, 100vh); z-index:50;
     overflow:hidden;
   }
   .footer-bg{
@@ -497,6 +499,46 @@
    LOADER — ojito.gif + stack estilo Cappen (v6 aprobado)
 ════════════════════════════════════════════ */
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* -------- base responsive --------
+   1) rama "con hover" vs "touch": se decide por CAPACIDAD del
+      dispositivo, no por ancho de pantalla — una notebook táctil con
+      mouse queda en la rama con hover, una tablet sin mouse en touch.
+      html.can-hover / html.is-touch para el CSS, canHover para el JS.
+      Se actualiza en vivo (ej. a una tablet se le conecta un mouse).
+   2) alto estable (appH y la variable CSS --app-h): en mobile la barra
+      de direcciones aparece y desaparece al scrollear y cambia
+      window.innerHeight a cada rato; si el hero, el footer y el scroll
+      usaran ese valor, toda la mecánica saltaría. Se mide el viewport
+      "grande" (100lvh, con la barra escondida) con un elemento sonda:
+      no cambia con la barra, solo con una rotación o un resize real.
+      En desktop es igual a innerHeight. -------- */
+const hoverMQ = window.matchMedia('(hover: hover) and (pointer: fine)');
+let canHover = hoverMQ.matches;
+function applyInputMode(){
+  canHover = hoverMQ.matches;
+  document.documentElement.classList.toggle('can-hover', canHover);
+  document.documentElement.classList.toggle('is-touch', !canHover);
+}
+applyInputMode();
+hoverMQ.addEventListener('change', applyInputMode);
+
+const vhProbe = document.createElement('div');
+vhProbe.style.cssText = 'position:fixed; top:0; left:0; width:0; height:100vh; height:100lvh; visibility:hidden; pointer-events:none;';
+document.documentElement.appendChild(vhProbe);
+function measureAppH(){ return vhProbe.offsetHeight || window.innerHeight; }
+let appH = measureAppH();
+document.documentElement.style.setProperty('--app-h', appH + 'px');
+// re-mide el alto estable; devuelve true si cambió
+function refreshAppH(){
+  const h = measureAppH();
+  if (h === appH) return false;
+  appH = h;
+  document.documentElement.style.setProperty('--app-h', appH + 'px');
+  return true;
+}
+// la arma explodeCards() cuando existe el anillo; antes de eso no hace nada
+let rebuildRingGeometry = () => {};
 const loader      = document.getElementById('loader');
 const ojito       = document.getElementById('ojito');
 const nameText    = document.getElementById('name-text');
@@ -515,7 +557,7 @@ const footerLinksEl = document.querySelector('.footer-links');
 const copyYearEl = document.getElementById('copyYear');
 if (copyYearEl) copyYearEl.textContent = new Date().getFullYear();
 let scrollP = 0; // 0..1, progreso de scroll — lo lee también startOrbit()
-let nameStartTop  = (window.innerHeight - nameText.offsetHeight) / 2;
+let nameStartTop  = (appH - nameText.offsetHeight) / 2;
 let footerLinksTop = footerLinksEl ? footerLinksEl.getBoundingClientRect().top : null;
 
 // estos dos dependen del tamaño de viewport, asi que se recalculan en
@@ -526,7 +568,7 @@ let footerLinksTop = footerLinksEl ? footerLinksEl.getBoundingClientRect().top :
 // puede estar a mitad de camino del "freeze" del scroll — leer su
 // posición actual ahí daría un valor contaminado por ese transform.
 function refreshScrollLayoutRefs(){
-  nameStartTop = (window.innerHeight - nameText.offsetHeight) / 2;
+  nameStartTop = (appH - nameText.offsetHeight) / 2;
   footerLinksTop = footerLinksEl ? footerLinksEl.getBoundingClientRect().top : null;
 }
 
@@ -714,7 +756,7 @@ function tickCursor(){
   // medida que avanza scrollP — el límite visible está a esta altura
   // de pantalla. Si el cursor está por debajo, ya está sobre el
   // footer y necesita la variante oscura para no perderse en el azul.
-  const footerBoundary = window.innerHeight * (1 - scrollP);
+  const footerBoundary = appH * (1 - scrollP);
   const overFooter = mouseY > footerBoundary;
   cursorDots.forEach((d, i) => {
     if (!d.init){ d.x = px; d.y = py; d.init = true; }
@@ -1084,7 +1126,7 @@ let nameScrollFrame = null;
 function scrollToFooter(){
   if (!document.body.classList.contains('stage-active')) return;
   const from = window.scrollY;
-  const to = window.innerHeight;
+  const to = appH;
   if (Math.abs(to - from) < 2) return;
   cancelAnimationFrame(nameScrollFrame);
   const start = performance.now();
@@ -1307,12 +1349,24 @@ function buildArcTable(rx, ry){
 function explodeCards(){
   const N  = stackImgs.length;
   const cx = window.innerWidth / 2;
-  const cy = window.innerHeight / 2;
+  const cy = appH / 2;
   // ring 10% más amplio que antes: da lugar a que las cards "de adelante"
   // puedan crecer sin que el espaciado se rompa — de paso se siente más
   // vasto y profundo, como pidió Cami
-  const rx = window.innerWidth * 0.33;
-  const ry = window.innerHeight * 0.275;
+  // radios del anillo: dependen del tamaño de pantalla, así que viven
+  // en "geom" y se re-arman en cada resize (rebuildRingGeometry), junto
+  // con la tabla de arco. Las cards guardan su lugar como FRACCIÓN del
+  // perímetro (0..1), no en px, así sobreviven a un cambio de tamaño.
+  const geom = {};
+  function measureRing(){
+    geom.rx = window.innerWidth * 0.33;
+    geom.ry = appH * 0.275;
+    const table = buildArcTable(geom.rx, geom.ry);
+    geom.total = table.total;
+    geom.angleAtArc = table.angleAtArc;
+  }
+  measureRing();
+  rebuildRingGeometry = measureRing;
   const tilt = -0.5;
   // rango de escala por profundidad: las de atrás quedan igual que antes
   // (0.75), las de adelante ahora un 10% más grandes (0.97 → 1.067) para
@@ -1328,8 +1382,8 @@ function explodeCards(){
   function scaleAt(angle){ return minScale + depthAt(angle) * (maxScale - minScale); }
 
   function ringPoint(angle){
-    const ux = Math.cos(angle) * rx;
-    const uy = Math.sin(angle) * ry;
+    const ux = Math.cos(angle) * geom.rx;
+    const uy = Math.sin(angle) * geom.ry;
     const dx = ux * Math.cos(tilt) - uy * Math.sin(tilt);
     const dy = ux * Math.sin(tilt) + uy * Math.cos(tilt);
     const scale = scaleAt(angle);
@@ -1340,10 +1394,9 @@ function explodeCards(){
   // quedaría más junto de un lado que del otro) — el anillo orbita
   // avanzando también en arco (ver startOrbit), así el espaciado entre
   // cards se mantiene constante todo el tiempo, no solo al asentarse
-  const { total: ringTotal, angleAtArc } = buildArcTable(rx, ry);
   const arcPositions = [];
-  for (let i = 0; i < N; i++) arcPositions.push((i / N) * ringTotal);
-  const ringAngles = arcPositions.map(angleAtArc);
+  for (let i = 0; i < N; i++) arcPositions.push(i / N); // fracción del perímetro
+  const ringAngles = arcPositions.map(f => geom.angleAtArc(f * geom.total));
 
   // punto del margen contra el que rebota cada card: sale disparada en
   // una dirección PROPIA y random (no la de su posición final — eso es
@@ -1355,7 +1408,7 @@ function explodeCards(){
     let t = Infinity;
     if (dx >  0.0001) t = Math.min(t, (window.innerWidth  - margin - cx) / dx);
     else if (dx < -0.0001) t = Math.min(t, (margin - cx) / dx);
-    if (dy >  0.0001) t = Math.min(t, (window.innerHeight - margin - cy) / dy);
+    if (dy >  0.0001) t = Math.min(t, (appH - margin - cy) / dy);
     else if (dy < -0.0001) t = Math.min(t, (margin - cy) / dy);
     return { x: dx * t, y: dy * t };
   }
@@ -1426,7 +1479,7 @@ function explodeCards(){
       c.img.style.zIndex = c.target.z;
     });
     if (!allDone) requestAnimationFrame(tick);
-    else startOrbit(cards, ringPoint, angleAtArc, ringTotal);
+    else startOrbit(cards, ringPoint, geom);
   }
   requestAnimationFrame(tick);
 }
@@ -1441,15 +1494,16 @@ function explodeCards(){
 const CARD_MAGNET_RADIUS = 280; // px alrededor del cursor donde las cards sienten la atracción
 const CARD_MAGNET_PX = 12;      // corrimiento máximo hacia el cursor
 
-function startOrbit(cards, ringPoint, angleAtArc, ringTotal){
-  const speed = ringTotal / 60000; // una vuelta completa (todo el perímetro) cada 60s
-  let arcRotation = 0;
+const ORBIT_LAP_MS = 60000; // una vuelta completa (todo el perímetro) cada 60s
+
+function startOrbit(cards, ringPoint, geom){
+  let arcRotation = 0; // en fracción del perímetro (0..1 = una vuelta)
   let last = performance.now();
 
   function frame(now){
     const dt = now - last;
     last = now;
-    if (!prefersReducedMotion) arcRotation += speed * dt;
+    if (!prefersReducedMotion) arcRotation += dt / ORBIT_LAP_MS;
 
     // implosión: 0 = anillo normal (scroll arriba del todo), 1 = todas
     // apiladas en el centro exacto (misma pose que al terminar el
@@ -1463,7 +1517,7 @@ function startOrbit(cards, ringPoint, angleAtArc, ringTotal){
     const wrapCY = wrapRect.top + wrapRect.height / 2;
 
     cards.forEach((c, i) => {
-      const angle = angleAtArc(c.arcPos + arcRotation);
+      const angle = geom.angleAtArc((c.arcPos + arcRotation) * geom.total);
       const p = ringPoint(angle);
       c.hoverScale += ((c.hovering ? 1.12 : 1) - c.hoverScale) * 0.2;
       const ringScale = p.scale * c.hoverScale;
@@ -1548,7 +1602,7 @@ function triggerFooterWordsReveal(){
 
 function updateFooterScroll(){
   if (!document.body.classList.contains('stage-active')) return;
-  const vh = window.innerHeight;
+  const vh = appH;
   const p = Math.max(0, Math.min(1, window.scrollY / vh));
   scrollP = p; // lo lee startOrbit() para blendear la implosión de las cards
   loader.style.transform = 'translateY(' + (-p * 100) + '%)';
@@ -1593,6 +1647,8 @@ document.addEventListener('scroll', () => requestAnimationFrame(updateFooterScro
 // real de la ventana) — si no, el nombre queda con el "left" fijo que
 // calculó la última vez y se desalinea del centro
 window.addEventListener('resize', () => {
+  refreshAppH();
+  rebuildRingGeometry();
   if (!document.body.classList.contains('stage-active')) return;
   centerNameText();
   refreshScrollLayoutRefs();
