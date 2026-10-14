@@ -385,12 +385,23 @@
      legales/firma de abajo, pero por fuera de esa fila: necesita
      z-index por encima de #loader (100) para no quedar tapado
      mientras el hero todavía cubre el footer. */
+  /* escondido durante el loader (en todos los tamaños) y aparece con
+     el mismo fade que el resto del stage (stage-active). visibility
+     va con delay al esconderse para que el fade termine antes, y sin
+     delay al mostrarse; mientras está invisible no se puede tocar. */
   .lang-switch{
     position:fixed; bottom:32px; right:32px; z-index:9999;
     display:flex; gap:10px;
     font-family:var(--font);
+    opacity:0; visibility:hidden;
+    transition: opacity 1s ease, visibility 0s linear 1s;
+  }
+  body.stage-active .lang-switch{
+    opacity:1; visibility:visible;
+    transition: opacity 1s ease, visibility 0s;
   }
   .lang-btn{
+    position:relative;
     background:none; border:none; padding:0; margin:0;
     font-family:inherit; color:var(--cream);
     font-size:clamp(9px, 0.7vw, 11px);
@@ -399,6 +410,16 @@
     cursor:pointer; transition:opacity 0.3s ease, color 0.3s ease;
   }
   .lang-btn.active{ font-weight:700; opacity:1; }
+  /* área de toque de 44×44px sin cambiar cómo se ve: una caja invisible
+     alrededor de cada botón. Las dos cajas se reparten el espacio en la
+     mitad del gap (10px / 2): ES crece hacia la izquierda y EN hacia la
+     derecha, así no se pisan y tocar una letra nunca activa la otra. */
+  .lang-btn::before{
+    content:''; position:absolute; top:50%;
+    width:44px; height:44px; transform:translateY(-50%);
+  }
+  .lang-btn:first-child::before{ right:-5px; }
+  .lang-btn:last-child::before{ left:-5px; }
   /* al hacer hover en el no seleccionado, se pone azul y sube su
      opacidad para que el azul se lea bien (a 30% quedaba casi
      invisible sobre el fondo) — el seleccionado no reacciona al hover */
