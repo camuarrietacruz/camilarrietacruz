@@ -204,6 +204,32 @@
   html.stage-active{ overflow-y:auto; }
   body.stage-active{ overflow-y:visible; height:auto; min-height:100%; }
   #loader{ will-change: transform; }
+  /* borde inferior en "panza": una extensión del hero colgada justo
+     debajo de su borde recto, recortada con un arco de círculo (centro
+     más bajo que los costados, curvatura pareja de punta a punta, más
+     "esférica" que una media elipse). El JS calcula el radio del
+     círculo (--curve-r) para que el arco toque las dos esquinas y
+     baje --curve en el centro. La altura (--curve)
+     arranca en 0, se infla a mitad del scroll y vuelve a 0 al final,
+     así la cortina se siente elástica. Es una extensión y no un
+     recorte del hero para no cortar el nombre, que se queda frenado
+     sobre el footer. background:inherit copia el negro + el grano, y
+     el -100vh alinea el tile del grano con el del hero.
+     El arco no es un corte nítido: una máscara radial lo deja sólido
+     hasta el arco y lo desvanece hacia afuera a lo largo de
+     --curve-blur, así el negro se funde con el azul. El desvanecido
+     va solo hacia afuera (la caja es --curve-blur más alta) para que
+     en las esquinas no asome el borde recto del hero. */
+  #loader{ --curve-blur: 56px; }
+  #loader::after{
+    content:''; position:absolute; left:0; right:0; top:100%;
+    height:calc(var(--curve, 0px) + var(--curve-blur));
+    background:inherit;
+    background-position:0 -100vh;
+    -webkit-mask-image:radial-gradient(circle var(--curve-r, 0px) at 50% calc(var(--curve, 0px) - var(--curve-r, 0px)), #000 calc(var(--curve-r, 0px) - 1px), transparent calc(var(--curve-r, 0px) + var(--curve-blur)));
+            mask-image:radial-gradient(circle var(--curve-r, 0px) at 50% calc(var(--curve, 0px) - var(--curve-r, 0px)), #000 calc(var(--curve-r, 0px) - 1px), transparent calc(var(--curve-r, 0px) + var(--curve-blur)));
+    z-index:-1; pointer-events:none;
+  }
 
   .footer-scroll-track{ height:200vh; }
 
@@ -1320,6 +1346,7 @@ runLoader();
 const footerShadowEl = document.getElementById('footerShadow');
 const FOOTER_START_OPACITY = 0.55;
 const FOOTER_FADE_END = 0.65;
+const CURTAIN_CURVE_MAX = 0.18; // profundidad máxima de la panza, en fracción del lado más corto de la pantalla
 const SUBTITLE_FADE_END = 0.18; // se apaga rápido, bien al principio del scroll
 
 // Reveal en cascada de las palabras del footer (copyright + firma
@@ -1352,6 +1379,15 @@ function updateFooterScroll(){
   const p = Math.max(0, Math.min(1, window.scrollY / vh));
   scrollP = p; // lo lee startOrbit() para blendear la implosión de las cards
   loader.style.transform = 'translateY(' + (-p * 100) + '%)';
+  // panza del borde inferior: 0 al inicio y al final, máxima a mitad
+  // el radio sale de la flecha del arco: R = (ancho²/4 + alto²) / (2·alto)
+  // (sobre el lado más corto de la pantalla, así en celular vertical no se pasa de profunda)
+  const halfW = window.innerWidth / 2;
+  const curve = Math.sin(p * Math.PI) * Math.min(vh, halfW * 2) * CURTAIN_CURVE_MAX;
+  loader.style.setProperty('--curve', curve + 'px');
+  // (con curva ~0 el radio queda enorme: arco casi recto, pero igual difuminado)
+  const arc = Math.max(curve, 0.5);
+  loader.style.setProperty('--curve-r', ((halfW * halfW + arc * arc) / (2 * arc)) + 'px');
   if (p > 0.01) triggerFooterWordsReveal();
 
   const t = Math.min(1, p / FOOTER_FADE_END);
