@@ -959,6 +959,37 @@ function setupNameScramble(){
       animating = false;
     });
   });
+  nameText.addEventListener('click', scrollToFooter);
+}
+
+/* -------- click en el nombre: dispara el mismo scroll que revela el
+   footer (scrollY = 1 pantalla = reveal completo), animado con un
+   ease-in-out para que se vea la cortina subir. Si el usuario mueve
+   la rueda o toca la pantalla en el medio, se le devuelve el control. -------- */
+const NAME_SCROLL_MS = 1400;
+let nameScrollFrame = null;
+function scrollToFooter(){
+  if (!document.body.classList.contains('stage-active')) return;
+  const from = window.scrollY;
+  const to = window.innerHeight;
+  if (Math.abs(to - from) < 2) return;
+  cancelAnimationFrame(nameScrollFrame);
+  const start = performance.now();
+  const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const cancel = () => {
+    cancelAnimationFrame(nameScrollFrame);
+    window.removeEventListener('wheel', cancel);
+    window.removeEventListener('touchstart', cancel);
+  };
+  window.addEventListener('wheel', cancel, { passive:true });
+  window.addEventListener('touchstart', cancel, { passive:true });
+  const step = now => {
+    const t = Math.min(1, (now - start) / NAME_SCROLL_MS);
+    window.scrollTo(0, from + (to - from) * ease(t));
+    if (t < 1) nameScrollFrame = requestAnimationFrame(step);
+    else cancel();
+  };
+  nameScrollFrame = requestAnimationFrame(step);
 }
 
 /* -------- hover en el bloque de contacto del footer: mismo efecto
