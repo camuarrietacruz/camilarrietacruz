@@ -338,11 +338,14 @@
      legal deja libre ese lugar (si no entra, corta en una línea más) */
   html.is-narrow .footer-signature-mark{ left:auto; right:0; transform:none; }
   html.is-narrow .footer-copyright{ max-width: calc(100% - 80px); }
-  /* la base de la firma es el borde de abajo del svg; la línea de base
-     del último renglón legal quedaba 3.5px más arriba (es el aire que
-     deja el line-height 1.5 del texto de 9px) — se baja eso para que
-     las dos se apoyen en la misma línea */
-  html.is-narrow .footer-copyright{ position:relative; top:3.5px; }
+  /* todas las últimas líneas del footer se apoyan en la misma línea de
+     base: la de la firma CAMUXI (el borde de abajo de su svg). El último
+     renglón legal quedaba 0.4em más arriba (el aire que deja su
+     line-height 1.5) y el ES/EN 0.35em — se bajan en em para que la
+     corrección acompañe el tamaño de letra en cualquier pantalla. En
+     celular el ES/EN está arriba, así que ahí no se toca. */
+  .footer-copyright{ position:relative; top:0.4em; }
+  html:not(.is-narrow) .lang-btn{ transform:translateY(0.35em); }
   /* Bloque de contacto (SAY HELLO :) + email + teléfono), centrado en
      los dos ejes de la pantalla — position:absolute contra
      .footer-content (que ya es inset:0 del viewport fijo), así queda
@@ -697,7 +700,7 @@
         <a class="footer-contact-phone" id="contactPhoneLink" href="#" target="_blank" rel="noopener">+54 11 3761 6193</a>
       </div>
       <div class="footer-bottom">
-        <div class="footer-copyright"><span class="rv-word">© <span id="copyYear">2026</span> Camila Arrieta Cruz</span><br><span class="rv-word" id="legalAllRights">ALL RIGHTS RESERVED.</span><br><span class="rv-word" id="legalWorkShown">Work shown belongs to its respective owners.</span></div>
+        <div class="footer-copyright"><span class="rv-word">© <span id="copyYear">2026</span> Camila Arrieta Cruz</span><br><span class="rv-word" id="legalAllRights">ALL RIGHTS RESERVED.</span></div>
         <div class="footer-signature-mark" aria-label="CAMUXI"><span class="rv-word"><svg viewBox="0 0 65 19" xmlns="http://www.w3.org/2000/svg">
 <path d="M56.1089 10.3316C56.1089 10.3316 56.0065 10.2024 56.0065 10.1593C56.3577 9.91521 56.7088 9.68549 57.0453 9.42705C58.4937 8.3215 61.3759 5.96682 60.5127 3.68393C60.1762 2.80811 59.313 2.57838 58.5376 2.53531C58.0548 2.50659 57.3379 2.49224 56.8697 2.53531C56.7673 2.53531 56.5479 2.57838 56.6503 2.75068C56.7234 2.86554 57.5281 2.80811 57.7037 2.83682C58.4937 2.92297 59.1667 3.526 59.3569 4.38746C59.7519 6.18219 58.3035 7.84769 57.1331 8.86709C56.9868 8.99631 55.8895 9.85778 55.8163 9.85778C55.7725 9.85778 55.7432 9.81471 55.7139 9.78599C54.763 8.43636 53.651 7.18723 52.7001 5.8376C52.0417 4.9187 50.8127 3.00912 52.7293 2.82246C53.0219 2.79375 53.4608 2.8799 53.7096 2.82246C53.7973 2.79375 53.8998 2.66453 53.8266 2.59274C53.7973 2.56402 53.6803 2.54967 53.6218 2.54967C52.9634 2.49224 51.9685 2.50659 51.3102 2.54967C49.3058 2.66453 50.1251 4.76077 50.9737 5.8376L54.6313 10.7623C53.139 11.7961 51.515 12.9734 50.5055 14.6102C49.8325 15.7014 49.218 17.9556 50.7689 18.4581C51.4565 18.6878 53.1097 18.6878 53.8412 18.616C53.9437 18.616 54.207 18.573 54.1046 18.4007C54.0314 18.2858 53.417 18.3432 53.2707 18.3289C51.5735 18.1997 51.0615 17.2377 51.4857 15.4286C51.9247 13.5477 53.417 12.0402 54.8654 11.0782L58.4937 15.9886C58.8156 16.4911 59.2545 17.1085 59.1374 17.7689C58.9911 18.6304 57.6305 18.2427 57.0892 18.3432C56.8405 18.3863 56.899 18.6017 57.177 18.6304C57.8792 18.6878 59.0058 18.6735 59.7227 18.6304C61.5368 18.5012 60.8785 16.7926 60.1469 15.7301C58.8887 13.9067 57.3525 12.1981 56.0943 10.3603L56.1089 10.3316Z" fill="currentColor"/>
 <path d="M64.4775 0.0944875C64.3166 -0.264457 64.3166 0.510863 64.302 0.568294C64.1703 1.64513 62.5024 1.54462 61.9757 2.29123C61.6831 2.7076 61.6978 3.33935 61.6392 3.84187V18.616H63.0291V3.26756C63.0291 2.95169 63.1754 2.43481 63.351 2.17637C63.6436 1.74563 64.1849 1.60206 64.3751 1.0421C64.4337 0.869808 64.5361 0.252423 64.4775 0.108845V0.0944875Z" fill="currentColor"/>
@@ -1555,7 +1558,6 @@ const I18N = {
     writeMe: 'ESCRIBIME!',
     letsChat: 'CHATEAMOS?',
     allRights: 'TODOS LOS DERECHOS RESERVADOS.',
-    workShown: 'El trabajo mostrado pertenece a sus respectivos dueños.',
     emailSubject: 'Hablemos ✦',
     emailBody: 'Hola! Vi tu web y me gustaría contarte sobre un proyecto.',
     waMessage: 'Hola Cami! ✨ Vi tu web y quiero contarte sobre un proyecto.',
@@ -1575,7 +1577,6 @@ const I18N = {
     writeMe: 'WRITE ME',
     letsChat: "LET'S CHAT",
     allRights: 'ALL RIGHTS RESERVED.',
-    workShown: 'Work shown belongs to its respective owners.',
     emailSubject: "Let's talk ✦",
     emailBody: "Hi, I came across your portfolio and I'd love to talk about a project...",
     waMessage: "Hi Cami! ✨ I found your site and I'd love to talk about a project.",
@@ -1648,8 +1649,6 @@ function applyLang(lang){
 
   const allRightsEl = document.getElementById('legalAllRights');
   if (allRightsEl) allRightsEl.textContent = copy.allRights;
-  const workShownEl = document.getElementById('legalWorkShown');
-  if (workShownEl) workShownEl.textContent = copy.workShown;
 
   setupContactLinks();
 
