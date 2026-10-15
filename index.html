@@ -2473,20 +2473,20 @@ const ProjectView = (() => {
   }
 
   /* scroll automático lento (como la referencia): el feed baja solo a
-     FEED_AUTO_PX px/s. Cualquier scroll que no haya hecho el propio
-     código (rueda, dedo, inercia del touch, teclado, barra) toma el
-     control: el automático se pausa y vuelve de a poco ~1.2s después de
-     que el feed queda quieto. Con "reducir movimiento" no corre. */
+     FEED_AUTO_PX px/s. Mientras el mouse o el dedo están apretados sobre
+     el feed, manda la persona; al soltar, el automático retoma en el
+     acto. La rueda y el teclado no tienen "soltar": retoma apenas dejan
+     de moverse (FEED_RESUME_MS). Con "reducir movimiento" no corre. */
   const FEED_AUTO_PX = 30;
-  let lastSetTop = 0, autoPauseUntil = 0, autoK = 1, autoAcc = 0, autoLast = performance.now();
+  const FEED_RESUME_MS = 150;
+  let lastSetTop = 0, autoPauseUntil = 0, holding = false, autoAcc = 0, autoLast = performance.now();
   function setFeedTop(v){ feed.scrollTop = v; lastSetTop = feed.scrollTop; }
   function autoTick(now){
     const dt = Math.min(50, now - autoLast);
     autoLast = now;
     if (currentProject && copyH && !prefersReducedMotion){
-      if (now < autoPauseUntil) autoK = 0;
-      else autoK = Math.min(1, autoK + dt / 1200);
-      autoAcc += FEED_AUTO_PX * autoK * dt / 1000;
+      const paused = holding || now < autoPauseUntil;
+      autoAcc += paused ? 0 : FEED_AUTO_PX * dt / 1000;
       if (autoAcc >= 1){
         const px = Math.floor(autoAcc);
         autoAcc -= px;
@@ -2496,14 +2496,19 @@ const ProjectView = (() => {
     requestAnimationFrame(autoTick);
   }
   requestAnimationFrame(autoTick);
-  ['wheel', 'touchstart', 'pointerdown', 'keydown'].forEach(type => {
-    feed.addEventListener(type, () => { autoPauseUntil = performance.now() + 1200; }, { passive:true });
+  ['touchstart', 'pointerdown'].forEach(type => {
+    feed.addEventListener(type, () => { holding = true; autoAcc = 0; }, { passive:true });
+  });
+  // el "soltar" se escucha en window: el dedo/mouse puede soltarse fuera del feed
+  ['touchend', 'touchcancel', 'pointerup', 'pointercancel'].forEach(type => {
+    window.addEventListener(type, () => { holding = false; autoPauseUntil = 0; }, { passive:true });
+  });
+  ['wheel', 'keydown'].forEach(type => {
+    feed.addEventListener(type, () => { autoPauseUntil = performance.now() + FEED_RESUME_MS; autoAcc = 0; }, { passive:true });
   });
 
   feed.addEventListener('scroll', () => {
     if (!copyH) return;
-    // movido por la persona (o la inercia del touch): pausa el automático
-    if (Math.abs(feed.scrollTop - lastSetTop) > 1.5) autoPauseUntil = performance.now() + 1200;
     if (feed.scrollTop < copyH) setFeedTop(feed.scrollTop + copyH);
     else if (feed.scrollTop >= copyH * 2) setFeedTop(feed.scrollTop - copyH);
     lastSetTop = feed.scrollTop;
