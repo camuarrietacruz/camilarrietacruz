@@ -293,6 +293,10 @@
     object-fit:cover;
     object-position:center 30%;
   }
+  /* celular: la foto es horizontal y los ojos están al 25% y al 73% del
+     ancho — en pantalla vertical el recorte central los dejaba afuera a
+     los dos. Se encuadra sobre el ojo derecho, grande y centrado. */
+  html.is-narrow .footer-bg{ object-position: 88% center; }
   .footer-shadow{
     position:absolute; inset:0;
     background:#000;
@@ -329,9 +333,11 @@
     display:block; height:18.15px; width:auto;
   }
   /* celular: el texto legal (alineado a la izquierda) llega hasta el
-     centro y se pisaba con la firma — la firma sube y queda centrada
-     arriba del bloque legal */
-  html.is-narrow .footer-signature-mark{ bottom: calc(100% + 24px); }
+     centro y se pisaba con la firma centrada — la firma pasa a la
+     derecha, con su base alineada a la última línea del legal, y el
+     legal deja libre ese lugar (si no entra, corta en una línea más) */
+  html.is-narrow .footer-signature-mark{ left:auto; right:0; transform:none; }
+  html.is-narrow .footer-copyright{ max-width: calc(100% - 80px); }
   /* Bloque de contacto (SAY HELLO :) + email + teléfono), centrado en
      los dos ejes de la pantalla — position:absolute contra
      .footer-content (que ya es inset:0 del viewport fijo), así queda
@@ -425,6 +431,10 @@
     opacity:1; visibility:visible;
     transition: opacity 1s ease, visibility 0s;
   }
+  /* celular: abajo a la derecha ahora va la firma CAMUXI, así que el
+     selector sube a la esquina de arriba a la derecha, por encima del
+     nombre (que está centrado a 72px del borde) */
+  html.is-narrow .lang-switch{ bottom:auto; top: calc(env(safe-area-inset-top, 0px) + 24px); }
   .lang-btn{
     position:relative;
     background:none; border:none; padding:0; margin:0;
@@ -1588,10 +1598,12 @@ function explodeCards(){
     };
   });
 
-  // touch (sin hover): las cards no arman el anillo disperso de desktop
-  // sino el cover-flow de frente (ver Coverflow). La explosión dispara cada
-  // una hacia su lado (la del centro hacia arriba) y aterriza en su pose.
-  const useCoverflow = !canHover;
+  // celular (touch + angosto): las cards no arman el anillo disperso de
+  // desktop sino el cover-flow de frente (ver Coverflow). La explosión
+  // dispara cada una hacia su lado (la del centro arriba) y aterriza en su
+  // pose. Tablet (touch + ancha) se ve igual que desktop: mismo anillo, que
+  // ahí se gira arrastrando (ver startOrbit).
+  const useCoverflow = !canHover && isNarrow;
   if (useCoverflow){
     cards.forEach((c, i) => {
       const d = Coverflow.wrap(i);
@@ -1677,11 +1689,20 @@ const ORBIT_LAP_MS = 60000; // una vuelta completa (todo el perímetro) cada 60s
 function startOrbit(cards, ringPoint, geom){
   let arcRotation = 0; // en fracción del perímetro (0..1 = una vuelta)
   let last = performance.now();
+  // touch (tablet): el dedo puede girar el anillo — ver más abajo
+  let autoK = 1;  // 0..1: cuánto pesa el giro automático (vuelve suave después de soltar)
+  let vel = 0;    // inercia después de soltar, en fracción de vuelta por ms
+  let drag = null;
 
   function frame(now){
-    const dt = now - last;
+    const dt = Math.min(50, now - last);
     last = now;
-    if (!prefersReducedMotion) arcRotation += dt / ORBIT_LAP_MS;
+    if (!(drag && drag.active)){
+      if (Math.abs(vel) > 0.0000005){ arcRotation += vel * dt; vel *= Math.pow(0.994, dt); }
+      else vel = 0;
+      autoK = Math.min(1, autoK + dt / 1500);
+      if (!prefersReducedMotion) arcRotation += autoK * dt / ORBIT_LAP_MS;
+    }
 
     // implosión: 0 = anillo normal (scroll arriba del todo), 1 = todas
     // apiladas en el centro exacto (misma pose que al terminar el
@@ -1740,6 +1761,70 @@ function startOrbit(cards, ringPoint, geom){
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+
+  /* touch (tablet): mismo anillo que desktop, pero sin mouse el
+     comportamiento cambia — arrastrar el dedo hacia un lado u otro gira
+     el anillo (las cards de adelante acompañan al dedo); al soltar sigue
+     con inercia y el giro automático vuelve de a poco. La card que se
+     toca se levanta y muestra el efecto líquido, el equivalente táctil
+     del hover. El arrastre vertical sigue siendo el scroll de la página. */
+  function cardAt(target){
+    const img = target && target.closest ? target.closest('.stack-img') : null;
+    return img ? cards.find(c => c.img === img) : null;
+  }
+  function release(){
+    if (drag && drag.card){
+      drag.card.hovering = false;
+      LiquidDistort.leave();
+    }
+  }
+  loader.addEventListener('touchstart', (e) => {
+    if (canHover || e.touches.length !== 1 || scrollP > 0.02){ drag = null; return; }
+    const t = e.touches[0];
+    const now = performance.now();
+    drag = { x0: t.clientX, y0: t.clientY, rot0: arcRotation, lastX: t.clientX, lastT: now,
+             v: 0, active: false, decided: false, card: cardAt(e.target) };
+    if (drag.card){
+      drag.card.hovering = true;
+      LiquidDistort.attach(drag.card);
+      LiquidDistort.move(t.clientX, t.clientY);
+    }
+  }, { passive:true });
+  loader.addEventListener('touchmove', (e) => {
+    if (!drag) return;
+    const t = e.touches[0];
+    if (!t) return;
+    if (drag.card) LiquidDistort.move(t.clientX, t.clientY);
+    if (!drag.decided){
+      const dx = t.clientX - drag.x0, dy = t.clientY - drag.y0;
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)){
+        drag.decided = true; drag.active = true;
+        vel = 0; autoK = 0;
+        drag.rot0 = arcRotation; drag.x0 = t.clientX;
+      } else if (Math.abs(dy) > 8){
+        drag.decided = true; // vertical: es el scroll de la página
+        return;
+      } else {
+        return;
+      }
+    }
+    if (!drag.active) return;
+    const now = performance.now();
+    // px de dedo → fracción de vuelta (arco real del anillo); con signo
+    // negativo las cards de adelante (abajo) se mueven hacia donde va el dedo
+    arcRotation = drag.rot0 - (t.clientX - drag.x0) / geom.total;
+    const ddt = Math.max(1, now - drag.lastT);
+    drag.v = 0.8 * (-(t.clientX - drag.lastX) / geom.total / ddt) + 0.2 * drag.v;
+    drag.lastX = t.clientX; drag.lastT = now;
+  }, { passive:true });
+  const onEnd = () => {
+    if (!drag) return;
+    if (drag.active) vel = Math.max(-0.0004, Math.min(0.0004, drag.v));
+    release();
+    drag = null;
+  };
+  loader.addEventListener('touchend', onEnd, { passive:true });
+  loader.addEventListener('touchcancel', onEnd, { passive:true });
 }
 
 /* -------- touch (mobile y tablet): el anillo visto de frente --------
