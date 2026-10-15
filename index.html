@@ -486,7 +486,7 @@
   }
   .pv-info::-webkit-scrollbar{ display:none; }
   .pv-title{
-    font-weight:700; font-size:clamp(18px, 1.98vw, 38.4px); /* 40% menos que antes */
+    font-weight:700; font-size:clamp(14.4px, 1.584vw, 30.72px);
     text-transform:uppercase;
     line-height:1.05; letter-spacing:0.01em; margin:0 0 12px;
   }
@@ -512,9 +512,9 @@
   .pv-coords[hidden]{ display:none; }
   .pv-info-toggle{ display:none; }
   .pv-body{ flex:1; display:flex; flex-direction:column; margin-top:clamp(36px, 4vw, 64px); }
-  /* 14px + 40%. max-width 29.5em ≈ tope de 10 palabras por renglón
-     (medido); en pantallas de notebook el panel corta antes (~7 palabras) */
-  .pv-desc{ font-size:19.6px; line-height:1.4; font-weight:400; opacity:0.85; margin:0 0 40px; max-width:29.5em; }
+  /* max-width 29.5em ≈ tope de 10 palabras por renglón (medido; al ir
+     en em acompaña el tamaño de letra); en notebooks el panel corta antes */
+  .pv-desc{ font-size:21.56px; line-height:1.4; font-weight:400; opacity:0.85; margin:0 0 40px; max-width:29.5em; }
   /* cliente / servicios / créditos: apilados abajo de todo del panel */
   .pv-rows{ margin-top:auto; }
   .pv-row{ padding:14px 0 16px; }
@@ -608,7 +608,7 @@
     left:0; right:0; width:auto; bottom:auto;
     padding:46px 20px 16px; overflow:hidden;
   }
-  html.is-narrow .pv-title{ font-size:14.4px; margin-bottom:8px; padding-right:80px; } /* 24px − 40% */
+  html.is-narrow .pv-title{ font-size:11.52px; margin-bottom:8px; padding-right:80px; }
   html.is-narrow .pv-meta,
   html.is-narrow .pv-coords{ display:none; }
   html.is-narrow .pv-index{ top:48px; right:20px; } /* arriba a la derecha está el ES/EN */
