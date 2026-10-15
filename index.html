@@ -519,23 +519,10 @@
   .pv-counter{
     position:absolute; top:24px; right:24px;
     width:52px; height:52px; z-index:3;
-    isolation:isolate;
     display:flex; align-items:center; justify-content:center;
     font-size:12px; letter-spacing:0.02em;
   }
   .pv-counter svg{ position:absolute; inset:0; transform:rotate(-90deg); }
-  /* fondo tipo glow: una mancha oscura y desenfocada que se desvanece
-     hacia afuera (gradiente radial + blur con máscara radial), sin
-     ningún borde duro — solo para que el número se lea sobre fotos claras */
-  .pv-counter::before{
-    content:''; position:absolute; inset:-22px; z-index:-1;
-    border-radius:50%;
-    background: radial-gradient(closest-side, rgba(17,17,17,0.33), rgba(17,17,17,0.18) 55%, rgba(17,17,17,0) 100%); /* 40% menos que antes (0.55 / 0.3) */
-    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-    -webkit-mask-image: radial-gradient(closest-side, #000 40%, transparent 100%);
-            mask-image: radial-gradient(closest-side, #000 40%, transparent 100%);
-    pointer-events:none;
-  }
   .pv-counter circle{ fill:none; stroke:var(--cream); stroke-width:1.5; }
   .pv-counter .pv-counter-track{ opacity:0.22; }
   .pv-counter .pv-counter-bar{ transition: stroke-dashoffset 0.35s ease; }
