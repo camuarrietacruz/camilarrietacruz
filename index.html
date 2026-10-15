@@ -326,7 +326,7 @@
   .footer-signature-mark{
     position:absolute; left:50%; bottom:0;
     transform:translateX(-50%);
-    color:var(--cream); opacity:0.9;
+    color:var(--cream); opacity:0.7;
     line-height:0;
   }
   .footer-signature-mark svg{
@@ -338,6 +338,11 @@
      legal deja libre ese lugar (si no entra, corta en una línea más) */
   html.is-narrow .footer-signature-mark{ left:auto; right:0; transform:none; }
   html.is-narrow .footer-copyright{ max-width: calc(100% - 80px); }
+  /* la base de la firma es el borde de abajo del svg; la línea de base
+     del último renglón legal quedaba 3.5px más arriba (es el aire que
+     deja el line-height 1.5 del texto de 9px) — se baja eso para que
+     las dos se apoyen en la misma línea */
+  html.is-narrow .footer-copyright{ position:relative; top:3.5px; }
   /* Bloque de contacto (SAY HELLO :) + email + teléfono), centrado en
      los dos ejes de la pantalla — position:absolute contra
      .footer-content (que ya es inset:0 del viewport fijo), así queda
@@ -402,7 +407,7 @@
   }
   .footer-copyright{
     font-size:clamp(9px, 0.7vw, 11px);
-    line-height:1.5; letter-spacing:0.02em; opacity:0.8;
+    line-height:1.5; letter-spacing:0.02em; opacity:0.7;
   }
   /* Say Hello / Follow / Let's Talk y CAMUXI (label viejo): pausados
      por pedido (van a volver en el rediseño) — visibility:hidden en
