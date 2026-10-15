@@ -438,8 +438,8 @@
      vista como cortina y destapa el footer de siempre (el mismo que
      el home, no se duplica). */
   .project-view{
-    --pv-left: max(83px, 9.2vw);
-    --pv-info: 25.8vw;
+    --pv-panel: 35vw;              /* panel de info, desde el borde izquierdo */
+    --pv-pad: max(24px, 2.4vw);    /* margen interno del panel */
     --pv-accent: var(--blue);
     position:fixed; top:0; left:0; right:0; height:var(--app-h, 100vh);
     z-index:200;
@@ -456,58 +456,75 @@
   .project-view button{ font-family:inherit; color:inherit; background:none; border:none; padding:0; }
 
   .pv-back{
-    position:absolute; top:28px; left:0; width:var(--pv-left); z-index:3;
-    font-size:11px; letter-spacing:0.1em; text-transform:uppercase;
+    position:absolute; top:34px; left:var(--pv-pad); z-index:3;
+    font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
     opacity:0.85; transition:opacity 0.2s ease;
   }
   html.can-hover .pv-back:hover{ opacity:1; }
 
+  /* panel de info: un solo panel ancho desde el borde de la pantalla
+     (volver y sello arriba, título y descripción, campos abajo de todo).
+     Fondo casi negro + atmósfera azul fija que nace abajo a la izquierda
+     (15% 100%) y se apaga hacia arriba/derecha antes del feed; siempre el
+     mismo azul, no depende del proyecto. Como el panel arranca en el borde
+     de la pantalla no hay ningún borde interno que la corte. Va como fondo
+     del panel (no en un ::before) para quedar quieta si el panel scrollea. */
   .pv-info{
-    position:absolute; top:0; bottom:0; left:var(--pv-left); width:var(--pv-info);
+    position:absolute; top:0; bottom:0; left:0; width:var(--pv-panel);
     z-index:2;
-    background:var(--pv-accent); color:var(--cream);
+    display:flex; flex-direction:column;
+    background:
+      radial-gradient(ellipse 90% 60% at 15% 100%, rgba(0,18,255,0.38) 0%, transparent 70%),
+      #07070a;
+    color:var(--cream);
     -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-    padding:28px 28px 40px;
+    padding:96px var(--pv-pad) 40px;
     overflow-y:auto; scrollbar-width:none;
   }
   .pv-info::-webkit-scrollbar{ display:none; }
-  .pv-head{ position:relative; padding-right:34px; }
   .pv-title{
-    font-weight:700; font-size:clamp(26px, 2.4vw, 42px);
-    line-height:1.02; letter-spacing:-0.01em; margin:0 0 14px;
+    font-weight:700; font-size:clamp(30px, 3.3vw, 64px);
+    line-height:1; letter-spacing:-0.02em; margin:0 0 12px;
   }
   .pv-meta{
-    font-size:11px; letter-spacing:0.1em; text-transform:uppercase; opacity:0.8;
-    display:flex; gap:8px;
+    font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase;
+    opacity:0.7; display:flex; gap:10px;
   }
-  /* sello vertical tipo "CX.01" en la esquina (guiño a CAMUXI) */
+  /* sello "CX-01" en pastilla, arriba a la derecha del panel (guiño a CAMUXI) */
   .pv-index{
-    position:absolute; top:2px; right:0;
-    writing-mode:vertical-rl;
+    position:absolute; top:30px; right:var(--pv-pad);
     font-size:10px; letter-spacing:0.12em;
-    border:1px solid rgba(248,247,239,0.55); border-radius:4px; padding:6px 3px;
+    border:1px solid rgba(248,247,239,0.4); border-radius:999px; padding:5px 11px;
+    opacity:0.85;
   }
+  /* coordenadas del proyecto: línea chica tipo telemetría bajo año/tipo;
+     si el proyecto no tiene coords no se renderiza (hidden) */
+  .pv-coords{
+    font-family:'Courier New', monospace;
+    font-size:10px; letter-spacing:0.1em;
+    opacity:0.4;
+    margin-top:8px;
+  }
+  .pv-coords[hidden]{ display:none; }
   .pv-info-toggle{ display:none; }
-  .pv-body{ margin-top:28px; }
-  .pv-desc{ font-size:14px; line-height:1.5; font-weight:300; margin:0 0 28px; max-width:42ch; }
-  .pv-row{
-    display:grid; grid-template-columns:22px 1fr; gap:16px;
-    border-top:1px solid rgba(248,247,239,0.35);
-    padding:18px 0 22px;
-  }
+  .pv-body{ flex:1; display:flex; flex-direction:column; margin-top:clamp(36px, 4vw, 64px); }
+  .pv-desc{ font-size:14px; line-height:1.55; font-weight:400; opacity:0.85; margin:0 0 40px; max-width:44ch; }
+  /* cliente / servicios / créditos: apilados abajo de todo del panel */
+  .pv-rows{ margin-top:auto; }
+  .pv-row{ border-top:1px solid rgba(248,247,239,0.16); padding:18px 0 20px; }
   .pv-label{
-    writing-mode:vertical-rl; transform:rotate(180deg);
-    font-size:10px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase;
-    margin:0; justify-self:start; align-self:start;
+    color:var(--cream); opacity:0.7; /* misma opacidad que año/tipo y el legal del footer */
+    font-size:10px; font-weight:400; letter-spacing:0.15em; text-transform:uppercase;
+    margin:0 0 6px;
   }
-  .pv-val{ font-size:14px; line-height:1.45; }
-  .pv-client{ font-weight:700; font-size:18px; letter-spacing:0.06em; text-transform:uppercase; }
+  /* todos los valores bajo los labels con la misma tipografía, en regular */
+  .pv-val{ font-size:14px; line-height:1.45; font-weight:400; }
   .pv-credit + .pv-credit{ margin-top:10px; }
-  .pv-credit b{ display:block; font-weight:700; }
+  .pv-credit b{ display:block; font-weight:400; }
 
   .pv-feed{
     position:absolute; top:0; bottom:0; right:0;
-    left:calc(var(--pv-left) + var(--pv-info));
+    left:var(--pv-panel);
     overflow-y:auto; overscroll-behavior:contain;
     scrollbar-width:none;
   }
@@ -585,20 +602,26 @@
     left:0; right:0; width:auto; bottom:auto;
     padding:46px 20px 16px; overflow:hidden;
   }
-  html.is-narrow .pv-title{ font-size:24px; margin-bottom:8px; }
-  html.is-narrow .pv-meta{ display:none; }
-  html.is-narrow .pv-index{ top:0; }
+  html.is-narrow .pv-title{ font-size:24px; margin-bottom:8px; padding-right:80px; }
+  html.is-narrow .pv-meta,
+  html.is-narrow .pv-coords{ display:none; }
+  html.is-narrow .pv-index{ top:48px; right:20px; } /* arriba a la derecha está el ES/EN */
   html.is-narrow .pv-info-toggle{
     display:inline-flex; gap:6px; align-items:center;
     font-size:13px; font-weight:700;
   }
   html.is-narrow .pv-body{ display:none; }
   html.is-narrow .pv-info.is-expanded{ bottom:0; overflow-y:auto; }
-  html.is-narrow .pv-info.is-expanded .pv-body{ display:block; }
+  html.is-narrow .pv-info.is-expanded .pv-body{ display:flex; }
   html.is-narrow .pv-info.is-expanded .pv-meta{ display:flex; margin-top:14px; }
+  html.is-narrow .pv-info.is-expanded .pv-coords:not([hidden]){ display:block; }
   html.is-narrow .pv-feed{ left:0; top:var(--pv-bar-h, 120px); }
   html.is-narrow .pv-counter{ top:calc(var(--pv-bar-h, 120px) + 14px); right:14px; }
   html.is-narrow .pv-contact{ right:12px; }
+  /* con la info desplegada a pantalla completa, el contador y el CX no
+     van encima del texto */
+  html.is-narrow .pv-info.is-expanded ~ .pv-counter,
+  html.is-narrow .pv-info.is-expanded ~ .pv-contact{ opacity:0; visibility:hidden; pointer-events:none; }
 
   /* con un proyecto abierto la página scrollea (para destapar el footer)
      aunque se haya entrado directo sin pasar por el loader. El selector
@@ -699,19 +722,22 @@
 
   <!-- VISTA DE PROYECTO: la llena el JS (ProjectView) con los datos de PROJECTS -->
   <section class="project-view" id="projectView" aria-hidden="true">
-    <button class="pv-back" id="pvBack" type="button">← <span data-pv="pvBack">Volver</span></button>
+    <button class="pv-back" id="pvBack" type="button">← <span data-pv="pvBack">Salir de órbita</span></button>
     <aside class="pv-info" id="pvInfo">
       <header class="pv-head">
         <span class="pv-index" id="pvIndex"></span>
         <h1 class="pv-title" id="pvTitle"></h1>
         <div class="pv-meta"><span id="pvYear"></span><span>/</span><span id="pvType"></span></div>
+        <div class="pv-coords" id="pvCoords" hidden></div>
         <button class="pv-info-toggle" id="pvInfoToggle" type="button" aria-expanded="false">↘ <span id="pvInfoToggleLabel"></span></button>
       </header>
       <div class="pv-body">
         <p class="pv-desc" id="pvDesc"></p>
+        <div class="pv-rows">
         <section class="pv-row"><h2 class="pv-label" data-pv="pvClient"></h2><div class="pv-val pv-client" id="pvClient"></div></section>
         <section class="pv-row"><h2 class="pv-label" data-pv="pvServices"></h2><div class="pv-val" id="pvServices"></div></section>
         <section class="pv-row"><h2 class="pv-label" data-pv="pvCredits"></h2><div class="pv-val" id="pvCredits"></div></section>
+        </div>
       </div>
     </aside>
     <div class="pv-feed" id="pvFeed"></div>
@@ -1087,9 +1113,7 @@ function tickCursor(){
   // de pantalla. Si el cursor está por debajo, ya está sobre el
   // footer y necesita la variante oscura para no perderse en el azul.
   const footerBoundary = appH * (1 - scrollP);
-  // también va la variante amarilla sobre la columna azul de un proyecto,
-  // donde el punto azul se perdería
-  const overFooter = mouseY > footerBoundary || cursorOverProjectInfo(mouseX, mouseY);
+  const overFooter = mouseY > footerBoundary;
   cursorDots.forEach((d, i) => {
     if (!d.init){ d.x = px; d.y = py; d.init = true; }
     const ease = i === 0 ? 0.55 : 0.4; // el punto principal sigue más de cerca
@@ -1601,7 +1625,7 @@ const I18N = {
     emailSubject: 'Hablemos ✦',
     emailBody: 'Hola! Vi tu web y me gustaría contarte sobre un proyecto.',
     waMessage: 'Hola Cami! ✨ Vi tu web y quiero contarte sobre un proyecto.',
-    pvBack: 'Volver',
+    pvBack: 'Salir de órbita',
     pvSeeInfo: 'Ver información',
     pvHideInfo: 'Ocultar información',
     pvContact: 'Contacto',
@@ -1621,7 +1645,7 @@ const I18N = {
     emailSubject: "Let's talk ✦",
     emailBody: "Hi, I came across your portfolio and I'd love to talk about a project...",
     waMessage: "Hi Cami! ✨ I found your site and I'd love to talk about a project.",
-    pvBack: 'Back',
+    pvBack: 'Leave orbit',
     pvSeeInfo: 'See information',
     pvHideInfo: 'Hide information',
     pvContact: 'Contact',
@@ -2246,6 +2270,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 01 — Camila Arrieta Cruz', en:'Project 01 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 01 de Camila Arrieta Cruz (placeholder).', en:'Project 01 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] },
   { slug:'proyecto-02', name:'Proyecto 02', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[1], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2255,6 +2280,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 02 — Camila Arrieta Cruz', en:'Project 02 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 02 de Camila Arrieta Cruz (placeholder).', en:'Project 02 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] },
   { slug:'proyecto-03', name:'Proyecto 03', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[2], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2264,6 +2290,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 03 — Camila Arrieta Cruz', en:'Project 03 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 03 de Camila Arrieta Cruz (placeholder).', en:'Project 03 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] },
   { slug:'proyecto-04', name:'Proyecto 04', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[3], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2273,6 +2300,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 04 — Camila Arrieta Cruz', en:'Project 04 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 04 de Camila Arrieta Cruz (placeholder).', en:'Project 04 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] },
   { slug:'proyecto-05', name:'Proyecto 05', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[4], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2282,6 +2310,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 05 — Camila Arrieta Cruz', en:'Project 05 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 05 de Camila Arrieta Cruz (placeholder).', en:'Project 05 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] },
   { slug:'proyecto-06', name:'Proyecto 06', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[5], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2291,6 +2320,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 06 — Camila Arrieta Cruz', en:'Project 06 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 06 de Camila Arrieta Cruz (placeholder).', en:'Project 06 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] },
   { slug:'proyecto-07', name:'Proyecto 07', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[6], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2300,6 +2330,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 07 — Camila Arrieta Cruz', en:'Project 07 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 07 de Camila Arrieta Cruz (placeholder).', en:'Project 07 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] },
   { slug:'proyecto-08', name:'Proyecto 08', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[7], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2309,6 +2340,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 08 — Camila Arrieta Cruz', en:'Project 08 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 08 de Camila Arrieta Cruz (placeholder).', en:'Project 08 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] },
   { slug:'proyecto-09', name:'Proyecto 09', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[8], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2318,6 +2350,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 09 — Camila Arrieta Cruz', en:'Project 09 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 09 de Camila Arrieta Cruz (placeholder).', en:'Project 09 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] },
   { slug:'proyecto-10', name:'Proyecto 10', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[9], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2327,6 +2360,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 10 — Camila Arrieta Cruz', en:'Project 10 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 10 de Camila Arrieta Cruz (placeholder).', en:'Project 10 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] },
   { slug:'proyecto-11', name:'Proyecto 11', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[10], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2336,6 +2370,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 11 — Camila Arrieta Cruz', en:'Project 11 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 11 de Camila Arrieta Cruz (placeholder).', en:'Project 11 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] },
   { slug:'proyecto-12', name:'Proyecto 12', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[11], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2345,6 +2380,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 12 — Camila Arrieta Cruz', en:'Project 12 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 12 de Camila Arrieta Cruz (placeholder).', en:'Project 12 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] },
   { slug:'proyecto-13', name:'Proyecto 13', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[12], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2354,6 +2390,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 13 — Camila Arrieta Cruz', en:'Project 13 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 13 de Camila Arrieta Cruz (placeholder).', en:'Project 13 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] },
   { slug:'proyecto-14', name:'Proyecto 14', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[13], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2363,6 +2400,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 14 — Camila Arrieta Cruz', en:'Project 14 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 14 de Camila Arrieta Cruz (placeholder).', en:'Project 14 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] },
   { slug:'proyecto-15', name:'Proyecto 15', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[14], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2372,6 +2410,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 15 — Camila Arrieta Cruz', en:'Project 15 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 15 de Camila Arrieta Cruz (placeholder).', en:'Project 15 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
     media:[] }
 ];
 
@@ -2380,6 +2419,19 @@ const projectViewEl = document.getElementById('projectView');
 const SITE_URL = 'https://www.camilarrietacruz.com';
 
 function tr(v){ return (v && typeof v === 'object' && !Array.isArray(v)) ? (v[currentLang] || v.es || v.en || '') : (v || ''); }
+// coords { lat, lng, label } → "34.6179° S · 58.4404° O — BUENOS AIRES"
+// (sin signos: N/S y E/O; en inglés el oeste es W). Sin coords → ''.
+function formatCoords(c){
+  if (!c || !isFinite(c.lat) || !isFinite(c.lng)) return '';
+  const ns = c.lat < 0 ? 'S' : 'N';
+  const ew = c.lng < 0 ? (currentLang === 'es' ? 'O' : 'W') : 'E';
+  const label = tr(c.label);
+  // espacios duros dentro de cada parte: si la línea no entra, corta
+  // limpio entre las coordenadas y el lugar (nunca deja el "—" suelto)
+  const nb = t => t.replace(/ /g, '\u00a0');
+  const pos = nb(Math.abs(c.lat).toFixed(4) + '° ' + ns + ' · ' + Math.abs(c.lng).toFixed(4) + '° ' + ew);
+  return pos + (label ? ' ' + nb('— ' + label) : '');
+}
 function projectBySlug(slug){ return PROJECTS.find(p => p.slug === slug) || null; }
 function projectMedia(p){
   if (p.media && p.media.length) return p.media;
@@ -2443,10 +2495,14 @@ const ProjectView = (() => {
     $('pvContact').setAttribute('aria-label', copy.pvContact);
     $('pvOrbitText').textContent = copy.pvContactOrbit;
     projectViewEl.style.setProperty('--pv-accent', p.accent || 'var(--blue)');
-    $('pvIndex').textContent = 'CX.' + String(PROJECTS.indexOf(p) + 1).padStart(2, '0');
+    $('pvIndex').textContent = 'CX-' + String(PROJECTS.indexOf(p) + 1).padStart(2, '0');
     $('pvTitle').textContent = p.name;
     $('pvYear').textContent = p.year;
     $('pvType').textContent = tr(p.type);
+    const coordsEl = $('pvCoords');
+    const coordsText = formatCoords(p.coords);
+    coordsEl.textContent = coordsText;
+    coordsEl.hidden = !coordsText;
     $('pvDesc').textContent = tr(p.description);
     $('pvClient').textContent = tr(p.client);
     $('pvServices').textContent = tr(p.services);
@@ -2615,17 +2671,10 @@ const ProjectView = (() => {
       renderFeed(p);
     },
     renderText,
-    clear(){ feed.innerHTML = ''; items = []; total = 0; copyH = 0; },
-    isOverInfo(x, y){
-      const r = info.getBoundingClientRect();
-      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
-    }
+    clear(){ feed.innerHTML = ''; items = []; total = 0; copyH = 0; }
   };
 })();
 
-function cursorOverProjectInfo(x, y){
-  return !!currentProject && ProjectView.isOverInfo(x, y);
-}
 function refreshProjectLang(){
   if (!currentProject) return;
   ProjectView.renderText(currentProject);
