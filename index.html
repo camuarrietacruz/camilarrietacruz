@@ -515,8 +515,18 @@
   /* max-width 29.5em ≈ tope de 10 palabras por renglón (medido; al ir
      en em acompaña el tamaño de letra); en notebooks el panel corta antes */
   .pv-desc{ font-size:21.56px; line-height:1.4; font-weight:400; opacity:0.85; margin:0 0 40px; max-width:29.5em; }
+  /* links del proyecto ("↗ Instagram") debajo de la descripción */
+  .pv-links{ display:flex; flex-wrap:wrap; gap:8px 22px; margin-top:-16px; margin-bottom:40px; font-size:13px; letter-spacing:0.08em; }
+  .pv-links:empty{ display:none; }
+  .pv-links a{ color:inherit; text-decoration:none; opacity:0.85; transition:opacity 0.2s ease; }
+  html.can-hover .pv-links a:hover{ opacity:1; }
   /* cliente / servicios / créditos: apilados abajo de todo del panel */
   .pv-rows{ margin-top:auto; }
+  .pv-rows[hidden]{ display:none; }
+  /* proyecto sin esos campos: la descripción (y sus links) bajan a ocupar
+     ese lugar, abajo de todo */
+  .pv-body.is-desc-bottom .pv-desc{ margin-top:auto; }
+  .pv-body.is-desc-bottom .pv-links{ margin-bottom:0; }
   .pv-row{ padding:14px 0 16px; }
   .pv-label{
     color:var(--cream); opacity:0.7; /* misma opacidad que año/tipo y el legal del footer */
@@ -739,6 +749,7 @@
       </header>
       <div class="pv-body">
         <p class="pv-desc" id="pvDesc"></p>
+        <div class="pv-links" id="pvLinks"></div>
         <div class="pv-rows">
         <section class="pv-row"><h2 class="pv-label" data-pv="pvClient"></h2><div class="pv-val pv-client" id="pvClient"></div></section>
         <section class="pv-row"><h2 class="pv-label" data-pv="pvServices"></h2><div class="pv-val" id="pvServices"></div></section>
@@ -2278,15 +2289,19 @@ const PROJECTS = [
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
     coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
-  { slug:'proyecto-02', name:'Proyecto 02', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+  { slug:'lacade', name:'LACADÉ BODEGÓN', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[1], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
-    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 02 — Camila Arrieta Cruz', en:'Project 02 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 02 de Camila Arrieta Cruz (placeholder).', en:'Project 02 by Camila Arrieta Cruz (placeholder).' },
+    // sin cliente/servicios/créditos: esa zona se oculta y la descripción baja a ocupar su lugar
+    client:null, services:null, credits:[],
+    description:{
+      es:'Identidad de marca completa para LACADÉ, el bodegón de la Sede Norberto Perone (Racing Club) en Villa del Parque. Desarrollé el sistema de logo y símbolos, paleta y tipografía bajo un concepto que pone en el centro la mesa, el festejo y el encuentro — llevado a todos los productos del local.',
+      en:'Complete brand identity for LACADÉ, the bodegón at the Norberto Perone headquarters (Racing Club) in Villa del Parque. I developed the logo and symbol system, palette and typography around a concept that puts the table, celebration and togetherness at the center — carried across every product in the venue.'
+    },
+    links:[ { label:'Instagram', url:'https://www.instagram.com/bodegon.lacade/' } ],
+    seoTitle:{ es:'LACADÉ Bodegón — Camila Arrieta Cruz', en:'LACADÉ Bodegón — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Identidad de marca para LACADÉ, el bodegón de Racing Club en Villa del Parque.', en:'Brand identity for LACADÉ, Racing Club’s bodegón in Villa del Parque.' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
+    coords:{ lat:-34.6039, lng:-58.4914, label:'VILLA DEL PARQUE' },
     media:[] },
   { slug:'proyecto-03', name:'Proyecto 03', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[2], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2511,6 +2526,17 @@ const ProjectView = (() => {
     coordsEl.textContent = coordsText;
     coordsEl.hidden = !coordsText;
     $('pvDesc').textContent = tr(p.description);
+    const linksEl = $('pvLinks');
+    linksEl.innerHTML = '';
+    (p.links || []).forEach(l => {
+      const a = document.createElement('a');
+      a.textContent = '↗ ' + tr(l.label);
+      if (l.url){ a.href = l.url; a.target = '_blank'; a.rel = 'noopener'; }
+      linksEl.appendChild(a);
+    });
+    const hasFields = !!(tr(p.client) || tr(p.services) || (p.credits || []).length);
+    projectViewEl.querySelector('.pv-rows').hidden = !hasFields;
+    projectViewEl.querySelector('.pv-body').classList.toggle('is-desc-bottom', !hasFields);
     $('pvClient').textContent = tr(p.client);
     $('pvServices').textContent = tr(p.services);
     $('pvCredits').innerHTML = '';
