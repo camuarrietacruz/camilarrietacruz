@@ -328,6 +328,10 @@
   .footer-signature-mark svg{
     display:block; height:18.15px; width:auto;
   }
+  /* celular: el texto legal (alineado a la izquierda) llega hasta el
+     centro y se pisaba con la firma — la firma sube y queda centrada
+     arriba del bloque legal */
+  html.is-narrow .footer-signature-mark{ bottom: calc(100% + 24px); }
   /* Bloque de contacto (SAY HELLO :) + email + teléfono), centrado en
      los dos ejes de la pantalla — position:absolute contra
      .footer-content (que ya es inset:0 del viewport fijo), así queda
@@ -369,8 +373,12 @@
   /* al hover pasa a la variable Bold — al ser dos archivos de fuente
      estáticos distintos (no un variable font real) el cambio de peso
      no se puede animar/interpolar, salta directo de Light a Bold */
-  .footer-contact-email:hover,
-  .footer-contact-phone:hover{
+  /* touch: no hay hover (y en iOS el :hover queda "pegado" después de
+     tocar), así que ahí el bold lo da .is-tapped un instante al tocar */
+  html.can-hover .footer-contact-email:hover,
+  html.can-hover .footer-contact-phone:hover,
+  .footer-contact-email.is-tapped,
+  .footer-contact-phone.is-tapped{
     font-weight:700;
   }
   /* Reveal de las palabras del footer (copyright + firma CAMUXI):
@@ -1291,22 +1299,38 @@ function setupContactHover(){
 
   const labelScrambler = new TextScramble(labelEl);
 
+  // touch: los datos se ven como en desktop por default; al tocar uno se
+  // pone bold un instante mientras el link hace lo suyo (mail o WhatsApp).
+  // Sin hover no se cambia el label ni se apaga el otro dato: en touch el
+  // mouseenter sintético los dejaba así para siempre.
+  [emailEl, phoneEl].forEach(el => {
+    el.addEventListener('touchstart', () => {
+      if (canHover) return;
+      el.classList.add('is-tapped');
+      setTimeout(() => el.classList.remove('is-tapped'), 450);
+    }, { passive:true });
+  });
+
   emailEl.addEventListener('mouseenter', () => {
+    if (!canHover) return;
     contactHoverState = 'email';
     phoneEl.style.opacity = '0.2';
     labelScrambler.setText(I18N[currentLang].writeMe);
   });
   emailEl.addEventListener('mouseleave', () => {
+    if (!canHover) return;
     contactHoverState = null;
     phoneEl.style.opacity = '1';
     labelScrambler.setText(I18N[currentLang].sayHello);
   });
   phoneEl.addEventListener('mouseenter', () => {
+    if (!canHover) return;
     contactHoverState = 'phone';
     emailEl.style.opacity = '0.2';
     labelScrambler.setText(I18N[currentLang].letsChat);
   });
   phoneEl.addEventListener('mouseleave', () => {
+    if (!canHover) return;
     contactHoverState = null;
     emailEl.style.opacity = '1';
     labelScrambler.setText(I18N[currentLang].sayHello);
