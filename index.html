@@ -361,6 +361,9 @@
     margin-bottom: clamp(14px, 2.2vw, 34px);
     animation: footer-label-float 14s ease-in-out infinite;
   }
+  /* desktop: 2px más chico que el nombre del hero (.side-text usa
+     clamp(12px, 1.05vw, 17px)), así acompaña su escala sin competirle */
+  html:not(.is-narrow) .footer-contact-label{ font-size: calc(clamp(12px, 1.05vw, 17px) - 2px); }
   /* "levita" alrededor de los datos de contacto — deriva orgánica y
      lenta, no una órbita cerrada, para que se sienta viva sin marear */
   @keyframes footer-label-float{
