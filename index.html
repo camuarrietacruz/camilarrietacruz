@@ -109,6 +109,9 @@
   html.is-narrow #name-text{ top: calc(env(safe-area-inset-top, 0px) + 72px); }
   html.is-narrow #sub-location{ top: calc(env(safe-area-inset-top, 0px) + 72px + 14px); }
   html.is-narrow #percent-text{ left:0; right:0; text-align:center; top: calc(50% + 70px + 32px); }
+  /* touch: el arrastre horizontal sobre el hero mueve el cover-flow; el
+     vertical sigue siendo el scroll de la página (pan-y) */
+  html.is-touch #loader{ touch-action: pan-y; }
   /* la frase queda a la misma distancia del borde de abajo que el nombre
      del de arriba (su centro a 72px), así el loader se lee simétrico */
   html.is-narrow #tagline{ bottom: calc(env(safe-area-inset-bottom, 0px) + 56px); }
@@ -1561,6 +1564,20 @@ function explodeCards(){
     };
   });
 
+  // touch (sin hover): las cards no arman el anillo disperso de desktop
+  // sino el cover-flow de frente (ver Coverflow). La explosión dispara cada
+  // una hacia su lado (la del centro hacia arriba) y aterriza en su pose.
+  const useCoverflow = !canHover;
+  if (useCoverflow){
+    cards.forEach((c, i) => {
+      const d = Coverflow.wrap(i);
+      c.cf = true;
+      c.target = Coverflow.pose(d);
+      const side = d === 0 ? -Math.PI / 2 : (d > 0 ? 0 : Math.PI);
+      c.bounce = marginPoint(side + (Math.random() - 0.5) * 1.2, 15 + Math.random() * 50);
+    });
+  }
+
   /* VARIANTE A — sin tilt: solo el efecto líquido + escala/sombra.
      No hay inclinación 3D en absoluto, ni fija ni dinámica. */
   cards.forEach((c) => {
@@ -1604,10 +1621,18 @@ function explodeCards(){
       const rot   = lerp(c.start.rot, 0, eFull);
       const scale = lerp(1, c.target.scale, eFull);
 
-      c.img.style.transform = `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(${scale})`;
+      if (c.cf){
+        const rotY = lerp(0, c.target.rotY, eFull);
+        c.img.style.transform = `perspective(${CF_PERSPECTIVE}px) translate(${tx}px, ${ty}px) rotate(${rot}deg) rotateY(${rotY}deg) scale(${scale})`;
+        c.img.style.opacity = lerp(1, c.target.op, eFull);
+        c.img.style.filter = 'brightness(' + lerp(1, c.target.bright, eFull) + ')';
+      } else {
+        c.img.style.transform = `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(${scale})`;
+      }
       c.img.style.zIndex = c.target.z;
     });
     if (!allDone) requestAnimationFrame(tick);
+    else if (useCoverflow) Coverflow.start(cards);
     else startOrbit(cards, ringPoint, geom);
   }
   requestAnimationFrame(tick);
@@ -1692,6 +1717,183 @@ function startOrbit(cards, ringPoint, geom){
   }
   requestAnimationFrame(frame);
 }
+
+/* -------- touch (mobile y tablet): el anillo visto de frente --------
+   estilo cover-flow: la card del centro grande y nítida, las de los
+   costados más chicas, más oscuras y giradas en perspectiva (rotateY),
+   las de atrás se desvanecen. Todo se calcula desde "pos" (qué card está
+   en el centro, en unidades de card y fraccional), así que:
+   - gira solo, lento y continuo: misma velocidad que la órbita de
+     desktop (una vuelta completa cada ORBIT_LAP_MS)
+   - arrastre horizontal: el dedo toma el control de pos; al soltar sigue
+     con inercia y el giro automático vuelve de a poco (autoK 0 → 1)
+   - arrastre vertical: no se toca, es el scroll de la página
+   - tap en una card del costado: viaja al centro (la del centro todavía
+     no hace nada; más adelante abrirá su proyecto)
+   - mientras se arrastra, la card del centro muestra el efecto líquido
+     (LiquidDistort, el mismo del hover de desktop) siguiendo al dedo
+   - scroll hacia el footer: implosionan desde su pose hacia el centro,
+     igual que en desktop
+   La geometría se lee en cada frame, así que rotar el teléfono o
+   cambiar el tamaño la recalcula sola. -------- */
+const CF_PERSPECTIVE = 800;
+const Coverflow = (() => {
+  const N = stackImgs.length;
+  const CARD_MS = ORBIT_LAP_MS / N; // tiempo que tarda en pasar de una card a la siguiente
+  let cards = [];
+  let pos = 0;
+  let autoK = 1;   // 0..1: cuánto pesa el giro automático
+  let vel = 0;     // inercia después de soltar, en cards por ms
+  let drag = null;
+  let goTo = null; // animación "traer al centro" después de un tap
+  let last = 0;
+
+  // distancia con signo al centro, en cards, dentro de [-N/2, N/2)
+  function wrap(d){ return ((d % N) + N * 1.5) % N - N / 2; }
+
+  function geometry(){
+    const vw = window.innerWidth;
+    // card del centro: grande pero con tope, porque las fotos son de 480px
+    const size = Math.min(vw * 0.56, appH * 0.4, 300);
+    return { center: size / 140, step: Math.min(vw * 0.34, size * 0.95) };
+  }
+
+  function pose(d){
+    const g = geometry();
+    const a = Math.abs(d), sg = Math.sign(d);
+    const near = Math.min(a, 1);                       // 0 → 1 de la central a la primera del costado
+    const far = Math.max(0, Math.min(a, 3.5) - 1);     // las siguientes se apilan más juntas
+    return {
+      dx: sg * (g.step * near + g.step * 0.42 * far),
+      dy: 0,
+      scale: g.center * (1 - 0.3 * near - 0.1 * far),
+      rotY: sg * 48 * near,
+      op: a < 2.4 ? 1 : Math.max(0, 1 - (a - 2.4) / 0.9),
+      bright: 1 - 0.38 * near - 0.12 * far,
+      z: Math.round(1000 - a * 100)
+    };
+  }
+
+  function centerCard(){
+    let best = null, bd = Infinity;
+    cards.forEach((c, i) => {
+      const a = Math.abs(wrap(i - pos));
+      if (a < bd){ bd = a; best = c; }
+    });
+    return best;
+  }
+
+  function easeInOut(t){ return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+  function frame(now){
+    const dt = Math.min(50, now - last);
+    last = now;
+
+    if (drag && drag.active){
+      // pos lo maneja el dedo (onMove)
+    } else if (goTo){
+      const t = Math.min(1, (now - goTo.t0) / goTo.ms);
+      pos = lerp(goTo.from, goTo.to, easeInOut(t));
+      if (t >= 1) goTo = null;
+    } else {
+      if (Math.abs(vel) > 0.00002){ pos += vel * dt; vel *= Math.pow(0.994, dt); }
+      else vel = 0;
+      autoK = Math.min(1, autoK + dt / 1500);
+      if (!prefersReducedMotion) pos += autoK * dt / CARD_MS;
+    }
+
+    const ip = 1 - Math.pow(1 - scrollP, 2); // implosión, igual que en desktop
+    cards.forEach((c, i) => {
+      const p = pose(wrap(i - pos));
+      const tx = lerp(p.dx, 0, ip);
+      const ty = lerp(p.dy, 0, ip);
+      const scale = lerp(p.scale, 1, ip);
+      const rotY = lerp(p.rotY, 0, ip);
+      const transformStr = `perspective(${CF_PERSPECTIVE}px) translate(${tx}px, ${ty}px) rotateY(${rotY}deg) scale(${scale})`;
+      c.img.style.transform = transformStr;
+      c.img.style.opacity = lerp(p.op, 1, ip);
+      c.img.style.filter = 'brightness(' + (p.bright * (1 - ip)) + ')';
+      c.img.style.zIndex = Math.round(lerp(p.z, (i + 1) * 40, ip));
+      if (LiquidDistort.isAttached(c)) LiquidDistort.syncTransform(transformStr, 9999);
+    });
+
+    // el efecto líquido acompaña a la card que esté en el centro mientras se arrastra
+    if (drag && drag.active){
+      const cc = centerCard();
+      if (cc && cc !== drag.liquidCard){ drag.liquidCard = cc; LiquidDistort.attach(cc); }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function onStart(e){
+    if (e.touches.length !== 1 || scrollP > 0.02){ drag = null; return; }
+    const t = e.touches[0];
+    const now = performance.now();
+    drag = { x0: t.clientX, y0: t.clientY, pos0: pos, t0: now, lastX: t.clientX, lastT: now,
+             v: 0, active: false, decided: false, liquidCard: null, target: e.target };
+  }
+  function onMove(e){
+    if (!drag) return;
+    const t = e.touches[0];
+    if (!t) return;
+    if (!drag.decided){
+      const dx = t.clientX - drag.x0, dy = t.clientY - drag.y0;
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)){
+        drag.decided = true; drag.active = true;
+        goTo = null; vel = 0; autoK = 0;
+        drag.pos0 = pos; drag.x0 = t.clientX;
+      } else if (Math.abs(dy) > 8){
+        drag.decided = true; // vertical: es el scroll de la página
+        return;
+      } else {
+        return;
+      }
+    }
+    if (!drag.active) return;
+    const now = performance.now();
+    const unit = geometry().step;
+    pos = drag.pos0 - (t.clientX - drag.x0) / unit;
+    const ddt = Math.max(1, now - drag.lastT);
+    drag.v = 0.8 * (-(t.clientX - drag.lastX) / unit / ddt) + 0.2 * drag.v;
+    drag.lastX = t.clientX; drag.lastT = now;
+    LiquidDistort.move(t.clientX, t.clientY);
+  }
+  function onEnd(){
+    if (!drag) return;
+    if (drag.active){
+      vel = Math.max(-0.006, Math.min(0.006, drag.v));
+      LiquidDistort.leave();
+    } else if (!drag.decided && performance.now() - drag.t0 < 400){
+      // tap: una card del costado viaja al centro
+      const img = drag.target && drag.target.closest ? drag.target.closest('.stack-img') : null;
+      const i = cards.findIndex(c => c.img === img);
+      if (i >= 0){
+        const d = wrap(i - pos);
+        if (Math.abs(d) > 0.5){
+          goTo = { from: pos, to: pos + d, t0: performance.now(), ms: 650 };
+          autoK = 0; vel = 0;
+        }
+      }
+    }
+    drag = null;
+  }
+
+  return {
+    wrap, pose,
+    start(cs){
+      cards = cs;
+      // las transforms se escriben en cada frame: sin la transición de
+      // la caída del loader, que haría que las cards "persigan" al dedo
+      cards.forEach(c => { c.img.style.transition = 'none'; });
+      loader.addEventListener('touchstart', onStart, { passive:true });
+      loader.addEventListener('touchmove', onMove, { passive:true });
+      loader.addEventListener('touchend', onEnd, { passive:true });
+      loader.addEventListener('touchcancel', onEnd, { passive:true });
+      last = performance.now();
+      requestAnimationFrame(frame);
+    }
+  };
+})();
 
 runLoader();
 
