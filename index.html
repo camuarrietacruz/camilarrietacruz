@@ -519,24 +519,77 @@
   .pv-counter{
     position:absolute; top:24px; right:24px;
     width:52px; height:52px; z-index:3;
-    border-radius:50%; background:rgba(17,17,17,0.55);
+    isolation:isolate;
     display:flex; align-items:center; justify-content:center;
     font-size:12px; letter-spacing:0.02em;
   }
   .pv-counter svg{ position:absolute; inset:0; transform:rotate(-90deg); }
+  /* fondo tipo glow: una mancha oscura y desenfocada que se desvanece
+     hacia afuera (gradiente radial + blur con máscara radial), sin
+     ningún borde duro — solo para que el número se lea sobre fotos claras */
+  .pv-counter::before{
+    content:''; position:absolute; inset:-22px; z-index:-1;
+    border-radius:50%;
+    background: radial-gradient(closest-side, rgba(17,17,17,0.55), rgba(17,17,17,0.3) 55%, rgba(17,17,17,0) 100%);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    -webkit-mask-image: radial-gradient(closest-side, #000 40%, transparent 100%);
+            mask-image: radial-gradient(closest-side, #000 40%, transparent 100%);
+    pointer-events:none;
+  }
   .pv-counter circle{ fill:none; stroke:var(--cream); stroke-width:1.5; }
   .pv-counter .pv-counter-track{ opacity:0.22; }
   .pv-counter .pv-counter-bar{ transition: stroke-dashoffset 0.35s ease; }
   .pv-counter-total{ opacity:0.55; margin-left:1px; }
 
-  /* tab "@ Contacto": lleva al footer real (mismo scroll que el nombre del home) */
+  /* contacto: el "CX" del favicon flotando, sin caja ni borde ni texto
+     (la palabra va solo como aria-label). Lleva al footer real. El botón
+     queda fijo a la derecha y centrado en vertical; lo único que se
+     anima es translateY de la marca de adentro (±5px, 5s, ease-in-out),
+     así nunca puede salirse de su lugar. Va en crema, sin halo. */
   .pv-contact{
-    position:absolute; right:20px; top:50%; z-index:3;
-    writing-mode:vertical-rl; transform:translateY(-50%) rotate(180deg);
-    background:var(--blue) !important; color:var(--cream);
-    border-radius:999px; padding:14px 9px !important;
-    font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
-    box-shadow:0 0 0 1px rgba(248,247,239,0.25);
+    position:absolute; right:22px; top:50%; z-index:3;
+    transform:translateY(-50%);
+    width:44px; height:44px;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0.9; transition:opacity 0.25s ease;
+  }
+  html.can-hover .pv-contact:hover{ opacity:1; }
+  .pv-contact-mark{
+    position:relative;
+    display:block; width:30.4px; line-height:0; /* 38px − 20% */
+    animation: pv-contact-float 5s ease-in-out infinite alternate;
+  }
+  .pv-contact-mark > svg{ display:block; width:100%; height:auto; fill:var(--cream); }
+
+  /* hover (solo con mouse): "CONTACTAME" orbita alrededor del CX como su
+     luna — la palabra va curvada sobre un círculo invisible (textPath) y
+     el círculo gira lento. Vive dentro de la marca, así acompaña su
+     flotación. Mismo estilo que el texto flotante del footer. En touch no
+     hay hover: la palabra no aparece nunca. */
+  .pv-contact-orbit{
+    position:absolute; left:50%; top:50%;
+    width:88px; height:88px; margin:-44px 0 0 -44px;
+    pointer-events:none;
+    opacity:0; transition:opacity 0.35s ease;
+    animation: pv-contact-orbit 9s linear infinite;
+  }
+  .pv-contact-orbit svg{ display:block; width:100%; height:100%; overflow:visible; }
+  .pv-contact-orbit text{
+    fill:var(--cream); fill-opacity:0.6;
+    font-family:var(--font); font-size:9px; letter-spacing:1.1px; text-transform:uppercase;
+  }
+  html.can-hover .pv-contact:hover .pv-contact-orbit,
+  html.can-hover .pv-contact:focus-visible .pv-contact-orbit{ opacity:1; }
+  @keyframes pv-contact-orbit{
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  @keyframes pv-contact-float{
+    from { transform: translateY(-5px); }
+    to   { transform: translateY(5px); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .pv-contact-mark, .pv-contact-orbit{ animation:none; }
   }
 
   /* celular: barra arriba + feed a pantalla completa (como la referencia) */
@@ -679,7 +732,7 @@
       <svg viewBox="0 0 52 52" aria-hidden="true"><circle class="pv-counter-track" cx="26" cy="26" r="24"/><circle class="pv-counter-bar" id="pvCounterBar" cx="26" cy="26" r="24"/></svg>
       <span id="pvCounterNum">1</span><span class="pv-counter-total" id="pvCounterTotal">/1</span>
     </div>
-    <button class="pv-contact" id="pvContact" type="button">@ <span data-pv="pvContact">Contacto</span></button>
+    <button class="pv-contact" id="pvContact" type="button" aria-label="Contacto"><span class="pv-contact-mark"><span class="pv-contact-orbit" aria-hidden="true"><svg viewBox="0 0 88 88"><defs><path id="pvOrbitPath" d="M44,44 m-34,0 a34,34 0 1,1 68,0 a34,34 0 1,1 -68,0"/></defs><text><textPath href="#pvOrbitPath" id="pvOrbitText">Contactame</textPath></text></svg></span><svg viewBox="0 0 532 391" aria-hidden="true" focusable="false"><path d="M419.639 192.13C419.639 192.13 417.253 189.119 417.253 188.116C425.432 182.43 433.612 177.079 441.451 171.058C475.192 145.304 542.333 90.4517 522.225 37.2715C514.386 16.869 494.278 11.5175 476.214 10.5141C464.967 9.8452 448.267 9.51074 437.361 10.5141C434.975 10.5141 429.863 11.5175 432.249 15.5311C433.953 18.2069 452.698 16.869 456.788 17.5379C475.192 19.5447 490.87 33.5923 495.3 53.6604C504.502 95.4687 470.761 134.267 443.496 158.014C440.088 161.024 414.527 181.092 412.822 181.092C411.8 181.092 411.118 180.089 410.437 179.42C388.283 147.98 362.381 118.881 340.228 87.4416C324.891 66.0357 296.263 21.5515 340.91 17.2035C347.726 16.5345 357.951 18.5413 363.745 17.2035C365.789 16.5345 368.175 13.5243 366.471 11.852C365.789 11.1831 363.063 10.8486 361.7 10.8486C346.363 9.51074 323.187 9.8452 307.85 10.8486C261.158 13.5243 280.244 62.3565 300.012 87.4416L385.216 202.164C350.453 226.245 312.622 253.672 289.105 291.801C273.428 317.22 259.113 369.732 295.24 381.438C311.259 386.789 349.771 386.789 366.812 385.117C369.198 385.117 375.332 384.114 372.947 380.1C371.243 377.424 356.928 378.762 353.52 378.428C313.985 375.418 302.057 353.008 311.94 310.865C322.165 267.05 356.928 231.931 390.669 209.522L475.192 323.91C482.69 335.616 492.914 349.998 490.188 365.384C486.78 385.452 455.084 376.421 442.473 378.762C436.68 379.766 438.043 384.783 444.518 385.452C460.878 386.789 487.121 386.455 503.821 385.452C546.082 382.441 530.745 342.64 513.704 317.889C484.394 275.412 448.608 235.61 419.298 192.799L419.639 192.13Z"/><path d="M125.111 362.374C167.031 385.118 225.165 385.023 261.632 350.907C264.181 349.689 310.356 303.239 310.356 303.239C310.356 303.239 286.438 340.535 263.998 360.335C253.693 369.428 241.671 376.422 233.832 379.432C155.103 411.206 59.6738 369.398 20.139 287.453C-40.1858 162.028 42.6329 6.83572 167.372 0.146383C206.225 -1.86042 259.393 16.8697 285.636 49.982C322.444 96.1384 283.591 150.656 233.15 135.605C212.701 129.251 205.203 122.896 182.368 129.251C178.96 130.254 157.829 139.285 156.466 138.616C151.695 136.274 159.193 132.595 160.897 131.926C172.144 126.24 192.593 118.882 204.521 117.879C224.97 116.206 252.236 134.602 264.165 104.166C275.411 75.4015 257.007 44.9649 235.195 30.5829C189.525 0.480844 122.725 6.16679 82.8494 45.2994C-4.3999 130.588 21.843 306.853 125.111 362.374Z"/></svg></span></button>
   </section>
 
   <div class="footer-scroll-track"></div>
@@ -1565,6 +1618,7 @@ const I18N = {
     pvSeeInfo: 'Ver información',
     pvHideInfo: 'Ocultar información',
     pvContact: 'Contacto',
+    pvContactOrbit: 'Contactame',
     pvClient: 'Cliente',
     pvServices: 'Servicios',
     pvCredits: 'Créditos'
@@ -1584,6 +1638,7 @@ const I18N = {
     pvSeeInfo: 'See information',
     pvHideInfo: 'Hide information',
     pvContact: 'Contact',
+    pvContactOrbit: 'Contact me',
     pvClient: 'Client',
     pvServices: 'Services',
     pvCredits: 'Credits'
@@ -2398,6 +2453,8 @@ const ProjectView = (() => {
   function renderText(p){
     const copy = I18N[currentLang];
     projectViewEl.querySelectorAll('[data-pv]').forEach(el => { el.textContent = copy[el.dataset.pv]; });
+    $('pvContact').setAttribute('aria-label', copy.pvContact);
+    $('pvOrbitText').textContent = copy.pvContactOrbit;
     projectViewEl.style.setProperty('--pv-accent', p.accent || 'var(--blue)');
     $('pvIndex').textContent = 'CX.' + String(PROJECTS.indexOf(p) + 1).padStart(2, '0');
     $('pvTitle').textContent = p.name;
