@@ -421,6 +421,147 @@
      legales/firma de abajo, pero por fuera de esa fila: necesita
      z-index por encima de #loader (100) para no quedar tapado
      mientras el hero todavía cubre el footer. */
+  /* ════════ VISTA DE PROYECTO (/slug) ════════
+     Capa fija a pantalla completa, sin scroll de página propio:
+     · desktop/tablet: 3 zonas — izquierda vacía (volver + contador),
+       columna de info en el color del proyecto, feed a la derecha
+       (~65%) con scroll propio e infinito.
+     · celular: barra arriba con la info colapsada ("Ver información"
+       la despliega a pantalla completa) y el feed ocupa el resto.
+     El scroll fuera del feed es el scroll real de la página: sube la
+     vista como cortina y destapa el footer de siempre (el mismo que
+     el home, no se duplica). */
+  .project-view{
+    --pv-left: max(83px, 9.2vw);
+    --pv-info: 25.8vw;
+    --pv-accent: var(--blue);
+    position:fixed; top:0; left:0; right:0; height:var(--app-h, 100vh);
+    z-index:200;
+    background:var(--black); color:var(--cream);
+    font-family:var(--font);
+    opacity:0; visibility:hidden;
+    transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+    will-change: transform;
+  }
+  .project-view.is-open{
+    opacity:1; visibility:visible;
+    transition: opacity 0.35s ease, visibility 0s;
+  }
+  .project-view button{ font-family:inherit; color:inherit; background:none; border:none; padding:0; }
+
+  .pv-back{
+    position:absolute; top:28px; left:0; width:var(--pv-left); z-index:3;
+    font-size:11px; letter-spacing:0.1em; text-transform:uppercase;
+    opacity:0.85; transition:opacity 0.2s ease;
+  }
+  html.can-hover .pv-back:hover{ opacity:1; }
+
+  .pv-info{
+    position:absolute; top:0; bottom:0; left:var(--pv-left); width:var(--pv-info);
+    z-index:2;
+    background:var(--pv-accent); color:var(--cream);
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    padding:28px 28px 40px;
+    overflow-y:auto; scrollbar-width:none;
+  }
+  .pv-info::-webkit-scrollbar{ display:none; }
+  .pv-head{ position:relative; padding-right:34px; }
+  .pv-title{
+    font-weight:700; font-size:clamp(26px, 2.4vw, 42px);
+    line-height:1.02; letter-spacing:-0.01em; margin:0 0 14px;
+  }
+  .pv-meta{
+    font-size:11px; letter-spacing:0.1em; text-transform:uppercase; opacity:0.8;
+    display:flex; gap:8px;
+  }
+  /* sello vertical tipo "CX.01" en la esquina (guiño a CAMUXI) */
+  .pv-index{
+    position:absolute; top:2px; right:0;
+    writing-mode:vertical-rl;
+    font-size:10px; letter-spacing:0.12em;
+    border:1px solid rgba(248,247,239,0.55); border-radius:4px; padding:6px 3px;
+  }
+  .pv-info-toggle{ display:none; }
+  .pv-body{ margin-top:28px; }
+  .pv-desc{ font-size:14px; line-height:1.5; font-weight:300; margin:0 0 28px; max-width:42ch; }
+  .pv-row{
+    display:grid; grid-template-columns:22px 1fr; gap:16px;
+    border-top:1px solid rgba(248,247,239,0.35);
+    padding:18px 0 22px;
+  }
+  .pv-label{
+    writing-mode:vertical-rl; transform:rotate(180deg);
+    font-size:10px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase;
+    margin:0; justify-self:start; align-self:start;
+  }
+  .pv-val{ font-size:14px; line-height:1.45; }
+  .pv-client{ font-weight:700; font-size:18px; letter-spacing:0.06em; text-transform:uppercase; }
+  .pv-credit + .pv-credit{ margin-top:10px; }
+  .pv-credit b{ display:block; font-weight:700; }
+
+  .pv-feed{
+    position:absolute; top:0; bottom:0; right:0;
+    left:calc(var(--pv-left) + var(--pv-info));
+    overflow-y:auto; overscroll-behavior:contain;
+    scrollbar-width:none;
+  }
+  .pv-feed::-webkit-scrollbar{ display:none; }
+  .pv-item{ display:block; width:100%; background:#0a0a0a; }
+  .pv-item img, .pv-item video{ display:block; width:100%; height:100%; object-fit:cover; }
+
+  /* contador circular: anillo de progreso + n / total */
+  .pv-counter{
+    position:absolute; top:24px; right:24px;
+    width:52px; height:52px; z-index:3;
+    border-radius:50%; background:rgba(17,17,17,0.55);
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; letter-spacing:0.02em;
+  }
+  .pv-counter svg{ position:absolute; inset:0; transform:rotate(-90deg); }
+  .pv-counter circle{ fill:none; stroke:var(--cream); stroke-width:1.5; }
+  .pv-counter .pv-counter-track{ opacity:0.22; }
+  .pv-counter .pv-counter-bar{ transition: stroke-dashoffset 0.35s ease; }
+  .pv-counter-total{ opacity:0.55; margin-left:1px; }
+
+  /* tab "@ Contacto": lleva al footer real (mismo scroll que el nombre del home) */
+  .pv-contact{
+    position:absolute; right:20px; top:50%; z-index:3;
+    writing-mode:vertical-rl; transform:translateY(-50%) rotate(180deg);
+    background:var(--blue) !important; color:var(--cream);
+    border-radius:999px; padding:14px 9px !important;
+    font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
+    box-shadow:0 0 0 1px rgba(248,247,239,0.25);
+  }
+
+  /* celular: barra arriba + feed a pantalla completa (como la referencia) */
+  html.is-narrow .pv-back{ top:16px; left:20px; width:auto; }
+  html.is-narrow .pv-info{
+    left:0; right:0; width:auto; bottom:auto;
+    padding:46px 20px 16px; overflow:hidden;
+  }
+  html.is-narrow .pv-title{ font-size:24px; margin-bottom:8px; }
+  html.is-narrow .pv-meta{ display:none; }
+  html.is-narrow .pv-index{ top:0; }
+  html.is-narrow .pv-info-toggle{
+    display:inline-flex; gap:6px; align-items:center;
+    font-size:13px; font-weight:700;
+  }
+  html.is-narrow .pv-body{ display:none; }
+  html.is-narrow .pv-info.is-expanded{ bottom:0; overflow-y:auto; }
+  html.is-narrow .pv-info.is-expanded .pv-body{ display:block; }
+  html.is-narrow .pv-info.is-expanded .pv-meta{ display:flex; margin-top:14px; }
+  html.is-narrow .pv-feed{ left:0; top:var(--pv-bar-h, 120px); }
+  html.is-narrow .pv-counter{ top:calc(var(--pv-bar-h, 120px) + 14px); right:14px; }
+  html.is-narrow .pv-contact{ right:12px; }
+
+  /* con un proyecto abierto la página scrollea (para destapar el footer)
+     aunque se haya entrado directo sin pasar por el loader. El selector
+     de idioma sigue visible (en desktop abajo a la derecha, en celular
+     arriba a la derecha) y cambia también los textos del proyecto. */
+  html.project-open{ overflow-y:auto; }
+  body.project-open{ overflow-y:visible; height:auto; min-height:100%; }
+  body.project-open .lang-switch{ opacity:1; visibility:visible; transition: opacity 0.35s ease, visibility 0s; }
+
   /* escondido durante el loader (en todos los tamaños) y aparece con
      el mismo fade que el resto del stage (stage-active). visibility
      va con delay al esconderse para que el fade termine antes, y sin
@@ -509,6 +650,31 @@
     <button type="button" class="lang-btn" data-lang="es">ES</button>
     <button type="button" class="lang-btn" data-lang="en">EN</button>
   </div>
+
+  <!-- VISTA DE PROYECTO: la llena el JS (ProjectView) con los datos de PROJECTS -->
+  <section class="project-view" id="projectView" aria-hidden="true">
+    <button class="pv-back" id="pvBack" type="button">← <span data-pv="pvBack">Volver</span></button>
+    <aside class="pv-info" id="pvInfo">
+      <header class="pv-head">
+        <span class="pv-index" id="pvIndex"></span>
+        <h1 class="pv-title" id="pvTitle"></h1>
+        <div class="pv-meta"><span id="pvYear"></span><span>/</span><span id="pvType"></span></div>
+        <button class="pv-info-toggle" id="pvInfoToggle" type="button" aria-expanded="false">↘ <span id="pvInfoToggleLabel"></span></button>
+      </header>
+      <div class="pv-body">
+        <p class="pv-desc" id="pvDesc"></p>
+        <section class="pv-row"><h2 class="pv-label" data-pv="pvClient"></h2><div class="pv-val pv-client" id="pvClient"></div></section>
+        <section class="pv-row"><h2 class="pv-label" data-pv="pvServices"></h2><div class="pv-val" id="pvServices"></div></section>
+        <section class="pv-row"><h2 class="pv-label" data-pv="pvCredits"></h2><div class="pv-val" id="pvCredits"></div></section>
+      </div>
+    </aside>
+    <div class="pv-feed" id="pvFeed"></div>
+    <div class="pv-counter" id="pvCounter" aria-live="polite">
+      <svg viewBox="0 0 52 52" aria-hidden="true"><circle class="pv-counter-track" cx="26" cy="26" r="24"/><circle class="pv-counter-bar" id="pvCounterBar" cx="26" cy="26" r="24"/></svg>
+      <span id="pvCounterNum">1</span><span class="pv-counter-total" id="pvCounterTotal">/1</span>
+    </div>
+    <button class="pv-contact" id="pvContact" type="button">@ <span data-pv="pvContact">Contacto</span></button>
+  </section>
 
   <div class="footer-scroll-track"></div>
   <div class="footer-fixed" id="footerFixed">
@@ -875,7 +1041,9 @@ function tickCursor(){
   // de pantalla. Si el cursor está por debajo, ya está sobre el
   // footer y necesita la variante oscura para no perderse en el azul.
   const footerBoundary = appH * (1 - scrollP);
-  const overFooter = mouseY > footerBoundary;
+  // también va la variante amarilla sobre la columna azul de un proyecto,
+  // donde el punto azul se perdería
+  const overFooter = mouseY > footerBoundary || cursorOverProjectInfo(mouseX, mouseY);
   cursorDots.forEach((d, i) => {
     if (!d.init){ d.x = px; d.y = py; d.init = true; }
     const ease = i === 0 ? 0.55 : 0.4; // el punto principal sigue más de cerca
@@ -1139,14 +1307,23 @@ function startNameTravel(){
   requestAnimationFrame(tick);
 }
 
-function onNameHitsPile(){
-  document.body.classList.add('stage-active');
-  document.documentElement.classList.add('stage-active');
+// el cursor custom (punto + estela) empieza a seguir al mouse/dedo cuando
+// arranca el stage del home, o al abrir un proyecto entrando directo por link
+let cursorTrackingOn = false;
+function enableCursorTracking(){
+  if (cursorTrackingOn) return;
+  cursorTrackingOn = true;
   document.addEventListener('mousemove', onMouseMove);
   document.addEventListener('touchstart', onTouchPoint, { passive:true });
   document.addEventListener('touchmove', onTouchPoint, { passive:true });
   document.addEventListener('touchend', onTouchEnd, { passive:true });
   document.addEventListener('touchcancel', onTouchEnd, { passive:true });
+}
+
+function onNameHitsPile(){
+  document.body.classList.add('stage-active');
+  document.documentElement.classList.add('stage-active');
+  enableCursorTracking();
   explodeCards();
   setupNameScramble();
 }
@@ -1275,7 +1452,7 @@ function startAutoNameSwap(toggle){
 const NAME_SCROLL_MS = 1400;
 let nameScrollFrame = null;
 function scrollToFooter(){
-  if (!document.body.classList.contains('stage-active')) return;
+  if (!document.body.classList.contains('stage-active') && !currentProject) return;
   const from = window.scrollY;
   const to = appH;
   if (Math.abs(to - from) < 2) return;
@@ -1378,7 +1555,14 @@ const I18N = {
     workShown: 'El trabajo mostrado pertenece a sus respectivos dueños.',
     emailSubject: 'Hablemos ✦',
     emailBody: 'Hola! Vi tu web y me gustaría contarte sobre un proyecto.',
-    waMessage: 'Hola Cami! ✨ Vi tu web y quiero contarte sobre un proyecto.'
+    waMessage: 'Hola Cami! ✨ Vi tu web y quiero contarte sobre un proyecto.',
+    pvBack: 'Volver',
+    pvSeeInfo: 'Ver información',
+    pvHideInfo: 'Ocultar información',
+    pvContact: 'Contacto',
+    pvClient: 'Cliente',
+    pvServices: 'Servicios',
+    pvCredits: 'Créditos'
   },
   en: {
     title: 'Camila Arrieta Cruz — Creative Direction',
@@ -1391,7 +1575,14 @@ const I18N = {
     workShown: 'Work shown belongs to its respective owners.',
     emailSubject: "Let's talk ✦",
     emailBody: "Hi, I came across your portfolio and I'd love to talk about a project...",
-    waMessage: "Hi Cami! ✨ I found your site and I'd love to talk about a project."
+    waMessage: "Hi Cami! ✨ I found your site and I'd love to talk about a project.",
+    pvBack: 'Back',
+    pvSeeInfo: 'See information',
+    pvHideInfo: 'Hide information',
+    pvContact: 'Contact',
+    pvClient: 'Client',
+    pvServices: 'Services',
+    pvCredits: 'Credits'
   }
 };
 
@@ -1462,6 +1653,8 @@ function applyLang(lang){
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.lang === lang);
   });
+
+  refreshProjectLang(); // si hay un proyecto abierto, sus textos y su SEO también
 }
 
 document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -1622,6 +1815,9 @@ function explodeCards(){
   /* VARIANTE A — sin tilt: solo el efecto líquido + escala/sombra.
      No hay inclinación 3D en absoluto, ni fija ni dinámica. */
   cards.forEach((c) => {
+    // cualquier card abre su proyecto, en todos los dispositivos (en touch
+    // el navegador no dispara click si el dedo arrastró el carrusel/anillo)
+    c.img.addEventListener('click', () => openProjectForCard(stackImgs.indexOf(c.img)));
     c.img.addEventListener('mousemove', (e) => {
       if (!canHover) return;
       LiquidDistort.move(e.clientX, e.clientY);
@@ -1842,8 +2038,7 @@ function startOrbit(cards, ringPoint, geom){
    - arrastre horizontal: el dedo toma el control de pos; al soltar sigue
      con inercia y el giro automático vuelve de a poco (autoK 0 → 1)
    - arrastre vertical: no se toca, es el scroll de la página
-   - tap en una card del costado: viaja al centro (la del centro todavía
-     no hace nada; más adelante abrirá su proyecto)
+   - tap en cualquier card: abre su proyecto (click en explodeCards)
    - mientras se arrastra, la card del centro muestra el efecto líquido
      (LiquidDistort, el mismo del hover de desktop) siguiendo al dedo
    - scroll hacia el footer: implosionan desde su pose hacia el centro,
@@ -1859,7 +2054,6 @@ const Coverflow = (() => {
   let autoK = 1;   // 0..1: cuánto pesa el giro automático
   let vel = 0;     // inercia después de soltar, en cards por ms
   let drag = null;
-  let goTo = null; // animación "traer al centro" después de un tap
   let last = 0;
 
   // distancia con signo al centro, en cards, dentro de [-N/2, N/2)
@@ -1897,7 +2091,6 @@ const Coverflow = (() => {
     return best;
   }
 
-  function easeInOut(t){ return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
   function frame(now){
     const dt = Math.min(50, now - last);
@@ -1905,10 +2098,6 @@ const Coverflow = (() => {
 
     if (drag && drag.active){
       // pos lo maneja el dedo (onMove)
-    } else if (goTo){
-      const t = Math.min(1, (now - goTo.t0) / goTo.ms);
-      pos = lerp(goTo.from, goTo.to, easeInOut(t));
-      if (t >= 1) goTo = null;
     } else {
       if (Math.abs(vel) > 0.00002){ pos += vel * dt; vel *= Math.pow(0.994, dt); }
       else vel = 0;
@@ -1954,7 +2143,7 @@ const Coverflow = (() => {
       const dx = t.clientX - drag.x0, dy = t.clientY - drag.y0;
       if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)){
         drag.decided = true; drag.active = true;
-        goTo = null; vel = 0; autoK = 0;
+        vel = 0; autoK = 0;
         drag.pos0 = pos; drag.x0 = t.clientX;
       } else if (Math.abs(dy) > 8){
         drag.decided = true; // vertical: es el scroll de la página
@@ -1977,17 +2166,6 @@ const Coverflow = (() => {
     if (drag.active){
       vel = Math.max(-0.006, Math.min(0.006, drag.v));
       LiquidDistort.leave();
-    } else if (!drag.decided && performance.now() - drag.t0 < 400){
-      // tap: una card del costado viaja al centro
-      const img = drag.target && drag.target.closest ? drag.target.closest('.stack-img') : null;
-      const i = cards.findIndex(c => c.img === img);
-      if (i >= 0){
-        const d = wrap(i - pos);
-        if (Math.abs(d) > 0.5){
-          goTo = { from: pos, to: pos + d, t0: performance.now(), ms: 650 };
-          autoK = 0; vel = 0;
-        }
-      }
     }
     drag = null;
   }
@@ -2009,7 +2187,498 @@ const Coverflow = (() => {
   };
 })();
 
-runLoader();
+/* ════════════════════════════════════════════
+   PROYECTOS — cada uno con URL propia (/slug), un solo index.html.
+   Campos de texto: string, o { es, en } si cambia con el idioma.
+   media: [{ type:'image'|'video', src, w, h, alt?, poster? }] — vacío =
+   placeholder con fotos de las cards (hasta cargar el contenido real).
+════════════════════════════════════════════ */
+const PROJECTS = [
+  { slug:'proyecto-01', name:'Proyecto 01', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[0], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 01 — Camila Arrieta Cruz', en:'Project 01 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 01 de Camila Arrieta Cruz (placeholder).', en:'Project 01 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] },
+  { slug:'proyecto-02', name:'Proyecto 02', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[1], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 02 — Camila Arrieta Cruz', en:'Project 02 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 02 de Camila Arrieta Cruz (placeholder).', en:'Project 02 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] },
+  { slug:'proyecto-03', name:'Proyecto 03', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[2], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 03 — Camila Arrieta Cruz', en:'Project 03 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 03 de Camila Arrieta Cruz (placeholder).', en:'Project 03 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] },
+  { slug:'proyecto-04', name:'Proyecto 04', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[3], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 04 — Camila Arrieta Cruz', en:'Project 04 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 04 de Camila Arrieta Cruz (placeholder).', en:'Project 04 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] },
+  { slug:'proyecto-05', name:'Proyecto 05', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[4], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 05 — Camila Arrieta Cruz', en:'Project 05 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 05 de Camila Arrieta Cruz (placeholder).', en:'Project 05 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] },
+  { slug:'proyecto-06', name:'Proyecto 06', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[5], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 06 — Camila Arrieta Cruz', en:'Project 06 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 06 de Camila Arrieta Cruz (placeholder).', en:'Project 06 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] },
+  { slug:'proyecto-07', name:'Proyecto 07', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[6], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 07 — Camila Arrieta Cruz', en:'Project 07 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 07 de Camila Arrieta Cruz (placeholder).', en:'Project 07 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] },
+  { slug:'proyecto-08', name:'Proyecto 08', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[7], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 08 — Camila Arrieta Cruz', en:'Project 08 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 08 de Camila Arrieta Cruz (placeholder).', en:'Project 08 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] },
+  { slug:'proyecto-09', name:'Proyecto 09', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[8], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 09 — Camila Arrieta Cruz', en:'Project 09 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 09 de Camila Arrieta Cruz (placeholder).', en:'Project 09 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] },
+  { slug:'proyecto-10', name:'Proyecto 10', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[9], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 10 — Camila Arrieta Cruz', en:'Project 10 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 10 de Camila Arrieta Cruz (placeholder).', en:'Project 10 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] },
+  { slug:'proyecto-11', name:'Proyecto 11', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[10], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 11 — Camila Arrieta Cruz', en:'Project 11 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 11 de Camila Arrieta Cruz (placeholder).', en:'Project 11 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] },
+  { slug:'proyecto-12', name:'Proyecto 12', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[11], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 12 — Camila Arrieta Cruz', en:'Project 12 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 12 de Camila Arrieta Cruz (placeholder).', en:'Project 12 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] },
+  { slug:'proyecto-13', name:'Proyecto 13', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[12], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 13 — Camila Arrieta Cruz', en:'Project 13 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 13 de Camila Arrieta Cruz (placeholder).', en:'Project 13 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] },
+  { slug:'proyecto-14', name:'Proyecto 14', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[13], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 14 — Camila Arrieta Cruz', en:'Project 14 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 14 de Camila Arrieta Cruz (placeholder).', en:'Project 14 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] },
+  { slug:'proyecto-15', name:'Proyecto 15', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[14], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
+    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    seoTitle:{ es:'Proyecto 15 — Camila Arrieta Cruz', en:'Project 15 — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Proyecto 15 de Camila Arrieta Cruz (placeholder).', en:'Project 15 by Camila Arrieta Cruz (placeholder).' },
+    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
+    media:[] }
+];
+
+var currentProject = null; // var: applyLang lo consulta (vía refreshProjectLang) antes de esta línea
+const projectViewEl = document.getElementById('projectView');
+const SITE_URL = 'https://www.camilarrietacruz.com';
+
+function tr(v){ return (v && typeof v === 'object' && !Array.isArray(v)) ? (v[currentLang] || v.es || v.en || '') : (v || ''); }
+function projectBySlug(slug){ return PROJECTS.find(p => p.slug === slug) || null; }
+function projectMedia(p){
+  if (p.media && p.media.length) return p.media;
+  const base = (p.cards && p.cards.length) ? p.cards[0] : 0;
+  return Array.from({ length: 6 }, (_, k) => {
+    const img = stackImgs[(base + k) % stackImgs.length];
+    return { type:'image', src: img.src, w:480, h:480, alt: img.alt };
+  });
+}
+
+/* -------- SEO por proyecto: título, description, canonical, OG y Twitter.
+   (Google lo lee porque ejecuta JS; WhatsApp/LinkedIn/IG leen el HTML
+   crudo y siguen mostrando el del home — pendiente para más adelante.) -------- */
+const SEO_SELECTORS = {
+  description: 'meta[name="description"]',
+  canonical: 'link[rel="canonical"]',
+  ogTitle: 'meta[property="og:title"]',
+  ogDescription: 'meta[property="og:description"]',
+  ogUrl: 'meta[property="og:url"]',
+  ogImage: 'meta[property="og:image"]',
+  twTitle: 'meta[name="twitter:title"]',
+  twDescription: 'meta[name="twitter:description"]',
+  twImage: 'meta[name="twitter:image"]'
+};
+const SEO_DEFAULTS = {};
+Object.entries(SEO_SELECTORS).forEach(([k, sel]) => {
+  const el = document.querySelector(sel);
+  if (el) SEO_DEFAULTS[k] = el.getAttribute(k === 'canonical' ? 'href' : 'content');
+});
+function setSeo(values){
+  Object.entries(SEO_SELECTORS).forEach(([k, sel]) => {
+    const el = document.querySelector(sel);
+    if (el && values[k] != null) el.setAttribute(k === 'canonical' ? 'href' : 'content', values[k]);
+  });
+}
+function applyProjectSeo(p){
+  const title = tr(p.seoTitle) || (p.name + ' — Camila Arrieta Cruz');
+  const desc = tr(p.seoDescription);
+  const url = SITE_URL + '/' + p.slug;
+  document.title = title;
+  setSeo({ description:desc, canonical:url, ogTitle:title, ogDescription:desc, ogUrl:url,
+           ogImage:p.ogImage, twTitle:title, twDescription:desc, twImage:p.ogImage });
+}
+function restoreHomeSeo(){
+  document.title = I18N[currentLang].title;
+  setSeo(SEO_DEFAULTS);
+}
+
+/* -------- vista de proyecto: render de textos, feed infinito y contador -------- */
+const ProjectView = (() => {
+  const $ = id => document.getElementById(id);
+  const info = $('pvInfo'), feed = $('pvFeed');
+  const counterNum = $('pvCounterNum'), counterTotal = $('pvCounterTotal'), counterBar = $('pvCounterBar');
+  const RING = 2 * Math.PI * 24;
+  counterBar.style.strokeDasharray = RING;
+  let items = [], offsets = [], copyH = 0, total = 0, rafPending = false;
+
+  function renderText(p){
+    const copy = I18N[currentLang];
+    projectViewEl.querySelectorAll('[data-pv]').forEach(el => { el.textContent = copy[el.dataset.pv]; });
+    projectViewEl.style.setProperty('--pv-accent', p.accent || 'var(--blue)');
+    $('pvIndex').textContent = 'CX.' + String(PROJECTS.indexOf(p) + 1).padStart(2, '0');
+    $('pvTitle').textContent = p.name;
+    $('pvYear').textContent = p.year;
+    $('pvType').textContent = tr(p.type);
+    $('pvDesc').textContent = tr(p.description);
+    $('pvClient').textContent = tr(p.client);
+    $('pvServices').textContent = tr(p.services);
+    $('pvCredits').innerHTML = '';
+    (p.credits || []).forEach(c => {
+      const d = document.createElement('div');
+      d.className = 'pv-credit';
+      const b = document.createElement('b'); b.textContent = tr(c.name);
+      d.appendChild(b); d.appendChild(document.createTextNode(tr(c.role)));
+      $('pvCredits').appendChild(d);
+    });
+    const expanded = info.classList.contains('is-expanded');
+    $('pvInfoToggleLabel').textContent = expanded ? copy.pvHideInfo : copy.pvSeeInfo;
+  }
+
+  // feed infinito: el contenido se repite en copias; el scroll se mantiene
+  // siempre entre la copia 1 y la 2, y al pasarse salta una copia entera
+  // (mismo contenido = el salto no se nota). Así después de la última
+  // imagen vuelve la primera, en los dos sentidos.
+  function renderFeed(p){
+    items = projectMedia(p);
+    total = items.length;
+    feed.innerHTML = '';
+    const feedW = feed.clientWidth || window.innerWidth;
+    const estCopyH = items.reduce((h, m) => h + feedW * (m.h || 1) / (m.w || 1), 0);
+    const copies = Math.max(3, Math.ceil((feed.clientHeight * 3) / Math.max(1, estCopyH)) + 1);
+    for (let c = 0; c < copies; c++){
+      items.forEach((m, i) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'pv-item';
+        wrap.dataset.index = i;
+        wrap.style.aspectRatio = (m.w || 1) + ' / ' + (m.h || 1);
+        let el;
+        if (m.type === 'video'){
+          el = document.createElement('video');
+          el.muted = true; el.loop = true; el.playsInline = true; el.preload = 'metadata';
+          if (m.poster) el.poster = m.poster;
+          el.src = m.src;
+          videoObserver.observe(el);
+        } else {
+          el = document.createElement('img');
+          el.decoding = 'async';
+          el.alt = c === 0 ? (m.alt || '') : '';
+          el.src = m.src;
+        }
+        wrap.appendChild(el);
+        feed.appendChild(wrap);
+      });
+    }
+    measure();
+    setFeedTop(copyH);
+    updateCounter();
+  }
+
+  function measure(){
+    const first = feed.children;
+    offsets = [];
+    for (let i = 0; i < total; i++) offsets.push(first[i].offsetTop);
+    copyH = first[total] ? first[total].offsetTop - first[0].offsetTop : feed.scrollHeight;
+  }
+
+  function updateCounter(){
+    if (!total) return;
+    const probe = ((feed.scrollTop + feed.clientHeight * 0.35) % copyH + copyH) % copyH;
+    let idx = 0;
+    for (let i = 0; i < total; i++) if (offsets[i] <= probe) idx = i;
+    counterNum.textContent = idx + 1;
+    counterTotal.textContent = '/' + total;
+    counterBar.style.strokeDashoffset = RING * (1 - (idx + 1) / total);
+  }
+
+  /* scroll automático lento (como la referencia): el feed baja solo a
+     FEED_AUTO_PX px/s. Cualquier scroll que no haya hecho el propio
+     código (rueda, dedo, inercia del touch, teclado, barra) toma el
+     control: el automático se pausa y vuelve de a poco ~1.2s después de
+     que el feed queda quieto. Con "reducir movimiento" no corre. */
+  const FEED_AUTO_PX = 30;
+  let lastSetTop = 0, autoPauseUntil = 0, autoK = 1, autoAcc = 0, autoLast = performance.now();
+  function setFeedTop(v){ feed.scrollTop = v; lastSetTop = feed.scrollTop; }
+  function autoTick(now){
+    const dt = Math.min(50, now - autoLast);
+    autoLast = now;
+    if (currentProject && copyH && !prefersReducedMotion){
+      if (now < autoPauseUntil) autoK = 0;
+      else autoK = Math.min(1, autoK + dt / 1200);
+      autoAcc += FEED_AUTO_PX * autoK * dt / 1000;
+      if (autoAcc >= 1){
+        const px = Math.floor(autoAcc);
+        autoAcc -= px;
+        setFeedTop(feed.scrollTop + px);
+      }
+    }
+    requestAnimationFrame(autoTick);
+  }
+  requestAnimationFrame(autoTick);
+  ['wheel', 'touchstart', 'pointerdown', 'keydown'].forEach(type => {
+    feed.addEventListener(type, () => { autoPauseUntil = performance.now() + 1200; }, { passive:true });
+  });
+
+  feed.addEventListener('scroll', () => {
+    if (!copyH) return;
+    // movido por la persona (o la inercia del touch): pausa el automático
+    if (Math.abs(feed.scrollTop - lastSetTop) > 1.5) autoPauseUntil = performance.now() + 1200;
+    if (feed.scrollTop < copyH) setFeedTop(feed.scrollTop + copyH);
+    else if (feed.scrollTop >= copyH * 2) setFeedTop(feed.scrollTop - copyH);
+    lastSetTop = feed.scrollTop;
+    if (!rafPending){
+      rafPending = true;
+      requestAnimationFrame(() => { rafPending = false; updateCounter(); });
+    }
+  }, { passive:true });
+
+  const videoObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.play().catch(() => {}); else e.target.pause(); });
+  }, { root: feed, threshold: 0.25 });
+
+  // celular: alto de la barra colapsada (el feed arranca debajo)
+  function measureBar(){
+    if (!isNarrow) return;
+    const wasExpanded = info.classList.contains('is-expanded');
+    if (wasExpanded) info.classList.remove('is-expanded');
+    projectViewEl.style.setProperty('--pv-bar-h', info.offsetHeight + 'px');
+    if (wasExpanded) info.classList.add('is-expanded');
+  }
+
+  $('pvInfoToggle').addEventListener('click', () => {
+    const open = !info.classList.contains('is-expanded');
+    info.classList.toggle('is-expanded', open);
+    $('pvInfoToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+    $('pvInfoToggleLabel').textContent = open ? I18N[currentLang].pvHideInfo : I18N[currentLang].pvSeeInfo;
+    if (!open) info.scrollTop = 0;
+  });
+  $('pvBack').addEventListener('click', () => Router.home());
+  $('pvContact').addEventListener('click', () => scrollToFooter());
+
+  // re-medir cuando el feed cambia de tamaño de verdad (resize, rotación,
+  // pasar a layout de celular): con el evento resize de window se medía
+  // antes de que se aplicara el layout nuevo y el loop quedaba desfasado.
+  // Se conserva en qué parte del contenido estaba (fracción de una copia).
+  let lastFeedW = 0, lastFeedH = 0;
+  new ResizeObserver(() => {
+    if (!currentProject || !total) return;
+    const w = feed.clientWidth, h = feed.clientHeight;
+    if (w === lastFeedW && h === lastFeedH) return;
+    lastFeedW = w; lastFeedH = h;
+    const keep = copyH ? (((feed.scrollTop % copyH) + copyH) % copyH) / copyH : 0;
+    measure();
+    setFeedTop(copyH + keep * copyH);
+    updateCounter();
+  }).observe(feed);
+  window.addEventListener('resize', () => { if (currentProject) measureBar(); });
+  narrowMQ.addEventListener('change', () => { if (currentProject) measureBar(); });
+
+  return {
+    render(p){
+      info.classList.remove('is-expanded');
+      $('pvInfoToggle').setAttribute('aria-expanded', 'false');
+      info.scrollTop = 0;
+      renderText(p);
+      measureBar();
+      renderFeed(p);
+    },
+    renderText,
+    clear(){ feed.innerHTML = ''; items = []; total = 0; copyH = 0; },
+    isOverInfo(x, y){
+      const r = info.getBoundingClientRect();
+      return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    }
+  };
+})();
+
+function cursorOverProjectInfo(x, y){
+  return !!currentProject && ProjectView.isOverInfo(x, y);
+}
+function refreshProjectLang(){
+  if (!currentProject) return;
+  ProjectView.renderText(currentProject);
+  applyProjectSeo(currentProject);
+}
+
+/* -------- mostrar / esconder un proyecto --------
+   TRANSICIÓN: por ahora un fade simple (.is-open en el CSS). La animación
+   final de entrada/salida se enchufa SOLO en enterProjectView() y
+   leaveProjectView(), sin tocar el resto. */
+function enterProjectView(){
+  projectViewEl.classList.add('is-open');
+  loader.style.visibility = 'hidden';
+}
+function leaveProjectView(){
+  projectViewEl.classList.remove('is-open');
+  loader.style.visibility = '';
+}
+
+function showProject(slug){
+  const p = projectBySlug(slug);
+  if (!p) return false;
+  const wasOpen = !!currentProject;
+  currentProject = p;
+  window.scrollTo(0, 0);
+  projectViewEl.style.transform = '';
+  document.documentElement.classList.add('project-open');
+  document.body.classList.add('project-open');
+  projectViewEl.setAttribute('aria-hidden', 'false');
+  enableCursorTracking();
+  if (!wasOpen) enterProjectView(); // visible antes de renderizar: el feed necesita medidas reales
+  ProjectView.render(p);
+  applyProjectSeo(p);
+  updateFooterScroll();
+  return true;
+}
+
+function hideProject(){
+  if (!currentProject) return;
+  currentProject = null;
+  leaveProjectView();
+  projectViewEl.setAttribute('aria-hidden', 'true');
+  projectViewEl.style.transform = '';
+  document.documentElement.classList.remove('project-open');
+  document.body.classList.remove('project-open');
+  window.scrollTo(0, 0);
+  restoreHomeSeo();
+  setTimeout(() => { if (!currentProject) ProjectView.clear(); }, 400);
+  updateFooterScroll();
+}
+
+/* -------- routing: /slug abre el proyecto, / es el home --------
+   pushState al abrir desde una card, popstate para el botón "atrás".
+   Entrando directo por link a /slug no corre el loader: el home recién
+   arranca (loader incluido) la primera vez que se vuelve a "/". */
+let homeStarted = false;
+function slugFromPath(){
+  return decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g, '')) || null;
+}
+function startHome(){
+  if (homeStarted) return;
+  homeStarted = true;
+  runLoader();
+}
+const Router = {
+  open(slug){
+    if (currentProject && currentProject.slug === slug) return;
+    if (!projectBySlug(slug)) return;
+    history.pushState({ project: slug, fromHome: true }, '', '/' + slug);
+    showProject(slug);
+  },
+  home(){
+    // si se llegó desde el home, "volver" es el atrás del navegador (no
+    // deja una entrada de más en el historial); si se entró por link, va a /
+    if (history.state && history.state.fromHome) history.back();
+    else {
+      history.pushState({}, '', '/');
+      hideProject();
+      startHome();
+    }
+  }
+};
+window.addEventListener('popstate', () => {
+  const slug = slugFromPath();
+  if (slug && projectBySlug(slug)) showProject(slug);
+  else { hideProject(); startHome(); }
+});
+function openProjectForCard(i){
+  const p = PROJECTS.find(pr => (pr.cards || []).includes(i));
+  if (p) Router.open(p.slug);
+}
+
+// se resuelve cuando terminó de cargar todo el script: showProject usa
+// cosas del footer que se definen más abajo
+queueMicrotask(function initRoute(){
+  const slug = slugFromPath();
+  if (slug && projectBySlug(slug)){
+    history.replaceState({ project: slug }, '', '/' + slug);
+    showProject(slug);
+  } else {
+    if (slug) history.replaceState({}, '', '/'); // ruta desconocida → home
+    startHome();
+  }
+});
 
 /* -------- footer: el hero se traslada hacia arriba con el scroll
    (solo una vez activo el stage) destapando el footer fijo detrás,
@@ -2046,11 +2715,13 @@ function triggerFooterWordsReveal(){
 }
 
 function updateFooterScroll(){
-  if (!document.body.classList.contains('stage-active')) return;
+  if (!document.body.classList.contains('stage-active') && !currentProject) return;
   const vh = appH;
   const p = Math.max(0, Math.min(1, window.scrollY / vh));
   scrollP = p; // lo lee startOrbit() para blendear la implosión de las cards
   loader.style.transform = 'translateY(' + (-p * 100) + '%)';
+  // un proyecto abierto hace de cortina igual que el hero
+  if (currentProject) projectViewEl.style.transform = 'translateY(' + (-p * 100) + '%)';
   // panza del borde inferior: 0 al inicio y al final, máxima a mitad
   // el radio sale de la flecha del arco: R = (ancho²/4 + alto²) / (2·alto)
   // (sobre el lado más corto de la pantalla, así en celular vertical no se pasa de profunda)
