@@ -455,9 +455,12 @@
   }
   .project-view button{ font-family:inherit; color:inherit; background:none; border:none; padding:0; }
 
+  /* solo la flecha (11px + 40%); "Salir de órbita" queda como aria-label.
+     Área de toque de 44px sin mover la flecha de lugar. */
   .pv-back{
     position:absolute; top:34px; left:var(--pv-pad); z-index:3;
-    font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
+    font-size:15.4px; line-height:1;
+    padding:14px; margin:-14px;
     opacity:0.85; transition:opacity 0.2s ease;
   }
   html.can-hover .pv-back:hover{ opacity:1; }
@@ -483,8 +486,9 @@
   }
   .pv-info::-webkit-scrollbar{ display:none; }
   .pv-title{
-    font-weight:700; font-size:clamp(30px, 3.3vw, 64px);
-    line-height:1; letter-spacing:-0.02em; margin:0 0 12px;
+    font-weight:700; font-size:clamp(18px, 1.98vw, 38.4px); /* 40% menos que antes */
+    text-transform:uppercase;
+    line-height:1.05; letter-spacing:0.01em; margin:0 0 12px;
   }
   .pv-meta{
     font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase;
@@ -508,10 +512,12 @@
   .pv-coords[hidden]{ display:none; }
   .pv-info-toggle{ display:none; }
   .pv-body{ flex:1; display:flex; flex-direction:column; margin-top:clamp(36px, 4vw, 64px); }
-  .pv-desc{ font-size:14px; line-height:1.55; font-weight:400; opacity:0.85; margin:0 0 40px; max-width:44ch; }
+  /* 14px + 40%. max-width 29.5em ≈ tope de 10 palabras por renglón
+     (medido); en pantallas de notebook el panel corta antes (~7 palabras) */
+  .pv-desc{ font-size:19.6px; line-height:1.4; font-weight:400; opacity:0.85; margin:0 0 40px; max-width:29.5em; }
   /* cliente / servicios / créditos: apilados abajo de todo del panel */
   .pv-rows{ margin-top:auto; }
-  .pv-row{ border-top:1px solid rgba(248,247,239,0.16); padding:18px 0 20px; }
+  .pv-row{ padding:14px 0 16px; }
   .pv-label{
     color:var(--cream); opacity:0.7; /* misma opacidad que año/tipo y el legal del footer */
     font-size:10px; font-weight:400; letter-spacing:0.15em; text-transform:uppercase;
@@ -602,7 +608,7 @@
     left:0; right:0; width:auto; bottom:auto;
     padding:46px 20px 16px; overflow:hidden;
   }
-  html.is-narrow .pv-title{ font-size:24px; margin-bottom:8px; padding-right:80px; }
+  html.is-narrow .pv-title{ font-size:14.4px; margin-bottom:8px; padding-right:80px; } /* 24px − 40% */
   html.is-narrow .pv-meta,
   html.is-narrow .pv-coords{ display:none; }
   html.is-narrow .pv-index{ top:48px; right:20px; } /* arriba a la derecha está el ES/EN */
@@ -722,7 +728,7 @@
 
   <!-- VISTA DE PROYECTO: la llena el JS (ProjectView) con los datos de PROJECTS -->
   <section class="project-view" id="projectView" aria-hidden="true">
-    <button class="pv-back" id="pvBack" type="button">← <span data-pv="pvBack">Salir de órbita</span></button>
+    <button class="pv-back" id="pvBack" type="button" aria-label="Salir de órbita"><span aria-hidden="true">←</span></button>
     <aside class="pv-info" id="pvInfo">
       <header class="pv-head">
         <span class="pv-index" id="pvIndex"></span>
@@ -2270,7 +2276,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 01 — Camila Arrieta Cruz', en:'Project 01 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 01 de Camila Arrieta Cruz (placeholder).', en:'Project 01 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
   { slug:'proyecto-02', name:'Proyecto 02', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[1], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2280,7 +2286,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 02 — Camila Arrieta Cruz', en:'Project 02 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 02 de Camila Arrieta Cruz (placeholder).', en:'Project 02 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
   { slug:'proyecto-03', name:'Proyecto 03', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[2], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2290,7 +2296,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 03 — Camila Arrieta Cruz', en:'Project 03 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 03 de Camila Arrieta Cruz (placeholder).', en:'Project 03 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
   { slug:'proyecto-04', name:'Proyecto 04', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[3], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2300,7 +2306,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 04 — Camila Arrieta Cruz', en:'Project 04 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 04 de Camila Arrieta Cruz (placeholder).', en:'Project 04 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
   { slug:'proyecto-05', name:'Proyecto 05', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[4], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2310,7 +2316,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 05 — Camila Arrieta Cruz', en:'Project 05 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 05 de Camila Arrieta Cruz (placeholder).', en:'Project 05 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
   { slug:'proyecto-06', name:'Proyecto 06', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[5], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2320,7 +2326,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 06 — Camila Arrieta Cruz', en:'Project 06 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 06 de Camila Arrieta Cruz (placeholder).', en:'Project 06 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
   { slug:'proyecto-07', name:'Proyecto 07', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[6], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2330,7 +2336,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 07 — Camila Arrieta Cruz', en:'Project 07 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 07 de Camila Arrieta Cruz (placeholder).', en:'Project 07 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
   { slug:'proyecto-08', name:'Proyecto 08', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[7], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2340,7 +2346,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 08 — Camila Arrieta Cruz', en:'Project 08 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 08 de Camila Arrieta Cruz (placeholder).', en:'Project 08 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
   { slug:'proyecto-09', name:'Proyecto 09', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[8], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2350,7 +2356,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 09 — Camila Arrieta Cruz', en:'Project 09 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 09 de Camila Arrieta Cruz (placeholder).', en:'Project 09 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
   { slug:'proyecto-10', name:'Proyecto 10', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[9], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2360,7 +2366,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 10 — Camila Arrieta Cruz', en:'Project 10 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 10 de Camila Arrieta Cruz (placeholder).', en:'Project 10 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
   { slug:'proyecto-11', name:'Proyecto 11', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[10], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2370,7 +2376,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 11 — Camila Arrieta Cruz', en:'Project 11 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 11 de Camila Arrieta Cruz (placeholder).', en:'Project 11 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
   { slug:'proyecto-12', name:'Proyecto 12', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[11], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2380,7 +2386,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 12 — Camila Arrieta Cruz', en:'Project 12 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 12 de Camila Arrieta Cruz (placeholder).', en:'Project 12 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
   { slug:'proyecto-13', name:'Proyecto 13', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[12], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2390,7 +2396,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 13 — Camila Arrieta Cruz', en:'Project 13 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 13 de Camila Arrieta Cruz (placeholder).', en:'Project 13 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
   { slug:'proyecto-14', name:'Proyecto 14', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[13], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2400,7 +2406,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 14 — Camila Arrieta Cruz', en:'Project 14 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 14 de Camila Arrieta Cruz (placeholder).', en:'Project 14 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] },
   { slug:'proyecto-15', name:'Proyecto 15', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[14], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2410,7 +2416,7 @@ const PROJECTS = [
     seoTitle:{ es:'Proyecto 15 — Camila Arrieta Cruz', en:'Project 15 — Camila Arrieta Cruz' },
     seoDescription:{ es:'Proyecto 15 de Camila Arrieta Cruz (placeholder).', en:'Project 15 by Camila Arrieta Cruz (placeholder).' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // { lat, lng, label } — ej. { lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }
+    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
     media:[] }
 ];
 
@@ -2493,6 +2499,7 @@ const ProjectView = (() => {
     const copy = I18N[currentLang];
     projectViewEl.querySelectorAll('[data-pv]').forEach(el => { el.textContent = copy[el.dataset.pv]; });
     $('pvContact').setAttribute('aria-label', copy.pvContact);
+    $('pvBack').setAttribute('aria-label', copy.pvBack);
     $('pvOrbitText').textContent = copy.pvContactOrbit;
     projectViewEl.style.setProperty('--pv-accent', p.accent || 'var(--blue)');
     $('pvIndex').textContent = 'CX-' + String(PROJECTS.indexOf(p) + 1).padStart(2, '0');
