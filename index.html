@@ -617,24 +617,22 @@
   html.is-narrow .pv-back{ top:calc(env(safe-area-inset-top, 0px) + 20px); left:32px; width:auto; font-size:17.71px; }
   html.is-narrow .pv-info{
     left:0; right:0; width:auto; bottom:auto;
-    padding:53px 20px 16px; overflow:hidden; /* el título (13.25px, interlineado 1.05) queda centrado a 60px, en la línea del CX-XX */
+    padding:52px 20px 16px; overflow:hidden; /* el título (15.24px, interlineado 1.05) queda centrado a 60px, en la línea del CX-XX */
   }
-  html.is-narrow .pv-title{ font-size:13.25px; margin-bottom:8px; padding-right:80px; }
-  html.is-narrow .pv-meta,
-  html.is-narrow .pv-coords{ display:none; }
-  /* el sello CX-XX no va en la barra colapsada (mucho texto para una pantalla chica); aparece solo con la info desplegada */
+  html.is-narrow .pv-title{ font-size:15.24px; margin-bottom:8px; padding-right:80px; }
+    /* el sello CX-XX no va en la barra colapsada (mucho texto para una pantalla chica); aparece solo con la info desplegada */
   html.is-narrow .pv-index{ display:none; top:48px; right:20px; } /* arriba a la derecha está el ES/EN */
   html.is-narrow .pv-info.is-expanded .pv-index{ display:inline-block; line-height:12px; } /* alto fijo: 12 + 10 de padding + 2 de borde = 24px, centro a 60px */
+  /* año / tipo y coordenadas siempre visibles; el + info va debajo, así no salta al abrir */
   html.is-narrow .pv-info-toggle{
+    margin-top:12px;
     display:inline-flex; gap:6px; align-items:center;
     font-size:13px; font-weight:700;
   }
   html.is-narrow .pv-body{ display:none; }
   html.is-narrow .pv-info.is-expanded{ bottom:0; overflow-y:auto; }
   html.is-narrow .pv-info.is-expanded .pv-body{ display:flex; }
-  html.is-narrow .pv-info.is-expanded .pv-meta{ display:flex; margin-top:14px; }
-  html.is-narrow .pv-info.is-expanded .pv-coords:not([hidden]){ display:block; }
-  html.is-narrow .pv-feed{ left:0; top:var(--pv-bar-h, 120px); }
+      html.is-narrow .pv-feed{ left:0; top:var(--pv-bar-h, 120px); }
   html.is-narrow .pv-counter{ top:calc(var(--pv-bar-h, 120px) + 14px); right:14px; }
   /* abajo a la izquierda, con 32px de margen a la marca (el botón de 44px tiene ~6.8px de aire alrededor) */
   html.is-narrow .pv-contact{ left:25px; right:auto; top:auto; bottom:calc(env(safe-area-inset-bottom, 0px) + 25px); transform:none; }
