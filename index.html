@@ -636,7 +636,8 @@
   html.is-narrow .pv-info.is-expanded .pv-coords:not([hidden]){ display:block; }
   html.is-narrow .pv-feed{ left:0; top:var(--pv-bar-h, 120px); }
   html.is-narrow .pv-counter{ top:calc(var(--pv-bar-h, 120px) + 14px); right:14px; }
-  html.is-narrow .pv-contact{ right:12px; top:calc((100% + var(--pv-bar-h, 120px)) / 2); } /* centrado en el carrusel (debajo de la barra), no en la pantalla */
+  /* abajo a la izquierda, con 32px de margen a la marca (el botón de 44px tiene ~6.8px de aire alrededor) */
+  html.is-narrow .pv-contact{ left:25px; right:auto; top:auto; bottom:calc(env(safe-area-inset-bottom, 0px) + 25px); transform:none; }
   /* con la info desplegada a pantalla completa, el contador y el CX no
      van encima del texto */
   html.is-narrow .pv-info.is-expanded ~ .pv-counter,
