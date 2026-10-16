@@ -624,11 +624,12 @@
     left:0; right:0; width:auto; bottom:0;
     padding:52px 20px 16px; overflow:hidden; /* el título (15.24px, interlineado 1.05) queda centrado a 60px, en la línea del CX-XX */
     pointer-events:none;
-    /* el glow azul está centrado en el borde inferior de la barra (la mitad de arriba se ve
-       igual que antes con el panel cerrado) y su mitad de abajo queda tapada por la máscara:
-       al abrir se destapa entero, sin cortes, porque es un solo panel */
+    /* el glow azul está centrado apenas debajo del borde inferior de la barra (con el panel
+       cerrado se ve su parte de arriba) y el resto queda tapado por la máscara: al abrir se
+       destapa entero, sin cortes, porque es un solo panel. Elipse más alta que ancha-plana
+       (radios 0.8 ancho × 1.1 alto de barra, centro a 1.15 alto de barra). */
     background:
-      radial-gradient(ellipse 90% 30% at 15% 50%, rgba(0,18,255,0.38) 0%, transparent 70%) 0 0 / 100% calc(var(--pv-bar-h, 120px) * 2) no-repeat,
+      radial-gradient(ellipse 80% 47.8% at 15% 50%, rgba(0,18,255,0.38) 0%, transparent 70%) 0 0 / 100% calc(var(--pv-bar-h, 120px) * 2.3) no-repeat,
       #07070a;
     -webkit-mask-image: radial-gradient(circle var(--sh-r, 99999px) at 50% calc(var(--sh-edge) + var(--sh-curve, 0px) - var(--sh-r, 99999px)), #000 calc(var(--sh-r, 99999px) - 1px), transparent calc(var(--sh-r, 99999px) + var(--sh-blur, 0px))), linear-gradient(#000, #000);
             mask-image: radial-gradient(circle var(--sh-r, 99999px) at 50% calc(var(--sh-edge) + var(--sh-curve, 0px) - var(--sh-r, 99999px)), #000 calc(var(--sh-r, 99999px) - 1px), transparent calc(var(--sh-r, 99999px) + var(--sh-blur, 0px))), linear-gradient(#000, #000);
@@ -2704,7 +2705,7 @@ const ProjectView = (() => {
      máscara (ver CSS) deja ver hasta --sh-edge. p: 0 = solo la barra,
      1 = todo. En el medio el borde inferior se infla en panza y se
      difumina, igual que la cortina hero → footer. */
-  const SHEET_MS = 1100, SHEET_BLUR = 56, SHEET_CURVE_MAX = 0.18;
+  const SHEET_MS = 1100, SHEET_FAST_MS = 280, SHEET_BLUR = 56, SHEET_CURVE_MAX = 0.18;
   let barH = 0, sheetP = 0, sheetFrame = 0;
   function applySheet(p){
     sheetP = p;
@@ -2717,7 +2718,7 @@ const ProjectView = (() => {
     info.style.setProperty('--sh-r', ((halfW * halfW + arc * arc) / (2 * arc)) + 'px');
     info.style.setProperty('--sh-blur', (SHEET_BLUR * Math.min(1, p * 6)) + 'px');
   }
-  function animateSheet(open){
+  function animateSheet(open, fast){
     cancelAnimationFrame(sheetFrame);
     const from = sheetP, to = open ? 1 : 0;
     if (prefersReducedMotion || from === to){
@@ -2725,8 +2726,9 @@ const ProjectView = (() => {
       if (!open) info.scrollTop = 0;
       return;
     }
-    const dur = SHEET_MS * Math.abs(to - from), t0 = performance.now();
-    const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    // fast (cerrar deslizando el dedo): respuesta inmediata, ease-out y ~4× más corta
+    const dur = (fast ? SHEET_FAST_MS : SHEET_MS) * Math.abs(to - from), t0 = performance.now();
+    const ease = fast ? (t => 1 - Math.pow(1 - t, 3)) : (t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
     const step = now => {
       const t = Math.min(1, (now - t0) / dur);
       applySheet(from + (to - from) * ease(t));
@@ -2743,7 +2745,7 @@ const ProjectView = (() => {
   function updateScrollable(){
     info.classList.toggle('is-scrollable', info.scrollHeight > info.clientHeight + 1);
   }
-  const CLOSE_SWIPE_PX = 14;
+  const CLOSE_SWIPE_PX = 6;
   let infoTouchY = null, infoSwipeDone = false;
   info.addEventListener('touchstart', e => { infoTouchY = e.touches[0].clientY; infoSwipeDone = false; }, { passive:true });
   info.addEventListener('touchmove', e => {
@@ -2754,7 +2756,7 @@ const ProjectView = (() => {
     if (e.cancelable) e.preventDefault(); // que el gesto no scrollee la página
     if (up > CLOSE_SWIPE_PX && !infoSwipeDone){
       infoSwipeDone = true;
-      setInfoOpen(false);
+      setInfoOpen(false, true);
     }
   }, { passive:false });
   info.addEventListener('touchend', () => { infoTouchY = null; }, { passive:true });
@@ -2770,12 +2772,12 @@ const ProjectView = (() => {
     applySheet(sheetP);
   }
 
-  function setInfoOpen(open){
+  function setInfoOpen(open, fast){
     info.classList.toggle('is-expanded', open);
     $('pvInfoToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
     $('pvInfoToggleLabel').textContent = open ? I18N[currentLang].pvHideInfo : I18N[currentLang].pvSeeInfo;
     if (open) updateScrollable();
-    animateSheet(open);
+    animateSheet(open, fast);
   }
   $('pvInfoToggle').addEventListener('click', () => setInfoOpen(!info.classList.contains('is-expanded')));
 
