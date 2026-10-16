@@ -270,8 +270,8 @@
      --curve-blur, así el negro se funde con el azul. El desvanecido
      va solo hacia afuera (la caja es --curve-blur más alta) para que
      en las esquinas no asome el borde recto del hero. */
-  #loader{ --curve-blur: 56px; }
-  #loader::after{
+  #loader, .project-view{ --curve-blur: 56px; }
+  #loader::after, .project-view::after{
     content:''; position:absolute; left:0; right:0; top:100%;
     height:calc(var(--curve, 0px) + var(--curve-blur));
     background:inherit;
@@ -613,15 +613,18 @@
   }
 
   /* celular: barra arriba + feed a pantalla completa (como la referencia) */
-  html.is-narrow .pv-back{ top:16px; left:20px; width:auto; }
+  /* alineada con el selector de idioma (mismo top y mismo margen de 32px, pero del lado izquierdo); flecha +15% */
+  html.is-narrow .pv-back{ top:calc(env(safe-area-inset-top, 0px) + 20px); left:32px; width:auto; font-size:17.71px; }
   html.is-narrow .pv-info{
     left:0; right:0; width:auto; bottom:auto;
-    padding:46px 20px 16px; overflow:hidden;
+    padding:53px 20px 16px; overflow:hidden; /* el título (13.25px, interlineado 1.05) queda centrado a 60px, en la línea del CX-XX */
   }
-  html.is-narrow .pv-title{ font-size:11.52px; margin-bottom:8px; padding-right:80px; }
+  html.is-narrow .pv-title{ font-size:13.25px; margin-bottom:8px; padding-right:80px; }
   html.is-narrow .pv-meta,
   html.is-narrow .pv-coords{ display:none; }
-  html.is-narrow .pv-index{ top:48px; right:20px; } /* arriba a la derecha está el ES/EN */
+  /* el sello CX-XX no va en la barra colapsada (mucho texto para una pantalla chica); aparece solo con la info desplegada */
+  html.is-narrow .pv-index{ display:none; top:48px; right:20px; } /* arriba a la derecha está el ES/EN */
+  html.is-narrow .pv-info.is-expanded .pv-index{ display:inline-block; line-height:12px; } /* alto fijo: 12 + 10 de padding + 2 de borde = 24px, centro a 60px */
   html.is-narrow .pv-info-toggle{
     display:inline-flex; gap:6px; align-items:center;
     font-size:13px; font-weight:700;
@@ -633,7 +636,7 @@
   html.is-narrow .pv-info.is-expanded .pv-coords:not([hidden]){ display:block; }
   html.is-narrow .pv-feed{ left:0; top:var(--pv-bar-h, 120px); }
   html.is-narrow .pv-counter{ top:calc(var(--pv-bar-h, 120px) + 14px); right:14px; }
-  html.is-narrow .pv-contact{ right:12px; }
+  html.is-narrow .pv-contact{ right:12px; top:calc((100% + var(--pv-bar-h, 120px)) / 2); } /* centrado en el carrusel (debajo de la barra), no en la pantalla */
   /* con la info desplegada a pantalla completa, el contador y el CX no
      van encima del texto */
   html.is-narrow .pv-info.is-expanded ~ .pv-counter,
@@ -745,7 +748,7 @@
         <h1 class="pv-title" id="pvTitle"></h1>
         <div class="pv-meta"><span id="pvYear"></span><span>/</span><span id="pvType"></span></div>
         <div class="pv-coords" id="pvCoords" hidden></div>
-        <button class="pv-info-toggle" id="pvInfoToggle" type="button" aria-expanded="false">↘ <span id="pvInfoToggleLabel"></span></button>
+        <button class="pv-info-toggle" id="pvInfoToggle" type="button" aria-expanded="false"><span id="pvInfoToggleLabel"></span></button>
       </header>
       <div class="pv-body">
         <p class="pv-desc" id="pvDesc"></p>
@@ -1643,8 +1646,8 @@ const I18N = {
     emailBody: 'Hola! Vi tu web y me gustaría contarte sobre un proyecto.',
     waMessage: 'Hola Cami! ✨ Vi tu web y quiero contarte sobre un proyecto.',
     pvBack: 'Salir de órbita',
-    pvSeeInfo: 'Ver información',
-    pvHideInfo: 'Ocultar información',
+    pvSeeInfo: '+ info',
+    pvHideInfo: '- info',
     pvContact: 'Contacto',
     pvContactOrbit: 'Contactame',
     pvClient: 'Cliente',
@@ -1663,8 +1666,8 @@ const I18N = {
     emailBody: "Hi, I came across your portfolio and I'd love to talk about a project...",
     waMessage: "Hi Cami! ✨ I found your site and I'd love to talk about a project.",
     pvBack: 'Leave orbit',
-    pvSeeInfo: 'See information',
-    pvHideInfo: 'Hide information',
+    pvSeeInfo: '+ info',
+    pvHideInfo: '- info',
     pvContact: 'Contact',
     pvContactOrbit: 'Contact me',
     pvClient: 'Client',
@@ -2615,12 +2618,13 @@ const ProjectView = (() => {
   const FEED_AUTO_PX = 30;
   const FEED_RESUME_MS = 150;
   let lastSetTop = 0, autoPauseUntil = 0, holding = false, autoAcc = 0, autoLast = performance.now();
-  function setFeedTop(v){ feed.scrollTop = v; lastSetTop = feed.scrollTop; }
+  let prevTop = 0;
+  function setFeedTop(v){ feed.scrollTop = v; lastSetTop = prevTop = feed.scrollTop; }
   function autoTick(now){
     const dt = Math.min(50, now - autoLast);
     autoLast = now;
     if (currentProject && copyH && !prefersReducedMotion){
-      const paused = holding || now < autoPauseUntil;
+      const paused = holding || now < autoPauseUntil || window.scrollY > 1; // con el footer a medio destapar el auto no corre
       autoAcc += paused ? 0 : FEED_AUTO_PX * dt / 1000;
       if (autoAcc >= 1){
         const px = Math.floor(autoAcc);
@@ -2644,9 +2648,20 @@ const ProjectView = (() => {
 
   feed.addEventListener('scroll', () => {
     if (!copyH) return;
+    /* touch: el feed solo es infinito mientras corre solo. Si la persona lo
+       mueve con el dedo (scroll nativo: scrollTop distinto del que puso el
+       JS) y llega al final de la última imagen, se frena ahí y el resto
+       del gesto pasa a la página, que levanta la cortina y destapa el
+       footer; al volver hacia arriba primero baja la cortina. */
+    if (!canHover && feed.scrollTop !== lastSetTop){
+      const top = feed.scrollTop;
+      const lim = copyH * 2 - feed.clientHeight;
+      if (top > lim && prevTop <= lim){ setFeedTop(lim); window.scrollBy(0, top - lim); }
+      else if (top < lim && window.scrollY > 0){ setFeedTop(lim); window.scrollBy(0, top - lim); }
+    }
     if (feed.scrollTop < copyH) setFeedTop(feed.scrollTop + copyH);
     else if (feed.scrollTop >= copyH * 2) setFeedTop(feed.scrollTop - copyH);
-    lastSetTop = feed.scrollTop;
+    lastSetTop = prevTop = feed.scrollTop;
     if (!rafPending){
       rafPending = true;
       requestAnimationFrame(() => { rafPending = false; updateCounter(); });
@@ -2860,10 +2875,13 @@ function updateFooterScroll(){
   // (sobre el lado más corto de la pantalla, así en celular vertical no se pasa de profunda)
   const halfW = window.innerWidth / 2;
   const curve = Math.sin(p * Math.PI) * Math.min(vh, halfW * 2) * CURTAIN_CURVE_MAX;
-  loader.style.setProperty('--curve', curve + 'px');
   // (con curva ~0 el radio queda enorme: arco casi recto, pero igual difuminado)
   const arc = Math.max(curve, 0.5);
-  loader.style.setProperty('--curve-r', ((halfW * halfW + arc * arc) / (2 * arc)) + 'px');
+  const curveR = ((halfW * halfW + arc * arc) / (2 * arc)) + 'px';
+  [loader, projectViewEl].forEach(el => {
+    el.style.setProperty('--curve', curve + 'px');
+    el.style.setProperty('--curve-r', curveR);
+  });
   if (p > 0.01) triggerFooterWordsReveal();
 
   const t = Math.min(1, p / FOOTER_FADE_END);
