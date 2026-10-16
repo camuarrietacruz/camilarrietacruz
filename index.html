@@ -2736,27 +2736,25 @@ const ProjectView = (() => {
     sheetFrame = requestAnimationFrame(step);
   }
 
-  /* panel abierto: el deslizar con el dedo no tiene que quedar atrapado en el
-     panel. Si el contenido entra en pantalla no scrollea (overflow hidden) y el
-     gesto va directo a la página, que levanta la cortina y destapa el footer.
-     Si no entra (descripciones largas con créditos) scrollea por dentro y, al
-     llegar al final, el resto del gesto pasa a la página (y al volver hacia
-     abajo primero baja la cortina). El panel NUNCA se cierra solo: se cierra
-     únicamente con "- info". */
+  /* panel abierto: deslizar con el dedo hacia arriba CIERRA el panel (misma
+     cortina que "- info"); no scrollea la página ni va al footer. Si el
+     contenido no entra en pantalla (descripciones largas con créditos)
+     scrollea por dentro y recién al llegar al final el deslizar cierra. */
   function updateScrollable(){
     info.classList.toggle('is-scrollable', info.scrollHeight > info.clientHeight + 1);
   }
-  let infoTouchY = null;
-  info.addEventListener('touchstart', e => { infoTouchY = e.touches[0].clientY; }, { passive:true });
+  const CLOSE_SWIPE_PX = 14;
+  let infoTouchY = null, infoSwipeDone = false;
+  info.addEventListener('touchstart', e => { infoTouchY = e.touches[0].clientY; infoSwipeDone = false; }, { passive:true });
   info.addEventListener('touchmove', e => {
     if (infoTouchY === null || !info.classList.contains('is-expanded')) return;
-    const y = e.touches[0].clientY, dy = y - infoTouchY;
-    infoTouchY = y;
-    if (!info.classList.contains('is-scrollable')) return; // sin scroll propio: el navegador scrollea la página
-    const atBottom = info.scrollTop + info.clientHeight >= info.scrollHeight - 1;
-    if ((dy < 0 && atBottom) || (dy > 0 && window.scrollY > 0)){
-      e.preventDefault();
-      window.scrollBy(0, -dy);
+    const atBottom = !info.classList.contains('is-scrollable') || info.scrollTop + info.clientHeight >= info.scrollHeight - 1;
+    const up = infoTouchY - e.touches[0].clientY; // >0: dedo hacia arriba
+    if (up > 0 && !atBottom) return; // todavía hay texto por scrollear dentro del panel
+    if (e.cancelable) e.preventDefault(); // que el gesto no scrollee la página
+    if (up > CLOSE_SWIPE_PX && !infoSwipeDone){
+      infoSwipeDone = true;
+      setInfoOpen(false);
     }
   }, { passive:false });
   info.addEventListener('touchend', () => { infoTouchY = null; }, { passive:true });
@@ -2772,14 +2770,15 @@ const ProjectView = (() => {
     applySheet(sheetP);
   }
 
-  $('pvInfoToggle').addEventListener('click', () => {
-    const open = !info.classList.contains('is-expanded');
+  function setInfoOpen(open){
     info.classList.toggle('is-expanded', open);
     $('pvInfoToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
     $('pvInfoToggleLabel').textContent = open ? I18N[currentLang].pvHideInfo : I18N[currentLang].pvSeeInfo;
     if (open) updateScrollable();
     animateSheet(open);
-  });
+  }
+  $('pvInfoToggle').addEventListener('click', () => setInfoOpen(!info.classList.contains('is-expanded')));
+
   $('pvBack').addEventListener('click', () => Router.home());
   $('pvContact').addEventListener('click', () => scrollToFooter());
 
