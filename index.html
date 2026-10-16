@@ -585,12 +585,16 @@
      anima es translateY de la marca de adentro (±5px, 5s, ease-in-out),
      así nunca puede salirse de su lugar. Va en crema, sin halo. */
   .pv-contact{
-    position:absolute; right:22px; top:50%; z-index:3;
+    position:fixed; right:22px; top:50%; z-index:201; /* por encima de la vista de proyecto (z-index 200) */
     transform:translateY(-50%);
     width:44px; height:44px;
-    display:flex; align-items:center; justify-content:center;
-    opacity:0.9; transition:opacity 0.25s ease;
+    display:none; align-items:center; justify-content:center;
+    font-family:inherit; color:var(--cream); background:none; border:none; padding:0; cursor:pointer;
+    opacity:0.9; transition:opacity 0.4s ease;
   }
+  html.project-open .pv-contact{ display:flex; }
+  /* panel de info abierto (celular): el CX se esconde y reaparece cuando la cortina terminó de cerrar */
+  html.is-narrow .pv-contact.is-under-panel{ opacity:0; pointer-events:none; transition:opacity 0.2s ease; }
   html.can-hover .pv-contact:hover{ opacity:1; }
   .pv-contact-mark{
     position:relative;
@@ -684,9 +688,9 @@
   html.is-narrow .pv-feed{ left:0; top:var(--pv-bar-h, 120px); }
   html.is-narrow .pv-counter{ top:calc(var(--pv-bar-h, 120px) + 14px); right:14px; z-index:1; }
   /* abajo a la derecha, con 32px de margen a la marca (el botón de 44px tiene ~6.8px de aire alrededor) */
-  html.is-narrow .pv-contact{ right:25px; left:auto; top:auto; bottom:calc(env(safe-area-inset-bottom, 0px) + 25px); transform:none; z-index:1; }
-  /* el contador y el CX van por debajo del panel de info (z-index 1 < 2): con la
-     info abierta quedan tapados y la cortina los tapa/destapa a su paso, sin saltos */
+  html.is-narrow .pv-contact{ right:25px; left:auto; top:calc(var(--app-h, 100vh) - 69px); bottom:auto; transform:none; }
+  /* el contador va por debajo del panel de info (z-index 1 < 2): con la info abierta
+     queda tapado y la cortina lo tapa/destapa a su paso, sin saltos */
 
   /* con un proyecto abierto la página scrollea (para destapar el footer)
      aunque se haya entrado directo sin pasar por el loader. El selector
@@ -811,8 +815,9 @@
       <svg viewBox="0 0 52 52" aria-hidden="true"><circle class="pv-counter-track" cx="26" cy="26" r="24"/><circle class="pv-counter-bar" id="pvCounterBar" cx="26" cy="26" r="24"/></svg>
       <span id="pvCounterNum">1</span><span class="pv-counter-total" id="pvCounterTotal">/1</span>
     </div>
-    <button class="pv-contact" id="pvContact" type="button" aria-label="Contacto"><span class="pv-contact-mark"><span class="pv-contact-orbit" aria-hidden="true"><svg viewBox="0 0 88 88"><defs><path id="pvOrbitPath" d="M44,44 m-34,0 a34,34 0 1,1 68,0 a34,34 0 1,1 -68,0"/></defs><text><textPath href="#pvOrbitPath" id="pvOrbitText">Contactame</textPath></text></svg></span><svg viewBox="0 0 532 391" aria-hidden="true" focusable="false"><path d="M419.639 192.13C419.639 192.13 417.253 189.119 417.253 188.116C425.432 182.43 433.612 177.079 441.451 171.058C475.192 145.304 542.333 90.4517 522.225 37.2715C514.386 16.869 494.278 11.5175 476.214 10.5141C464.967 9.8452 448.267 9.51074 437.361 10.5141C434.975 10.5141 429.863 11.5175 432.249 15.5311C433.953 18.2069 452.698 16.869 456.788 17.5379C475.192 19.5447 490.87 33.5923 495.3 53.6604C504.502 95.4687 470.761 134.267 443.496 158.014C440.088 161.024 414.527 181.092 412.822 181.092C411.8 181.092 411.118 180.089 410.437 179.42C388.283 147.98 362.381 118.881 340.228 87.4416C324.891 66.0357 296.263 21.5515 340.91 17.2035C347.726 16.5345 357.951 18.5413 363.745 17.2035C365.789 16.5345 368.175 13.5243 366.471 11.852C365.789 11.1831 363.063 10.8486 361.7 10.8486C346.363 9.51074 323.187 9.8452 307.85 10.8486C261.158 13.5243 280.244 62.3565 300.012 87.4416L385.216 202.164C350.453 226.245 312.622 253.672 289.105 291.801C273.428 317.22 259.113 369.732 295.24 381.438C311.259 386.789 349.771 386.789 366.812 385.117C369.198 385.117 375.332 384.114 372.947 380.1C371.243 377.424 356.928 378.762 353.52 378.428C313.985 375.418 302.057 353.008 311.94 310.865C322.165 267.05 356.928 231.931 390.669 209.522L475.192 323.91C482.69 335.616 492.914 349.998 490.188 365.384C486.78 385.452 455.084 376.421 442.473 378.762C436.68 379.766 438.043 384.783 444.518 385.452C460.878 386.789 487.121 386.455 503.821 385.452C546.082 382.441 530.745 342.64 513.704 317.889C484.394 275.412 448.608 235.61 419.298 192.799L419.639 192.13Z"/><path d="M125.111 362.374C167.031 385.118 225.165 385.023 261.632 350.907C264.181 349.689 310.356 303.239 310.356 303.239C310.356 303.239 286.438 340.535 263.998 360.335C253.693 369.428 241.671 376.422 233.832 379.432C155.103 411.206 59.6738 369.398 20.139 287.453C-40.1858 162.028 42.6329 6.83572 167.372 0.146383C206.225 -1.86042 259.393 16.8697 285.636 49.982C322.444 96.1384 283.591 150.656 233.15 135.605C212.701 129.251 205.203 122.896 182.368 129.251C178.96 130.254 157.829 139.285 156.466 138.616C151.695 136.274 159.193 132.595 160.897 131.926C172.144 126.24 192.593 118.882 204.521 117.879C224.97 116.206 252.236 134.602 264.165 104.166C275.411 75.4015 257.007 44.9649 235.195 30.5829C189.525 0.480844 122.725 6.16679 82.8494 45.2994C-4.3999 130.588 21.843 306.853 125.111 362.374Z"/></svg></span></button>
   </section>
+  <!-- CX de contacto: fuera de la vista de proyecto para que NO suba con la cortina; queda fijo a la pantalla y se desvanece al scrollear hacia el footer -->
+    <button class="pv-contact" id="pvContact" type="button" aria-label="Contacto"><span class="pv-contact-mark"><span class="pv-contact-orbit" aria-hidden="true"><svg viewBox="0 0 88 88"><defs><path id="pvOrbitPath" d="M44,44 m-34,0 a34,34 0 1,1 68,0 a34,34 0 1,1 -68,0"/></defs><text><textPath href="#pvOrbitPath" id="pvOrbitText">Contactame</textPath></text></svg></span><svg viewBox="0 0 532 391" aria-hidden="true" focusable="false"><path d="M419.639 192.13C419.639 192.13 417.253 189.119 417.253 188.116C425.432 182.43 433.612 177.079 441.451 171.058C475.192 145.304 542.333 90.4517 522.225 37.2715C514.386 16.869 494.278 11.5175 476.214 10.5141C464.967 9.8452 448.267 9.51074 437.361 10.5141C434.975 10.5141 429.863 11.5175 432.249 15.5311C433.953 18.2069 452.698 16.869 456.788 17.5379C475.192 19.5447 490.87 33.5923 495.3 53.6604C504.502 95.4687 470.761 134.267 443.496 158.014C440.088 161.024 414.527 181.092 412.822 181.092C411.8 181.092 411.118 180.089 410.437 179.42C388.283 147.98 362.381 118.881 340.228 87.4416C324.891 66.0357 296.263 21.5515 340.91 17.2035C347.726 16.5345 357.951 18.5413 363.745 17.2035C365.789 16.5345 368.175 13.5243 366.471 11.852C365.789 11.1831 363.063 10.8486 361.7 10.8486C346.363 9.51074 323.187 9.8452 307.85 10.8486C261.158 13.5243 280.244 62.3565 300.012 87.4416L385.216 202.164C350.453 226.245 312.622 253.672 289.105 291.801C273.428 317.22 259.113 369.732 295.24 381.438C311.259 386.789 349.771 386.789 366.812 385.117C369.198 385.117 375.332 384.114 372.947 380.1C371.243 377.424 356.928 378.762 353.52 378.428C313.985 375.418 302.057 353.008 311.94 310.865C322.165 267.05 356.928 231.931 390.669 209.522L475.192 323.91C482.69 335.616 492.914 349.998 490.188 365.384C486.78 385.452 455.084 376.421 442.473 378.762C436.68 379.766 438.043 384.783 444.518 385.452C460.878 386.789 487.121 386.455 503.821 385.452C546.082 382.441 530.745 342.64 513.704 317.889C484.394 275.412 448.608 235.61 419.298 192.799L419.639 192.13Z"/><path d="M125.111 362.374C167.031 385.118 225.165 385.023 261.632 350.907C264.181 349.689 310.356 303.239 310.356 303.239C310.356 303.239 286.438 340.535 263.998 360.335C253.693 369.428 241.671 376.422 233.832 379.432C155.103 411.206 59.6738 369.398 20.139 287.453C-40.1858 162.028 42.6329 6.83572 167.372 0.146383C206.225 -1.86042 259.393 16.8697 285.636 49.982C322.444 96.1384 283.591 150.656 233.15 135.605C212.701 129.251 205.203 122.896 182.368 129.251C178.96 130.254 157.829 139.285 156.466 138.616C151.695 136.274 159.193 132.595 160.897 131.926C172.144 126.24 192.593 118.882 204.521 117.879C224.97 116.206 252.236 134.602 264.165 104.166C275.411 75.4015 257.007 44.9649 235.195 30.5829C189.525 0.480844 122.725 6.16679 82.8494 45.2994C-4.3999 130.588 21.843 306.853 125.111 362.374Z"/></svg></span></button>
 
   <div class="footer-scroll-track"></div>
   <div class="footer-fixed" id="footerFixed">
@@ -2670,7 +2675,7 @@ const ProjectView = (() => {
     const dt = Math.min(50, now - autoLast);
     autoLast = now;
     if (currentProject && copyH && !prefersReducedMotion){
-      const paused = holding || now < autoPauseUntil || window.scrollY > 1; // con el footer a medio destapar el auto no corre
+      const paused = holding || now < autoPauseUntil || window.scrollY > 0.5; // con el footer a medio destapar el auto no corre
       autoAcc += paused ? 0 : FEED_AUTO_PX * dt / 1000;
       if (autoAcc >= 1){
         const px = Math.floor(autoAcc);
@@ -2790,12 +2795,17 @@ const ProjectView = (() => {
     applySheet(sheetP);
   }
 
+  let cxTimer = 0;
   function setInfoOpen(open, fast){
     info.classList.toggle('is-expanded', open);
     $('pvInfoToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
     $('pvInfoToggleLabel').textContent = open ? I18N[currentLang].pvHideInfo : I18N[currentLang].pvSeeInfo;
     if (open) updateScrollable();
     animateSheet(open, fast);
+    const cx = $('pvContact');
+    clearTimeout(cxTimer);
+    if (open) cx.classList.add('is-under-panel');
+    else cxTimer = setTimeout(() => cx.classList.remove('is-under-panel'), (fast ? SHEET_FAST_MS : SHEET_MS) * 0.9);
   }
   $('pvInfoToggle').addEventListener('click', () => setInfoOpen(!info.classList.contains('is-expanded')));
 
@@ -2823,6 +2833,8 @@ const ProjectView = (() => {
   return {
     render(p){
       cancelAnimationFrame(sheetFrame);
+      clearTimeout(cxTimer);
+      $('pvContact').classList.remove('is-under-panel');
       sheetP = 0;
       info.classList.remove('is-expanded', 'is-scrollable');
       $('pvInfoToggle').setAttribute('aria-expanded', 'false');
@@ -2946,6 +2958,7 @@ queueMicrotask(function initRoute(){
    con la misma sombra-que-se-levanta calcada del video de referencia
    nuageboi.fr. -------- */
 const footerShadowEl = document.getElementById('footerShadow');
+const pvContactEl = document.getElementById('pvContact');
 const FOOTER_START_OPACITY = 0.55;
 const FOOTER_FADE_END = 0.65;
 const CURTAIN_CURVE_MAX = 0.18; // profundidad máxima de la panza, en fracción del lado más corto de la pantalla
@@ -2996,8 +3009,27 @@ function updateFooterScroll(){
     el.style.setProperty('--curve-r', curveR);
   });
   // la vista de proyecto se recorta por dentro: el difuminado arranca en 0 (reposo sin máscara visible)
-  projectViewEl.style.setProperty('--curve-blur', (56 * Math.min(1, p * 6)) + 'px');
+  const pvBlur = 56 * Math.min(1, p * 6);
+  projectViewEl.style.setProperty('--curve-blur', pvBlur + 'px');
+  // Safari/iOS no recorta con la máscara a los hijos que scrollean (el feed): el borde quedaba
+  // recto. Por eso además se recorta con clip-path (arco exterior de la misma máscara: círculo de
+  // radio R + difuminado), que sí respeta todo el contenido; la máscara aporta el difuminado.
+  if (p < 0.002) projectViewEl.style.clipPath = '';
+  else {
+    const W = projectViewEl.clientWidth, H = projectViewEl.clientHeight;
+    const R = parseFloat(curveR), R2 = R + pvBlur;
+    const cy = H - pvBlur - R;
+    const yc = cy + Math.sqrt(Math.max(0, R2 * R2 - (W / 2) * (W / 2)));
+    projectViewEl.style.clipPath = 'path("M0 0H' + W + 'V' + yc.toFixed(1) + 'A' + R2.toFixed(1) + ' ' + R2.toFixed(1) + ' 0 0 1 0 ' + yc.toFixed(1) + 'Z")';
+  }
   if (p > 0.01) triggerFooterWordsReveal();
+  // CX de contacto de la vista de proyecto: fijo en pantalla, se desvanece al destapar el footer
+  // (apagado del todo a ~35% del recorrido, antes de que aparezca la firma CAMUXI)
+  if (pvContactEl){
+    const f = 1 - Math.min(1, p / 0.35);
+    pvContactEl.firstElementChild.style.opacity = String(f);
+    pvContactEl.style.pointerEvents = f < 0.05 ? 'none' : '';
+  }
 
   const t = Math.min(1, p / FOOTER_FADE_END);
   const eased = 1 - Math.pow(1 - t, 2);
