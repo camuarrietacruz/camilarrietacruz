@@ -270,8 +270,8 @@
      --curve-blur, así el negro se funde con el azul. El desvanecido
      va solo hacia afuera (la caja es --curve-blur más alta) para que
      en las esquinas no asome el borde recto del hero. */
-  #loader, .project-view{ --curve-blur: 56px; }
-  #loader::after, .project-view::after{
+  #loader{ --curve-blur: 56px; }
+  #loader::after{
     content:''; position:absolute; left:0; right:0; top:100%;
     height:calc(var(--curve, 0px) + var(--curve-blur));
     background:inherit;
@@ -448,6 +448,24 @@
     opacity:0; visibility:hidden;
     transition: opacity 0.35s ease, visibility 0s linear 0.35s;
     will-change: transform;
+  }
+  /* al subir como cortina hacia el footer, el borde inferior de la vista se
+     recorta con la panza difuminada (en vez de colgar una pieza negra debajo:
+     el borde de un proyecto es una foto, no negro). Círculo cuyo punto más
+     bajo queda --curve-blur por encima del borde de la pantalla y cuyas
+     esquinas suben --curve más; hacia afuera se desvanece a lo largo de
+     --curve-blur (que el JS lleva de 0 a 56px al arrancar el scroll, así en
+     reposo la máscara no se nota). Más un rectángulo sólido que cubre todo lo
+     de arriba. */
+  .project-view{
+    -webkit-mask-image: radial-gradient(circle var(--curve-r, 99999px) at 50% calc(var(--app-h, 100vh) - var(--curve-blur, 0px) - var(--curve-r, 99999px)), #000 calc(var(--curve-r, 99999px) - 1px), transparent calc(var(--curve-r, 99999px) + var(--curve-blur, 0px))), linear-gradient(#000, #000);
+            mask-image: radial-gradient(circle var(--curve-r, 99999px) at 50% calc(var(--app-h, 100vh) - var(--curve-blur, 0px) - var(--curve-r, 99999px)), #000 calc(var(--curve-r, 99999px) - 1px), transparent calc(var(--curve-r, 99999px) + var(--curve-blur, 0px))), linear-gradient(#000, #000);
+    -webkit-mask-size: 100% 100%, 100% calc(var(--app-h, 100vh) - var(--curve-blur, 0px) - var(--curve, 0px));
+            mask-size: 100% 100%, 100% calc(var(--app-h, 100vh) - var(--curve-blur, 0px) - var(--curve, 0px));
+    -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+    -webkit-mask-position: 0 0;
+            mask-position: 0 0;
   }
   .project-view.is-open{
     opacity:1; visibility:visible;
@@ -2977,6 +2995,8 @@ function updateFooterScroll(){
     el.style.setProperty('--curve', curve + 'px');
     el.style.setProperty('--curve-r', curveR);
   });
+  // la vista de proyecto se recorta por dentro: el difuminado arranca en 0 (reposo sin máscara visible)
+  projectViewEl.style.setProperty('--curve-blur', (56 * Math.min(1, p * 6)) + 'px');
   if (p > 0.01) triggerFooterWordsReveal();
 
   const t = Math.min(1, p / FOOTER_FADE_END);
