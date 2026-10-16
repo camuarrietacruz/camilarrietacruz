@@ -615,27 +615,54 @@
   /* celular: barra arriba + feed a pantalla completa (como la referencia) */
   /* alineada con el selector de idioma (mismo top y mismo margen de 32px, pero del lado izquierdo); flecha +15% */
   html.is-narrow .pv-back{ top:calc(env(safe-area-inset-top, 0px) + 20px); left:32px; width:auto; font-size:17.71px; }
+  /* el panel ocupa siempre toda la pantalla pero se ve recortado por una máscara:
+     cerrado = solo la barra de arriba; "+ info" corre el borde inferior hacia
+     abajo con la misma cortina de panza difuminada del footer (JS: applySheet
+     pone --sh-edge/--sh-curve/--sh-r/--sh-blur). Cerrado no tapa los toques. */
   html.is-narrow .pv-info{
-    left:0; right:0; width:auto; bottom:auto;
+    --sh-edge: var(--pv-bar-h, 120px);
+    left:0; right:0; width:auto; bottom:0;
     padding:52px 20px 16px; overflow:hidden; /* el título (15.24px, interlineado 1.05) queda centrado a 60px, en la línea del CX-XX */
+    pointer-events:none;
+    /* el glow azul queda anclado a la barra (mismo lugar abierto o cerrado) */
+    background:
+      radial-gradient(ellipse 90% 60% at 15% 100%, rgba(0,18,255,0.38) 0%, transparent 70%) 0 0 / 100% var(--pv-bar-h, 120px) no-repeat,
+      #07070a;
+    -webkit-mask-image: radial-gradient(circle var(--sh-r, 99999px) at 50% calc(var(--sh-edge) + var(--sh-curve, 0px) - var(--sh-r, 99999px)), #000 calc(var(--sh-r, 99999px) - 1px), transparent calc(var(--sh-r, 99999px) + var(--sh-blur, 0px))), linear-gradient(#000, #000);
+            mask-image: radial-gradient(circle var(--sh-r, 99999px) at 50% calc(var(--sh-edge) + var(--sh-curve, 0px) - var(--sh-r, 99999px)), #000 calc(var(--sh-r, 99999px) - 1px), transparent calc(var(--sh-r, 99999px) + var(--sh-blur, 0px))), linear-gradient(#000, #000);
+    -webkit-mask-size: 100% 100%, 100% var(--sh-edge);
+            mask-size: 100% 100%, 100% var(--sh-edge);
+    -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+    -webkit-mask-position: 0 0;
+            mask-position: 0 0;
   }
+  html.is-narrow .pv-info.is-expanded{ overflow-y:auto; pointer-events:auto; }
   html.is-narrow .pv-title{ font-size:15.24px; margin-bottom:8px; padding-right:80px; }
-    /* el sello CX-XX no va en la barra colapsada (mucho texto para una pantalla chica); aparece solo con la info desplegada */
-  html.is-narrow .pv-index{ display:none; top:48px; right:20px; } /* arriba a la derecha está el ES/EN */
-  html.is-narrow .pv-info.is-expanded .pv-index{ display:inline-block; line-height:12px; } /* alto fijo: 12 + 10 de padding + 2 de borde = 24px, centro a 60px */
+  /* el sello CX-XX no va en la barra colapsada (mucho texto para una pantalla chica); aparece con un fade-in suave al desplegar la info */
+  html.is-narrow .pv-index{
+    top:48px; right:20px; /* arriba a la derecha está el ES/EN */
+    line-height:12px; /* alto fijo: 12 + 10 de padding + 2 de borde = 24px, centro a 60px */
+    opacity:0; visibility:hidden;
+    transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+  }
+  html.is-narrow .pv-info.is-expanded .pv-index{
+    opacity:0.85; visibility:visible;
+    transition: opacity 0.9s ease 0.45s, visibility 0s;
+  }
   /* año / tipo y coordenadas siempre visibles; el + info va debajo, así no salta al abrir */
   html.is-narrow .pv-info-toggle{
-    margin-top:12px;
+    margin-top:12px; pointer-events:auto;
     display:inline-flex; gap:6px; align-items:center;
     font-size:13px; font-weight:700;
   }
-  html.is-narrow .pv-body{ display:none; }
-  html.is-narrow .pv-info.is-expanded{ bottom:0; overflow-y:auto; }
-  html.is-narrow .pv-info.is-expanded .pv-body{ display:flex; }
-      html.is-narrow .pv-feed{ left:0; top:var(--pv-bar-h, 120px); }
+  /* el cuerpo está siempre en el layout (la máscara lo revela); oculto a lectores/tab mientras está cerrado */
+  html.is-narrow .pv-body{ visibility:hidden; transition: visibility 0s linear 1.1s; }
+  html.is-narrow .pv-info.is-expanded .pv-body{ visibility:visible; transition:none; }
+  html.is-narrow .pv-feed{ left:0; top:var(--pv-bar-h, 120px); }
   html.is-narrow .pv-counter{ top:calc(var(--pv-bar-h, 120px) + 14px); right:14px; }
-  /* abajo a la izquierda, con 32px de margen a la marca (el botón de 44px tiene ~6.8px de aire alrededor) */
-  html.is-narrow .pv-contact{ left:25px; right:auto; top:auto; bottom:calc(env(safe-area-inset-bottom, 0px) + 25px); transform:none; }
+  /* abajo a la derecha, con 32px de margen a la marca (el botón de 44px tiene ~6.8px de aire alrededor) */
+  html.is-narrow .pv-contact{ right:25px; left:auto; top:auto; bottom:calc(env(safe-area-inset-bottom, 0px) + 25px); transform:none; }
   /* con la info desplegada a pantalla completa, el contador y el CX no
      van encima del texto */
   html.is-narrow .pv-info.is-expanded ~ .pv-counter,
@@ -2299,7 +2326,7 @@ const PROJECTS = [
       es:'Identidad de marca completa para LACADÉ, el bodegón de la Sede Norberto Perone (Racing Club) en Villa del Parque. Desarrollé el sistema de logo y símbolos, paleta y tipografía bajo un concepto que pone en el centro la mesa, el festejo y el encuentro — llevado a todos los productos del local.',
       en:'Complete brand identity for LACADÉ, the bodegón at the Norberto Perone headquarters (Racing Club) in Villa del Parque. I developed the logo and symbol system, palette and typography around a concept that puts the table, celebration and togetherness at the center — carried across every product in the venue.'
     },
-    links:[ { label:'Instagram', url:'https://www.instagram.com/bodegon.lacade/' } ],
+    links:[ { label:{ es:'Conocé LACADÉ Bodegón', en:'Meet LACADÉ Bodegón' }, url:'https://www.instagram.com/bodegon.lacade/' } ],
     seoTitle:{ es:'LACADÉ Bodegón — Camila Arrieta Cruz', en:'LACADÉ Bodegón — Camila Arrieta Cruz' },
     seoDescription:{ es:'Identidad de marca para LACADÉ, el bodegón de Racing Club en Villa del Parque.', en:'Brand identity for LACADÉ, Racing Club’s bodegón in Villa del Parque.' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
@@ -2672,12 +2699,49 @@ const ProjectView = (() => {
   }, { root: feed, threshold: 0.25 });
 
   // celular: alto de la barra colapsada (el feed arranca debajo)
+  /* cortina de la info (celular): el panel es de pantalla completa y una
+     máscara (ver CSS) deja ver hasta --sh-edge. p: 0 = solo la barra,
+     1 = todo. En el medio el borde inferior se infla en panza y se
+     difumina, igual que la cortina hero → footer. */
+  const SHEET_MS = 1100, SHEET_BLUR = 56, SHEET_CURVE_MAX = 0.18;
+  let barH = 0, sheetP = 0, sheetFrame = 0;
+  function applySheet(p){
+    sheetP = p;
+    const H = projectViewEl.clientHeight, W = projectViewEl.clientWidth;
+    const edge = barH + p * Math.max(0, H - barH);
+    const curve = Math.sin(p * Math.PI) * Math.min(H, W) * SHEET_CURVE_MAX;
+    const arc = Math.max(curve, 0.5), halfW = W / 2;
+    info.style.setProperty('--sh-edge', edge + 'px');
+    info.style.setProperty('--sh-curve', curve + 'px');
+    info.style.setProperty('--sh-r', ((halfW * halfW + arc * arc) / (2 * arc)) + 'px');
+    info.style.setProperty('--sh-blur', (SHEET_BLUR * Math.min(1, p * 6)) + 'px');
+  }
+  function animateSheet(open){
+    cancelAnimationFrame(sheetFrame);
+    const from = sheetP, to = open ? 1 : 0;
+    if (prefersReducedMotion || from === to){
+      applySheet(to);
+      if (!open) info.scrollTop = 0;
+      return;
+    }
+    const dur = SHEET_MS * Math.abs(to - from), t0 = performance.now();
+    const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const step = now => {
+      const t = Math.min(1, (now - t0) / dur);
+      applySheet(from + (to - from) * ease(t));
+      if (t < 1) sheetFrame = requestAnimationFrame(step);
+      else if (!open) info.scrollTop = 0;
+    };
+    sheetFrame = requestAnimationFrame(step);
+  }
+
+  // alto de la barra (padding + encabezado); el feed arranca debajo
   function measureBar(){
     if (!isNarrow) return;
-    const wasExpanded = info.classList.contains('is-expanded');
-    if (wasExpanded) info.classList.remove('is-expanded');
-    projectViewEl.style.setProperty('--pv-bar-h', info.offsetHeight + 'px');
-    if (wasExpanded) info.classList.add('is-expanded');
+    const cs = getComputedStyle(info);
+    barH = info.querySelector('.pv-head').offsetHeight + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+    projectViewEl.style.setProperty('--pv-bar-h', barH + 'px');
+    applySheet(sheetP);
   }
 
   $('pvInfoToggle').addEventListener('click', () => {
@@ -2685,7 +2749,7 @@ const ProjectView = (() => {
     info.classList.toggle('is-expanded', open);
     $('pvInfoToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
     $('pvInfoToggleLabel').textContent = open ? I18N[currentLang].pvHideInfo : I18N[currentLang].pvSeeInfo;
-    if (!open) info.scrollTop = 0;
+    animateSheet(open);
   });
   $('pvBack').addEventListener('click', () => Router.home());
   $('pvContact').addEventListener('click', () => scrollToFooter());
@@ -2710,6 +2774,8 @@ const ProjectView = (() => {
 
   return {
     render(p){
+      cancelAnimationFrame(sheetFrame);
+      sheetP = 0;
       info.classList.remove('is-expanded');
       $('pvInfoToggle').setAttribute('aria-expanded', 'false');
       info.scrollTop = 0;
