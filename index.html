@@ -582,10 +582,22 @@
   .pv-counter{
     position:absolute; top:24px; right:24px;
     width:52px; height:52px; z-index:3;
+    isolation:isolate;
     display:flex; align-items:center; justify-content:center;
     font-size:12px; letter-spacing:0.02em;
   }
   .pv-counter svg{ position:absolute; inset:0; transform:rotate(-90deg); }
+  /* overlay negro debajo del contador (mancha desenfocada que se desvanece hacia afuera, sin borde
+     duro) al 8% de opacidad, para que el número no se pierda sobre fotos claras */
+  .pv-counter::before{
+    content:''; position:absolute; inset:-22px; z-index:-1;
+    border-radius:50%;
+    background: radial-gradient(closest-side, rgba(0,0,0,0.08), rgba(0,0,0,0.045) 55%, rgba(0,0,0,0) 100%);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    -webkit-mask-image: radial-gradient(closest-side, #000 40%, transparent 100%);
+            mask-image: radial-gradient(closest-side, #000 40%, transparent 100%);
+    pointer-events:none;
+  }
   .pv-counter circle{ fill:none; stroke:var(--cream); stroke-width:1.5; }
   .pv-counter .pv-counter-track{ opacity:0.22; }
   .pv-counter .pv-counter-bar{ transition: stroke-dashoffset 0.35s ease; }
@@ -2260,8 +2272,10 @@ const Coverflow = (() => {
 
   function geometry(){
     const vw = window.innerWidth;
-    // card del centro: grande pero con tope, porque las fotos son de 480px
-    const size = Math.min(vw * 0.56, appH * 0.4, 300);
+    // card del centro: grande pero con tope, porque las fotos son de 480px.
+    // +20px sobre el tamaño anterior: la del centro crece 20px, las vecinas (escala ~0.7) unos 14px
+    // y las de atrás (escala ~0.5) ≥ 10px
+    const size = Math.min(vw * 0.56 + 20, appH * 0.4 + 20, 320);
     return { center: size / 140, step: Math.min(vw * 0.34, size * 0.95) };
   }
 
