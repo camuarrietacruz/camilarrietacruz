@@ -504,7 +504,7 @@
   }
   .pv-info::-webkit-scrollbar{ display:none; }
   .pv-title{
-    font-weight:700; font-size:clamp(14.4px, 1.584vw, 30.72px);
+    font-weight:400; font-size:clamp(14.4px, 1.584vw, 30.72px);
     text-transform:uppercase;
     line-height:1.05; letter-spacing:0.01em; margin:0 0 12px;
   }
@@ -646,13 +646,8 @@
     left:0; right:0; width:auto; bottom:0;
     padding:52px 20px 16px; overflow:hidden; /* el título (15.24px, interlineado 1.05) queda centrado a 60px, en la línea del CX-XX */
     pointer-events:none;
-    /* el glow azul está centrado apenas debajo del borde inferior de la barra (con el panel
-       cerrado se ve su parte de arriba) y el resto queda tapado por la máscara: al abrir se
-       destapa entero, sin cortes, porque es un solo panel. Elipse más alta que ancha-plana
-       (radios 0.8 ancho × 1.1 alto de barra, centro a 1.15 alto de barra). */
-    background:
-      radial-gradient(ellipse 80% 47.8% at 15% 50%, rgba(0,18,255,0.38) 0%, transparent 70%) 0 0 / 100% calc(var(--pv-bar-h, 120px) * 2.3) no-repeat,
-      #07070a;
+    /* el glow azul queda en el margen inferior izquierdo del panel (igual que en desktop,
+       heredado de .pv-info) y se destapa con la cortina al abrir */
     -webkit-mask-image: radial-gradient(circle var(--sh-r, 99999px) at 50% calc(var(--sh-edge) + var(--sh-curve, 0px) - var(--sh-r, 99999px)), #000 calc(var(--sh-r, 99999px) - 1px), transparent calc(var(--sh-r, 99999px) + var(--sh-blur, 0px))), linear-gradient(#000, #000);
             mask-image: radial-gradient(circle var(--sh-r, 99999px) at 50% calc(var(--sh-edge) + var(--sh-curve, 0px) - var(--sh-r, 99999px)), #000 calc(var(--sh-r, 99999px) - 1px), transparent calc(var(--sh-r, 99999px) + var(--sh-blur, 0px))), linear-gradient(#000, #000);
     -webkit-mask-size: 100% 100%, 100% var(--sh-edge);
@@ -688,7 +683,10 @@
   html.is-narrow .pv-feed{ left:0; top:var(--pv-bar-h, 120px); }
   html.is-narrow .pv-counter{ top:calc(var(--pv-bar-h, 120px) + 14px); right:14px; z-index:1; }
   /* abajo a la derecha, con 32px de margen a la marca (el botón de 44px tiene ~6.8px de aire alrededor) */
-  html.is-narrow .pv-contact{ right:25px; left:auto; top:calc(var(--app-h, 100vh) - 69px); bottom:auto; transform:none; }
+  /* misma posición que la firma CAMUXI del footer: borde derecho a 32px y centro vertical en su línea
+     (CAMUXI: 18.15px de alto a 32px del borde de abajo → centro a 41.1px; la marca CX mide 30.4×22.3px
+     dentro de un botón de 44px → right 32−6.8 = 25.2px, bottom 41.1−22 = 19.1px) */
+  html.is-narrow .pv-contact{ right:25.2px; left:auto; top:auto; bottom:19.1px; transform:none; }
   /* el contador va por debajo del panel de info (z-index 1 < 2): con la info abierta
      queda tapado y la cortina lo tapa/destapa a su paso, sin saltos */
 
@@ -3023,10 +3021,10 @@ function updateFooterScroll(){
     projectViewEl.style.clipPath = 'path("M0 0H' + W + 'V' + yc.toFixed(1) + 'A' + R2.toFixed(1) + ' ' + R2.toFixed(1) + ' 0 0 1 0 ' + yc.toFixed(1) + 'Z")';
   }
   if (p > 0.01) triggerFooterWordsReveal();
-  // CX de contacto de la vista de proyecto: fijo en pantalla, se desvanece al destapar el footer
-  // (apagado del todo a ~35% del recorrido, antes de que aparezca la firma CAMUXI)
+  // CX de contacto de la vista de proyecto: fijo en pantalla, se desvanece apenas arranca el scroll
+  // (apagado del todo al 3% del recorrido: antes de que asome el footer, así nunca se pisa con CAMUXI)
   if (pvContactEl){
-    const f = 1 - Math.min(1, p / 0.35);
+    const f = 1 - Math.min(1, p / 0.03);
     pvContactEl.firstElementChild.style.opacity = String(f);
     pvContactEl.style.pointerEvents = f < 0.05 ? 'none' : '';
   }
