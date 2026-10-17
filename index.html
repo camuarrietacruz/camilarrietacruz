@@ -109,13 +109,13 @@
   /* sistema de márgenes del celular (igual en loader, hero, proyecto y footer):
        · lateral 24px · superior e inferior 32px
        · fila de arriba (ES/EN y flecha de volver): arriba a 32px, centro a 41px
-       · fila del nombre (hero) / título (proyecto): centro a 68px, 15.24px regular
+       · fila del nombre (hero) / título (proyecto): centro a 76px, 17.24px regular
      El nombre sigue centrado en horizontal (lo centra centerNameText). */
   html.is-narrow #name-text{
-    top: calc(env(safe-area-inset-top, 0px) + 68px);
-    font-size:15.24px; font-weight:400; letter-spacing:0.01em;
+    top: calc(env(safe-area-inset-top, 0px) + 76px);
+    font-size:17.24px; font-weight:400; letter-spacing:0.01em;
   }
-  html.is-narrow #sub-location{ top: calc(env(safe-area-inset-top, 0px) + 84px); }
+  html.is-narrow #sub-location{ top: calc(env(safe-area-inset-top, 0px) + 93px); }
   html.is-narrow #percent-text{ left:0; right:0; text-align:center; top: calc(50% + 70px + 32px); }
   /* touch: el arrastre horizontal sobre el hero mueve el cover-flow; el
      vertical sigue siendo el scroll de la página (pan-y) */
@@ -659,7 +659,7 @@
   html.is-narrow .pv-info{
     --sh-edge: var(--pv-bar-h, 120px);
     left:0; right:0; width:auto; bottom:0;
-    padding:60px 24px 16px; overflow:hidden; /* el título (15.24px, interlineado 1.05) queda centrado a 68px, en la línea del CX-XX y del nombre del hero */
+    padding:67px 24px 16px; overflow:hidden; /* el título (17.24px, interlineado 1.05 → 18.1px) queda centrado a 76px, en la línea del CX-XX y del nombre del hero */
     pointer-events:none;
     /* el glow azul queda en el margen inferior izquierdo del panel (igual que en desktop,
        heredado de .pv-info) y se destapa con la cortina al abrir */
@@ -674,11 +674,11 @@
   }
   html.is-narrow .pv-info.is-expanded{ pointer-events:auto; }
   html.is-narrow .pv-info.is-expanded.is-scrollable{ overflow-y:auto; }
-  html.is-narrow .pv-title{ font-size:15.24px; margin-bottom:8px; padding-right:80px; }
+  html.is-narrow .pv-title{ font-size:17.24px; margin-bottom:8px; padding-right:80px; }
   /* el sello CX-XX no va en la barra colapsada (mucho texto para una pantalla chica); aparece con un fade-in suave al desplegar la info */
   html.is-narrow .pv-index{
-    top:56px; right:24px; /* arriba a la derecha está el ES/EN */
-    line-height:12px; /* alto fijo: 12 + 10 de padding + 2 de borde = 24px, centro a 68px */
+    top:64px; right:24px; /* arriba a la derecha está el ES/EN */
+    line-height:12px; /* alto fijo: 12 + 10 de padding + 2 de borde = 24px, centro a 76px */
     opacity:0; visibility:hidden;
     transition: opacity 0.3s ease, visibility 0s linear 0.3s;
   }
@@ -740,7 +740,7 @@
   }
   /* celular: abajo a la derecha ahora va la firma CAMUXI, así que el
      selector sube a la esquina de arriba a la derecha, por encima del
-     nombre (centrado a 68px del borde). Texto de ~10px: top 36 → centro a 41px. */
+     nombre (centrado a 76px del borde). Texto de ~10px: top 36 → centro a 41px. */
   html.is-narrow .lang-switch{ bottom:auto; top: calc(env(safe-area-inset-top, 0px) + 36px); right:24px; }
   .lang-btn{
     position:relative;
