@@ -106,15 +106,22 @@
      El % va centrado debajo de la pila. El "left" del nombre lo sigue
      poniendo el JS (centerNameText) para que se recentre mientras el
      scramble cambia el ancho del texto. */
-  html.is-narrow #name-text{ top: calc(env(safe-area-inset-top, 0px) + 72px); }
-  html.is-narrow #sub-location{ top: calc(env(safe-area-inset-top, 0px) + 72px + 14px); }
+  /* sistema de márgenes del celular (igual en loader, hero, proyecto y footer):
+       · lateral 24px · superior e inferior 32px
+       · fila de arriba (ES/EN y flecha de volver): arriba a 32px, centro a 41px
+       · fila del nombre (hero) / título (proyecto): centro a 68px, 15.24px regular
+     El nombre sigue centrado en horizontal (lo centra centerNameText). */
+  html.is-narrow #name-text{
+    top: calc(env(safe-area-inset-top, 0px) + 68px);
+    font-size:15.24px; font-weight:400; letter-spacing:0.01em;
+  }
+  html.is-narrow #sub-location{ top: calc(env(safe-area-inset-top, 0px) + 84px); }
   html.is-narrow #percent-text{ left:0; right:0; text-align:center; top: calc(50% + 70px + 32px); }
   /* touch: el arrastre horizontal sobre el hero mueve el cover-flow; el
      vertical sigue siendo el scroll de la página (pan-y) */
   html.is-touch #loader{ touch-action: pan-y; }
-  /* la frase queda a la misma distancia del borde de abajo que el nombre
-     del de arriba (su centro a 72px), así el loader se lee simétrico */
-  html.is-narrow #tagline{ bottom: calc(env(safe-area-inset-bottom, 0px) + 56px); }
+  /* la frase apoya su borde de abajo a 32px (el margen inferior del sitio) */
+  html.is-narrow #tagline{ bottom: calc(env(safe-area-inset-bottom, 0px) + 32px); }
 
 
   /* subtítulo de ubicación, debajo del nombre — el nombre viaja y
@@ -337,6 +344,9 @@
      derecha, con su base alineada a la última línea del legal, y el
      legal deja libre ese lugar (si no entra, corta en una línea más) */
   html.is-narrow .footer-signature-mark{ left:auto; right:0; transform:none; }
+  /* márgenes del celular: 24px a los lados, 32px arriba y abajo */
+  html.is-narrow .footer-content{ padding:32px 24px 32px 24px; }
+  html.is-narrow .footer-contact{ padding:0 24px; }
   html.is-narrow .footer-copyright{ max-width: calc(100% - 80px); }
   /* todas las últimas líneas del footer se apoyan en la misma línea de
      base: la de la firma CAMUXI (el borde de abajo de su svg). El último
@@ -636,7 +646,10 @@
 
   /* celular: barra arriba + feed a pantalla completa (como la referencia) */
   /* alineada con el selector de idioma (mismo top y mismo margen de 32px, pero del lado izquierdo); flecha +15% */
-  html.is-narrow .pv-back{ top:calc(env(safe-area-inset-top, 0px) + 20px); left:32px; width:auto; font-size:17.71px; }
+  /* arriba a 32px; su centro (41px) coincide con el del ES/EN. El padding de 14px (área de toque de 44px)
+     lo pisaba `.project-view button{ padding:0 }` y el margin negativo la subía 14px: se fuerza con más especificidad */
+  html.is-narrow .project-view .pv-back{ padding:14px; }
+  html.is-narrow .pv-back{ top:calc(env(safe-area-inset-top, 0px) + 32px); left:24px; width:auto; font-size:17.71px; }
   /* el panel ocupa siempre toda la pantalla pero se ve recortado por una máscara:
      cerrado = solo la barra de arriba; "+ info" corre el borde inferior hacia
      abajo con la misma cortina de panza difuminada del footer (JS: applySheet
@@ -644,7 +657,7 @@
   html.is-narrow .pv-info{
     --sh-edge: var(--pv-bar-h, 120px);
     left:0; right:0; width:auto; bottom:0;
-    padding:52px 20px 16px; overflow:hidden; /* el título (15.24px, interlineado 1.05) queda centrado a 60px, en la línea del CX-XX */
+    padding:60px 24px 16px; overflow:hidden; /* el título (15.24px, interlineado 1.05) queda centrado a 68px, en la línea del CX-XX y del nombre del hero */
     pointer-events:none;
     /* el glow azul queda en el margen inferior izquierdo del panel (igual que en desktop,
        heredado de .pv-info) y se destapa con la cortina al abrir */
@@ -662,8 +675,8 @@
   html.is-narrow .pv-title{ font-size:15.24px; margin-bottom:8px; padding-right:80px; }
   /* el sello CX-XX no va en la barra colapsada (mucho texto para una pantalla chica); aparece con un fade-in suave al desplegar la info */
   html.is-narrow .pv-index{
-    top:48px; right:20px; /* arriba a la derecha está el ES/EN */
-    line-height:12px; /* alto fijo: 12 + 10 de padding + 2 de borde = 24px, centro a 60px */
+    top:56px; right:24px; /* arriba a la derecha está el ES/EN */
+    line-height:12px; /* alto fijo: 12 + 10 de padding + 2 de borde = 24px, centro a 68px */
     opacity:0; visibility:hidden;
     transition: opacity 0.3s ease, visibility 0s linear 0.3s;
   }
@@ -681,12 +694,12 @@
   html.is-narrow .pv-body{ visibility:hidden; transition: visibility 0s linear 1.1s; }
   html.is-narrow .pv-info.is-expanded .pv-body{ visibility:visible; transition:none; }
   html.is-narrow .pv-feed{ left:0; top:var(--pv-bar-h, 120px); }
-  html.is-narrow .pv-counter{ top:calc(var(--pv-bar-h, 120px) + 14px); right:14px; z-index:1; }
+  html.is-narrow .pv-counter{ top:calc(var(--pv-bar-h, 120px) + 14px); right:24px; z-index:1; }
   /* abajo a la derecha, con 32px de margen a la marca (el botón de 44px tiene ~6.8px de aire alrededor) */
-  /* misma posición que la firma CAMUXI del footer: borde derecho a 32px y centro vertical en su línea
+  /* misma posición que la firma CAMUXI del footer: borde derecho a 24px y centro vertical en su línea
      (CAMUXI: 18.15px de alto a 32px del borde de abajo → centro a 41.1px; la marca CX mide 30.4×22.3px
-     dentro de un botón de 44px → right 32−6.8 = 25.2px, bottom 41.1−22 = 19.1px) */
-  html.is-narrow .pv-contact{ right:25.2px; left:auto; top:auto; bottom:19.1px; transform:none; }
+     dentro de un botón de 44px → right 24−6.8 = 17.2px, bottom 41.1−22 = 19.1px) */
+  html.is-narrow .pv-contact{ right:17.2px; left:auto; top:auto; bottom:19.1px; transform:none; }
   /* el contador va por debajo del panel de info (z-index 1 < 2): con la info abierta
      queda tapado y la cortina lo tapa/destapa a su paso, sin saltos */
 
@@ -715,8 +728,8 @@
   }
   /* celular: abajo a la derecha ahora va la firma CAMUXI, así que el
      selector sube a la esquina de arriba a la derecha, por encima del
-     nombre (que está centrado a 72px del borde) */
-  html.is-narrow .lang-switch{ bottom:auto; top: calc(env(safe-area-inset-top, 0px) + 24px); }
+     nombre (centrado a 68px del borde). Texto de ~10px: top 36 → centro a 41px. */
+  html.is-narrow .lang-switch{ bottom:auto; top: calc(env(safe-area-inset-top, 0px) + 36px); right:24px; }
   .lang-btn{
     position:relative;
     background:none; border:none; padding:0; margin:0;
