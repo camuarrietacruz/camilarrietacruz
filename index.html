@@ -690,11 +690,13 @@
   html.is-narrow .pv-info-toggle{
     margin-top:12px; pointer-events:auto;
     display:inline-flex; gap:6px; align-items:center;
-    font-size:13px; font-weight:400; color:var(--blue);
+    font-size:14px; font-weight:400; color:#F5CD0A; /* amarillo complementario del azul (el mismo del punto del cursor en el footer) */
   }
   /* el + y el - son svg de la misma caja de 10×10px (el − centrado): al cambiar no varía el ancho
      y "info" no se mueve. Cruzan con un fade corto. */
-  .pv-info-icon{ position:relative; display:inline-block; width:10px; height:10px; flex:none; }
+  /* top:1px: medido a 14px, el centro de "info" (entre el centro de la altura total, +0.5px, y el de la x, +1.9px)
+     queda ~1px más abajo que el centro de la caja, así que el símbolo baja 1px para centrarse con el texto */
+  .pv-info-icon{ position:relative; top:1px; display:inline-block; width:10px; height:10px; flex:none; }
   .pv-info-icon svg{ position:absolute; left:0; fill:currentColor; transition:opacity 0.25s ease; }
   .pv-ico-plus{ top:0; opacity:1; }
   .pv-ico-minus{ top:4px; opacity:0; }
