@@ -150,6 +150,18 @@
      (nombre, ciudad) y los de abajo (proyecto): 1.5px más abajo del medio */
   html.is-landscape-phone body.stage-active #center-wrap{ top:calc(50% + 1.5px); transition: top 0.65s cubic-bezier(.2,.7,.2,1); }
   html.is-landscape-phone #center-wrap{ perspective:700px; }
+  /* celular girado: Safari NO deja que la página use las franjas de los costados
+     (la zona de la cámara; la página recibe 734 de 852px aunque pida
+     viewport-fit=cover) y las pinta con el fondo del body. El fondo va oscuro
+     como el hero desde el primer instante (media query, sin esperar al JS:
+     Safari toma el color apenas carga). */
+  @media (pointer: coarse) and (orientation: landscape) and (max-height: 499.98px){
+    html, body{ background:#111111 !important; }
+  }
+  .edge-probe{ display:none; }
+  @media (pointer: coarse) and (orientation: landscape) and (max-height: 499.98px){
+    .edge-probe{ display:block; position:fixed; left:env(safe-area-inset-left); right:env(safe-area-inset-right); top:0; height:1px; }
+  }
   /* la página ocupa también las franjas de los costados del iPhone (viewport-fit=cover):
      el fondo llega a los bordes y lo que toca un borde se corre la zona de la cámara */
   html.is-landscape-phone{ --sl: env(safe-area-inset-left, 0px); --sr: env(safe-area-inset-right, 0px); }
@@ -1196,6 +1208,12 @@
     </div>
   </div>
 
+<!-- celular girado: Safari pinta las franjas de los costados (zona de la cámara)
+     con el color del último elemento fijo pegado arriba, y lo decide en el PRIMER
+     dibujo de la página. Esta línea transparente va después de todas las capas
+     fijas (loader, proyecto, footer) y antes del código, así ya está en ese primer
+     dibujo: Safari no encuentra color y usa el fondo de la página (oscuro). -->
+<div class="edge-probe" aria-hidden="true"></div>
 <script>
 /* -------- favicon adaptativo: CX azul en light mode, CX crema
    en dark mode. El truco de @media dentro del propio SVG del
@@ -1259,9 +1277,26 @@ narrowMQ.addEventListener('change', applyNarrowMode);
 // celular girado (touch, bajo y ancho): hero con el carrusel plano del celu y
 // el bloque del nombre arriba a la izquierda; proyecto con tipografía más chica
 let landscapePhone = false;
+/* celular girado: Safari pinta las franjas de los costados (la zona de la
+   cámara) con el theme-color, aunque la página pida ocupar todo el ancho.
+   Así que el theme-color sigue al fondo que se ve: azul mientras el loader
+   está azul y en el footer, oscuro en el hero y en los proyectos. */
+function updateThemeColor(){
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) return;
+  let tc = '#0012FF';
+  if (landscapePhone){
+    const ld = document.getElementById('loader');
+    const darkStage = (ld && ld.classList.contains('inverted')) || document.body.classList.contains('stage-active') || document.documentElement.classList.contains('project-open');
+    const inFooter = window.scrollY >= window.innerHeight * 0.5; // (scrollP todavía no existe al cargar)
+    if (darkStage && !inFooter) tc = '#111111';
+  }
+  if (meta.content !== tc) meta.content = tc;
+}
 function applyLandscapeMode(){
   landscapePhone = !canHover && window.innerHeight < 500 && window.innerWidth > window.innerHeight;
   document.documentElement.classList.toggle('is-landscape-phone', landscapePhone);
+  if (document.body) updateThemeColor();
   // girado después de cargar (con el hero ya armado): el nombre va a su esquina
   const nt = document.getElementById('name-text');
   if (landscapePhone && nt && document.body && document.body.classList.contains('stage-active') && !nt.classList.contains('ls-top')){
@@ -3915,6 +3950,11 @@ window.addEventListener('popstate', () => {
   else About.hide();
 });
 
+// el theme-color sigue al fondo (loader azul → oscuro, proyecto abierto) — ver updateThemeColor
+new MutationObserver(updateThemeColor).observe(document.getElementById('loader'), { attributes: true, attributeFilter: ['class'] });
+new MutationObserver(updateThemeColor).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+new MutationObserver(updateThemeColor).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
 // panel de info: entrada "telemetría" desde el hero y "+ info" con fade en celular
 document.documentElement.classList.add('pv-telemetry', 'pv-sheet-fade');
 (function(){
@@ -3981,7 +4021,6 @@ queueMicrotask(function initRoute(){
    con la misma sombra-que-se-levanta calcada del video de referencia
    nuageboi.fr. -------- */
 const footerShadowEl = document.getElementById('footerShadow');
-const themeColorEl = document.querySelector('meta[name="theme-color"]');
 const pvContactEl = document.getElementById('pvContact');
 const FOOTER_START_OPACITY = 0.55;
 const FOOTER_FADE_END = 0.65;
@@ -4064,12 +4103,7 @@ function updateFooterScroll(){
   // un proyecto abierto se funde (no sube como cortina)
   if (currentProject && p >= 0.002) pvFooterFade(p);
   else if (pvFooterDirty) pvFooterReset();
-  // celular girado: las franjas a los costados (zona de la cámara) toman el
-  // color de theme-color: oscuro sobre el hero/proyecto, azul en el footer
-  if (themeColorEl){
-    const tc = landscapePhone && p < 0.5 ? '#111111' : '#0012FF';
-    if (themeColorEl.content !== tc) themeColorEl.content = tc;
-  }
+  updateThemeColor();
   if (p > 0.01) triggerFooterWordsReveal();
   // CX de contacto de la vista de proyecto: fijo en pantalla, se desvanece apenas arranca el scroll
   // (apagado del todo al 3% del recorrido: antes de que asome el footer, así nunca se pisa con CAMUXI)
