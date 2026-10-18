@@ -451,7 +451,12 @@
      el home, no se duplica). */
   .project-view{
     --pv-panel: 35vw;              /* panel de info, desde el borde izquierdo */
-    --pv-pad: max(24px, 2.4vw);    /* margen interno del panel */
+    /* un solo margen para todos los bordes (como en celular, que es 24px): flecha,
+       textos del panel, sello CX, contador y contacto quedan a la misma distancia */
+    --pv-pad: clamp(24px, 2.2vw, 40px);
+    /* fila de arriba: flecha, sello CX-XX y contador comparten el mismo centro vertical
+       (el del contador, que mide 52px y arranca en --pv-pad) */
+    --pv-row: calc(var(--pv-pad) + 26px);
     --pv-accent: var(--blue);
     position:fixed; top:0; left:0; right:0; height:var(--app-h, 100vh);
     z-index:200;
@@ -676,11 +681,11 @@
   }
 
   /* solo la flecha (15.4px + 30%); "Salir de órbita" queda como aria-label.
-     Área de click de ~64px sin mover la flecha de lugar (queda donde estaba:
-     pv-pad − 14px; el padding va con .project-view para ganarle al reset de botones). */
-  .project-view .pv-back{ padding:22px; margin:-36px; }
+     Área de click de ~64px sin mover la flecha de lugar (el padding va con
+     .project-view para ganarle al reset de botones). Alineada con los textos. */
+  .project-view .pv-back{ padding:22px; margin:-22px; }
   .pv-back{
-    position:absolute; top:34px; left:var(--pv-pad); z-index:3;
+    position:absolute; top:calc(var(--pv-row) - 10px); left:var(--pv-pad); z-index:3; /* caja de 20px: centro en --pv-row */
     font-size:20px; line-height:1;
     opacity:0.85; transition:opacity 0.2s ease;
   }
@@ -702,7 +707,7 @@
       #07070a;
     color:var(--cream);
     -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-    padding:96px var(--pv-pad) 40px;
+    padding:calc(var(--pv-row) + 40px) var(--pv-pad) var(--pv-pad);
     overflow-y:auto; scrollbar-width:none;
   }
   .pv-info::-webkit-scrollbar{ display:none; }
@@ -717,7 +722,7 @@
   }
   /* sello "CX-01" en pastilla, arriba a la derecha del panel (guiño a CAMUXI) */
   .pv-index{
-    position:absolute; top:30px; right:var(--pv-pad);
+    position:absolute; top:calc(var(--pv-row) - 13.5px); right:var(--pv-pad);
     font-size:10px; letter-spacing:0.12em;
     border:1px solid rgba(248,247,239,0.4); border-radius:999px; padding:5px 11px;
     opacity:0.85;
@@ -771,7 +776,7 @@
 
   /* contador circular: anillo de progreso + n / total */
   .pv-counter{
-    position:absolute; top:24px; right:24px;
+    position:absolute; top:var(--pv-pad); right:var(--pv-pad);
     width:52px; height:52px; z-index:3;
     isolation:isolate;
     display:flex; align-items:center; justify-content:center;
@@ -800,7 +805,7 @@
      anima es translateY de la marca de adentro (±5px, 5s, ease-in-out),
      así nunca puede salirse de su lugar. Va en crema, sin halo. */
   .pv-contact{
-    position:fixed; right:22px; top:50%; z-index:201; /* por encima de la vista de proyecto (z-index 200) */
+    position:fixed; right:calc(clamp(24px, 2.2vw, 40px) + 4px); top:50%; z-index:201; /* centrado bajo el contador */ /* por encima de la vista de proyecto (z-index 200) */
     transform:translateY(-50%);
     width:44px; height:44px;
     display:none; align-items:center; justify-content:center;
@@ -3851,7 +3856,8 @@ function updateFooterScroll(){
     const rawTop = nameStartTop - p * vh;
     // en celular el nombre ya está arriba: se queda ahí todo el scroll
     const stopTop = isNarrow ? nameStartTop : footerLinksTop;
-    const clampedTop = Math.max(stopTop, rawTop);
+    // desde un proyecto el nombre ya está quieto en su lugar final (no sube con el scroll)
+    const clampedTop = currentProject ? stopTop : Math.max(stopTop, rawTop);
     const compensation = clampedTop - rawTop;
     nameText.style.transform = 'translateY(calc(-50% + ' + compensation + 'px))';
   }
