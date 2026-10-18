@@ -494,7 +494,7 @@
      foto real aparecería antes de que llegue la que vuela). */
   .pv-flyer{ position:fixed; z-index:260; pointer-events:none; overflow:hidden; }
   .pv-flyer img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:opacity 0.35s ease; }
-  .project-view.pv-flying{ transition: opacity 0.45s ease, visibility 0s; }
+  .project-view.pv-flying{ transition: opacity 0.3s ease, visibility 0s; }
   .pv-feed{ transition: opacity 0.3s ease; }
   .project-view.pv-feed-hidden .pv-feed{ opacity:0; }
   .pv-info{ transition: transform 0.55s cubic-bezier(.2,.7,.2,1), opacity 0.45s ease; }
@@ -2994,7 +2994,9 @@ function refreshProjectLang(){
    Entrando por link directo, sin hero, o con "reducir movimiento": fundido
    simple. Si llega otra navegación en medio (atrás del navegador, gesto de
    iPhone), la transición en curso se termina al instante antes de seguir. */
-const PV_FLY_MS = 760;
+const PV_FLY_MS = 520;   // abrir: zoom in rápido desde la card
+const PV_BACK_MS = 620;  // volver: un poco más calmo
+function easeOutQuart(t){ return 1 - Math.pow(1 - t, 4); } // arranca de golpe, frena suave al llegar
 let pvTransition = null;
 function finishPvTransition(){
   if (!pvTransition) return;
@@ -3075,14 +3077,20 @@ function enterProjectView(opts){
   }
 
   const from = plainRect(card.getBoundingClientRect());
-  const to = plainRect(target.getBoundingClientRect());
+  // destino: lo que efectivamente se ve de la primera foto del carrusel
+  // (puede ser más alta que la pantalla; así no hay re-encuadre al llegar)
+  const to = visibleItemRect(target);
   if (typeof LiquidDistort !== 'undefined') LiquidDistort.leave();
+  // la capa del efecto líquido (hover de desktop) se apaga en el acto: si no,
+  // quedaba un instante la card "fantasma" en su lugar mientras la otra volaba
+  const liquidCanvas = document.querySelector('#center-wrap > canvas');
+  if (liquidCanvas){ liquidCanvas.style.transition = 'none'; liquidCanvas.style.opacity = '0'; requestAnimationFrame(() => { liquidCanvas.style.transition = ''; }); }
   card.style.visibility = 'hidden';
   const realSrc = itemImageSrc(target);
   // base: la foto real del proyecto; encima: la de la card, que se funde al llegar
   const fly = makeFlyer(realSrc || card.src, realSrc ? card.src : null, from);
   projectViewEl.classList.add('pv-flying', 'pv-feed-hidden', 'pv-chrome-out', 'is-open');
-  ProjectView.pauseAuto(PV_FLY_MS + 900);
+  ProjectView.pauseAuto(PV_FLY_MS + 700);
 
   const t0 = performance.now();
   let raf = 0, chromeIn = false;
@@ -3098,10 +3106,10 @@ function enterProjectView(opts){
   };
   const tick = (now) => {
     const t = Math.min(1, (now - t0) / PV_FLY_MS);
-    const e = easeInOutCubic(t);
+    const e = easeOutQuart(t);
     placeFlyer(fly.el, lerpRect(from, to, e));
-    if (fly.over && t > 0.55) fly.over.style.opacity = '0';
-    if (!chromeIn && t > 0.55){ chromeIn = true; projectViewEl.classList.remove('pv-chrome-out'); }
+    if (fly.over && t > 0.45) fly.over.style.opacity = '0';
+    if (!chromeIn && t > 0.5){ chromeIn = true; projectViewEl.classList.remove('pv-chrome-out'); }
     if (t < 1) raf = requestAnimationFrame(tick);
     else { pvTransition = null; finish(); }
   };
@@ -3143,7 +3151,7 @@ function leaveProjectView(project){
     projectViewEl.classList.remove('pv-flying', 'pv-feed-hidden', 'pv-chrome-out');
   };
   const tick = (now) => {
-    const t = Math.min(1, (now - t0) / PV_FLY_MS);
+    const t = Math.min(1, (now - t0) / PV_BACK_MS);
     const e = easeInOutCubic(t);
     // la card sigue moviéndose con el anillo: el destino se mide en cada frame
     placeFlyer(fly.el, lerpRect(from, plainRect(card.getBoundingClientRect()), e));
