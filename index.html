@@ -3572,25 +3572,39 @@ function enterProjectView(opts){
   projectViewEl.classList.add('pv-flying', 'pv-feed-hidden', 'pv-chrome-out', 'is-open');
   void feedEl.offsetWidth;
   feedEl.style.transition = '';
-  ProjectView.pauseAuto(PV_FLY_MS + 700);
 
   const t0 = performance.now();
   let raf = 0, chromeIn = false;
+  // la foto grande del carrusel puede tardar en bajar: la imagen que vuela se
+  // queda hasta que esté lista (como mucho 2.5s) y recién ahí se cambia
+  const targetImg = target.querySelector('img');
+  const targetReady = (!targetImg || (targetImg.complete && targetImg.naturalWidth)) ? Promise.resolve()
+    : Promise.race([(targetImg.decode ? targetImg.decode() : Promise.resolve()).catch(() => {}), new Promise(r => setTimeout(r, 2500))]);
+  ProjectView.pauseAuto(60000); // quieto hasta que la pantalla quede armada (ver abajo)
+  let finished = false;
   const finish = () => {
+    if (finished) return;
+    finished = true;
     cancelAnimationFrame(raf);
     placeFlyerImgs(fly, to, fullTo);
-    projectViewEl.classList.remove('pv-feed-hidden', 'pv-chrome-out');
+    projectViewEl.classList.remove('pv-chrome-out');
     loader.style.visibility = 'hidden';
     card.style.visibility = '';
-    fly.el.style.transition = 'opacity 0.3s ease';
-    requestAnimationFrame(() => { fly.el.style.opacity = '0'; });
-    setTimeout(() => { fly.el.remove(); projectViewEl.classList.remove('pv-flying'); }, 340);
+    targetReady.then(() => {
+      if (currentProject) projectViewEl.classList.remove('pv-feed-hidden'); // (si ya volvió al home, no)
+      fly.el.style.transition = 'opacity 0.3s ease';
+      requestAnimationFrame(() => { fly.el.style.opacity = '0'; });
+      setTimeout(() => { fly.el.remove(); projectViewEl.classList.remove('pv-flying'); }, 340);
+      // la pantalla ya está armada: el carrusel arranca solo, desde esa misma foto
+      ProjectView.pauseAuto(700);
+    });
   };
   const tick = (now) => {
     const t = Math.min(1, (now - t0) / PV_FLY_MS);
     const e = easeOutQuart(t);
     placeFlyerImgs(fly, lerpRect(from, to, e), lerpRect(from, fullTo, e));
-    if (fly.over && t > 0.45) fly.over.style.opacity = '0';
+    // la imagen de la card se cambia por la foto grande solo si esa ya cargó
+    if (fly.over && t > 0.45 && fly.under.complete && fly.under.naturalWidth) fly.over.style.opacity = '0';
     if (!chromeIn && t > 0.5){ chromeIn = true; projectViewEl.classList.remove('pv-chrome-out'); }
     if (t < 1) raf = requestAnimationFrame(tick);
     else { pvTransition = null; finish(); }
