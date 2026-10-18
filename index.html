@@ -77,6 +77,13 @@
   }
 
   *{ margin:0; padding:0; box-sizing:border-box; }
+  /* accesibilidad: indicador de foco SOLO al navegar con teclado (Tab), sutil,
+     en crema; con mouse o dedo no aparece nunca */
+  :focus{ outline:none; }
+  :focus-visible{ outline:1px solid rgba(248,247,239,0.75); outline-offset:4px; border-radius:2px; }
+  .stack-img:focus-visible{ outline-offset:6px; border-radius:0; }
+  /* texto solo para lectores de pantalla (no se ve) */
+  .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
   html,body{ width:100%; height:100%; background:var(--cream); font-family:var(--font); overflow:hidden; }
 
   #loader{
@@ -839,7 +846,7 @@
   .pv-coords{
     font-family:'Courier New', monospace;
     font-size:10px; letter-spacing:0.1em;
-    opacity:0.4;
+    opacity:0.55; /* más legible (antes 0.4: muy poco contraste a 10px) */
     margin-top:8px;
   }
   .pv-coords[hidden]{ display:none; }
@@ -1096,6 +1103,7 @@
 
   <!-- LOADER -->
   <div id="loader">
+    <h1 class="sr-only">Camila Arrieta Cruz — Dirección creativa</h1>
     <div class="side-text" id="name-text">CAMILA ARRIETA CRUZ</div>
     <div id="sub-location">Buenos Aires — Argentina</div>
     <div id="center-wrap">
@@ -1127,8 +1135,8 @@
        al mismo margen (32px) que la línea de legales/firma de abajo,
        aunque estructuralmente vive afuera de esa fila. -->
   <div class="lang-switch" id="langSwitch">
-    <button type="button" class="lang-btn" data-lang="es">ES</button>
-    <button type="button" class="lang-btn" data-lang="en">EN</button>
+    <button type="button" class="lang-btn" data-lang="es" aria-label="Español" lang="es">ES</button>
+    <button type="button" class="lang-btn" data-lang="en" aria-label="English" lang="en">EN</button>
   </div>
 
   <!-- CARD PERSONAL (Aries): la llena el JS (About) -->
@@ -1172,7 +1180,7 @@
       </div>
     </aside>
     <div class="pv-feed" id="pvFeed"></div>
-    <div class="pv-counter" id="pvCounter" aria-live="polite">
+    <div class="pv-counter" id="pvCounter">
       <svg viewBox="0 0 52 52" aria-hidden="true"><circle class="pv-counter-track" cx="26" cy="26" r="24"/><circle class="pv-counter-bar" id="pvCounterBar" cx="26" cy="26" r="24"/></svg>
       <span id="pvCounterNum">1</span><span class="pv-counter-total" id="pvCounterTotal">/1</span>
     </div>
@@ -1849,7 +1857,7 @@ function startNameTravel(){
 
   nameText.style.left = startLeft + 'px';
 
-  const duration = 650;
+  const duration = prefersReducedMotion ? 1 : 650;
   const t0 = performance.now();
 
   function tick(now){
@@ -1971,6 +1979,17 @@ class TextScramble {
 
 // hover de una card del anillo (compu): el centro muestra el proyecto. Lo arma setupNameScramble.
 var cardLabel = null;
+/* lector de pantalla: cada card del home se anuncia como su proyecto
+   ("LACADÉ BODEGÓN, Bodegón de Racing Club · Branding"); se actualiza con el idioma.
+   (Recién después de que existe PROJECTS: applyLang corre antes al cargar.) */
+var cardAriaReady = false;
+function updateCardAria(){
+  if (!cardAriaReady) return;
+  stackImgs.forEach((img, i) => {
+    const l = cardLabelFor(i);
+    if (l) img.setAttribute('aria-label', l.name + ', ' + l.sub);
+  });
+}
 // nombre + "qué es · tipo" de la card i (lo usan el hover de compu y el carrusel del celu)
 function cardLabelFor(i){
   if (i === ABOUT_CARD) return { name: 'CAMUXI', sub: currentLang === 'es' ? 'Desde 1995' : 'Since 1995' };
@@ -2297,6 +2316,7 @@ function applyLang(lang){
 
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.lang === lang);
+    btn.setAttribute('aria-pressed', btn.dataset.lang === lang ? 'true' : 'false');
   });
 
   refreshProjectLang(); // si hay un proyecto abierto, sus textos y su SEO también
@@ -2418,7 +2438,7 @@ function explodeCards(){
     return { x: dx * t, y: dy * t };
   }
 
-  const duration = 560;
+  const duration = prefersReducedMotion ? 1 : 560; // con "reducir movimiento" las cards van directo a su lugar
   const bounceT  = 0.22; // % del recorrido hasta pegar en el margen — bien cortito, tipo BUM
   const t0 = performance.now();
 
@@ -2463,6 +2483,20 @@ function explodeCards(){
     // cualquier card abre su proyecto, en todos los dispositivos (en touch
     // el navegador no dispara click si el dedo arrastró el carrusel/anillo)
     c.img.addEventListener('click', () => openProjectForCard(stackImgs.indexOf(c.img)));
+    // teclado: cada card se elige con Tab y se abre con Enter (o espacio). Al
+    // enfocarla pasa lo mismo que con el hover: el centro muestra el proyecto y
+    // el anillo desacelera. El lector de pantalla anuncia el proyecto (updateCardAria).
+    const cardIdx = stackImgs.indexOf(c.img);
+    c.img.tabIndex = 0;
+    c.img.setAttribute('role', 'link');
+    c.img.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openProjectForCard(cardIdx); }
+    });
+    c.img.addEventListener('focus', () => {
+      c.hovering = true;
+      if (cardLabel && !currentProject && scrollP < 0.05) cardLabel.show(cardIdx);
+    });
+    c.img.addEventListener('blur', () => { c.hovering = false; if (cardLabel) cardLabel.hide(); });
     c.img.addEventListener('mousemove', (e) => {
       if (!canHover) return;
       LiquidDistort.move(e.clientX, e.clientY);
@@ -3436,6 +3470,7 @@ const ProjectView = (() => {
 
 function refreshProjectLang(){
   if (aboutRefreshHook) aboutRefreshHook();
+  updateCardAria();
   if (!currentProject) return;
   ProjectView.renderText(currentProject);
   applyProjectSeo(currentProject);
@@ -3662,10 +3697,20 @@ function leaveProjectView(project){
   raf = requestAnimationFrame(tick);
 }
 
+// teclado: al abrir un proyecto el foco pasa a la flecha de volver; al cerrar,
+// vuelve a la card desde la que se entró (si se entró con teclado)
+let focusBeforeProject = null;
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && currentProject) Router.home();
+});
 function showProject(slug, opts){
   const p = projectBySlug(slug);
   if (!p) return false;
   const wasOpen = !!currentProject;
+  if (!wasOpen){
+    focusBeforeProject = document.activeElement;
+    requestAnimationFrame(() => { const b = document.getElementById('pvBack'); if (b) b.focus({ preventScroll: true }); });
+  }
   currentProject = p;
   window.scrollTo(0, 0);
   projectViewEl.style.transform = '';
@@ -3684,6 +3729,12 @@ function showProject(slug, opts){
 
 function hideProject(){
   if (!currentProject) return;
+  if (focusBeforeProject && focusBeforeProject !== document.body && document.contains(focusBeforeProject)){
+    const el = focusBeforeProject;
+    // la card está oculta mientras vuelve volando (PV_BACK_MS): se enfoca al aterrizar
+    setTimeout(() => el.focus({ preventScroll: true }), PV_BACK_MS + 60);
+  }
+  focusBeforeProject = null;
   const leaving = currentProject;
   currentProject = null;
   leaveProjectView(leaving);
@@ -4041,6 +4092,8 @@ document.documentElement.classList.add('pv-telemetry', 'pv-sheet-fade');
 // se resuelve cuando terminó de cargar todo el script: showProject usa
 // cosas del footer que se definen más abajo
 queueMicrotask(function initRoute(){
+  cardAriaReady = true;
+  updateCardAria();
   const slug = slugFromPath();
   if (slug && projectBySlug(slug)){
     history.replaceState({ project: slug }, '', '/' + slug);
