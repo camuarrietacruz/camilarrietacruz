@@ -67,6 +67,10 @@
     --cream: #F8F7EF;
     --black: #111111;
     --font: 'Helvetica Now Display', 'Helvetica Neue', Arial, sans-serif;
+    /* margen único de compu: todo lo que toca un borde queda a 32px de ese
+       borde, medido a lo que se ve (tinta del texto / borde de la forma).
+       En celular cada regla html.is-narrow usa su propio sistema (24/32). */
+    --m: 32px;
   }
 
   *{ margin:0; padding:0; box-sizing:border-box; }
@@ -97,8 +101,8 @@
     white-space: nowrap;
     text-transform: uppercase;
   }
-  #name-text{ left:6vw; z-index:9999; }
-  #percent-text{ right:6vw; }
+  #name-text{ left:var(--m); z-index:9999; }
+  #percent-text{ right:var(--m); }
 
   /* -------- celular (html.is-narrow, ancho < 600px): loader apilado --------
      nombre arriba (fijo, centrado desde el principio, no viaja), pila de
@@ -314,7 +318,7 @@
   .footer-content{
     position:absolute; inset:0; z-index:3;
     display:flex; flex-direction:column; justify-content:space-between;
-    padding:48px 32px 32px 32px;
+    padding:var(--m) var(--m) var(--m) var(--m);
     font-family:var(--font);
     color:var(--cream);
   }
@@ -451,12 +455,7 @@
      el home, no se duplica). */
   .project-view{
     --pv-panel: 35vw;              /* panel de info, desde el borde izquierdo */
-    /* un solo margen para todos los bordes (como en celular, que es 24px): flecha,
-       textos del panel, sello CX, contador y contacto quedan a la misma distancia */
-    --pv-pad: clamp(24px, 2.2vw, 40px);
-    /* fila de arriba: flecha, sello CX-XX y contador comparten el mismo centro vertical
-       (el del contador, que mide 52px y arranca en --pv-pad) */
-    --pv-row: calc(var(--pv-pad) + 26px);
+    --pv-pad: var(--m); /* textos del panel, sello CX, contador y contacto */
     --pv-accent: var(--blue);
     position:fixed; top:0; left:0; right:0; height:var(--app-h, 100vh);
     z-index:200;
@@ -493,9 +492,13 @@
   .about-view.is-open{ opacity:1; visibility:visible; transition: opacity 0.4s ease, visibility 0s; }
   .about-view button{ font-family:inherit; color:inherit; background:none; border:none; padding:0; }
 
+  /* igual que la flecha del proyecto: tinta a --m de arriba y de la izquierda,
+     área de click de ~64px (el padding va con .about-view para ganarle al reset de botones) */
+  .about-view .about-close{ padding:22px; margin:-22px; }
+  html.is-narrow .about-view .about-close{ top:calc(env(safe-area-inset-top, 0px) + 32px); left:24px; font-size:17.71px; }
   .about-close{
-    position:absolute; top:34px; left:max(24px, 2.4vw); z-index:2;
-    font-size:15.4px; line-height:1; padding:14px; margin:-14px;
+    position:absolute; top:calc(var(--m) - 3.3px); left:calc(var(--m) - 2.3px); z-index:2;
+    font-size:20px; line-height:1;
     opacity:0.85; transition:opacity 0.2s ease;
   }
   html.can-hover .about-close:hover{ opacity:1; }
@@ -685,7 +688,9 @@
      .project-view para ganarle al reset de botones). Alineada con los textos. */
   .project-view .pv-back{ padding:22px; margin:-22px; }
   .pv-back{
-    position:absolute; top:calc(var(--pv-row) - 10px); left:var(--pv-pad); z-index:3; /* caja de 20px: centro en --pv-row */
+    /* la tinta de la flecha (20px) arranca 3.3px abajo y 2.3px a la derecha de la caja:
+       se compensa para que lo que se ve quede a --m de arriba y de la izquierda */
+    position:absolute; top:calc(var(--m) - 3.3px); left:calc(var(--m) - 2.3px); z-index:3;
     font-size:20px; line-height:1;
     opacity:0.85; transition:opacity 0.2s ease;
   }
@@ -707,7 +712,9 @@
       #07070a;
     color:var(--cream);
     -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-    padding:calc(var(--pv-row) + 40px) var(--pv-pad) var(--pv-pad);
+    /* abajo: la línea de base del último renglón queda a --m (como el © y el ES/EN);
+       el texto de 13px tiene ~4.5px de aire bajo la base dentro de su renglón */
+    padding:calc(var(--m) + 64px) var(--pv-pad) calc(var(--m) - 4.5px);
     overflow-y:auto; scrollbar-width:none;
   }
   .pv-info::-webkit-scrollbar{ display:none; }
@@ -722,7 +729,7 @@
   }
   /* sello "CX-01" en pastilla, arriba a la derecha del panel (guiño a CAMUXI) */
   .pv-index{
-    position:absolute; top:calc(var(--pv-row) - 13.5px); right:var(--pv-pad);
+    position:absolute; top:var(--m); right:var(--pv-pad);
     font-size:10px; letter-spacing:0.12em;
     border:1px solid rgba(248,247,239,0.4); border-radius:999px; padding:5px 11px;
     opacity:0.85;
@@ -754,6 +761,7 @@
   .pv-body.is-desc-bottom .pv-desc{ margin-top:auto; }
   .pv-body.is-desc-bottom .pv-links{ margin-bottom:0; }
   .pv-row{ padding:14px 0 16px; }
+  .pv-row:last-child{ padding-bottom:0; } /* el margen de abajo lo da el panel */
   .pv-label{
     color:var(--cream); opacity:0.7; /* misma opacidad que año/tipo y el legal del footer */
     font-size:10px; font-weight:400; letter-spacing:0.15em; text-transform:uppercase;
@@ -805,7 +813,7 @@
      anima es translateY de la marca de adentro (±5px, 5s, ease-in-out),
      así nunca puede salirse de su lugar. Va en crema, sin halo. */
   .pv-contact{
-    position:fixed; right:calc(clamp(24px, 2.2vw, 40px) + 4px); top:50%; z-index:201; /* centrado bajo el contador */ /* por encima de la vista de proyecto (z-index 200) */
+    position:fixed; right:calc(var(--m) - 6.8px); top:50%; z-index:201; /* la marca (30.4px en una caja de 44) queda a --m del borde */ /* por encima de la vista de proyecto (z-index 200) */
     transform:translateY(-50%);
     width:44px; height:44px;
     display:none; align-items:center; justify-content:center;
@@ -1193,7 +1201,20 @@ let scrollP = 0; // 0..1, progreso de scroll — lo lee también startOrbit()
 // borde superior del nombre según el CSS: top (offsetTop, sin transform) - mitad del alto (translateY(-50%))
 function measureNameStartTop(){ return nameText.offsetTop - nameText.offsetHeight / 2; }
 let nameStartTop  = measureNameStartTop();
-let footerLinksTop = footerLinksEl ? footerLinksEl.getBoundingClientRect().top : null;
+// del borde de arriba de la caja del nombre al de sus mayúsculas: en el footer
+// lo que queda a --m del borde es la tinta, no la caja
+function nameCapOffset(){
+  const cs = getComputedStyle(nameText);
+  const lh = nameText.offsetHeight, fs = parseFloat(cs.fontSize);
+  const c = document.createElement('canvas').getContext('2d');
+  c.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+  const m = c.measureText('H');
+  const ascent = m.fontBoundingBoxAscent || fs * 0.8, descent = m.fontBoundingBoxDescent || fs * 0.2;
+  // línea de base dentro de la caja (texto centrado en su line-height) menos la altura de mayúscula
+  const baseline = (lh - (ascent + descent)) / 2 + ascent;
+  return Math.max(0, baseline - m.actualBoundingBoxAscent);
+}
+let footerLinksTop = footerLinksEl ? footerLinksEl.getBoundingClientRect().top - nameCapOffset() : null;
 
 // estos dos dependen del tamaño de viewport, asi que se recalculan en
 // cada resize (ver el addEventListener('resize', ...) mas abajo, junto
@@ -1204,7 +1225,7 @@ let footerLinksTop = footerLinksEl ? footerLinksEl.getBoundingClientRect().top :
 // posición actual ahí daría un valor contaminado por ese transform.
 function refreshScrollLayoutRefs(){
   nameStartTop = measureNameStartTop();
-  footerLinksTop = footerLinksEl ? footerLinksEl.getBoundingClientRect().top : null;
+  footerLinksTop = footerLinksEl ? footerLinksEl.getBoundingClientRect().top - nameCapOffset() : null;
 }
 
 // en celular el nombre está centrado desde el arranque del loader; se
