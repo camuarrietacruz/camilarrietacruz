@@ -854,6 +854,7 @@
   .pv-body{ flex:1; display:flex; flex-direction:column; margin-top:clamp(36px, 4vw, 64px); }
   /* max-width 29.5em ≈ tope de 10 palabras por renglón (medido; al ir
      en em acompaña el tamaño de letra); en notebooks el panel corta antes */
+  .pv-desc[hidden]{ display:none; }
   .pv-desc{ font-size:21.56px; line-height:1.4; font-weight:400; opacity:0.85; margin:0 0 40px; max-width:29.5em; }
   /* links del proyecto ("↗ Instagram") debajo de la descripción */
   .pv-links{ display:flex; flex-wrap:wrap; gap:8px 22px; margin-top:-16px; margin-bottom:40px; font-size:13px; letter-spacing:0.08em; }
@@ -2386,6 +2387,9 @@ function explodeCards(){
   function measureRing(){
     geom.rx = window.innerWidth * 0.33;
     geom.ry = appH * 0.275;
+    // pantallas grandes: las cards crecen con la pantalla (en una laptop de
+    // 1440×900 o menos quedan igual; tope 1.6× en monitores muy grandes)
+    geom.k = Math.min(1.6, Math.max(1, Math.min(window.innerWidth / 1440, appH / 900)));
     const table = buildArcTable(geom.rx, geom.ry);
     geom.total = table.total;
     geom.angleAtArc = table.angleAtArc;
@@ -2411,7 +2415,7 @@ function explodeCards(){
     const uy = Math.sin(angle) * geom.ry;
     const dx = ux * Math.cos(tilt) - uy * Math.sin(tilt);
     const dy = ux * Math.sin(tilt) + uy * Math.cos(tilt);
-    const scale = scaleAt(angle);
+    const scale = scaleAt(angle) * geom.k;
     return { dx, dy, scale, z: Math.round(depthAt(angle) * 500) };
   }
 
@@ -3068,7 +3072,7 @@ const PROJECTS = [
     coords:null, // pendiente: { lat, lng, label }
     media:[] },
   { slug:'humo', name:'HUMO', year:'2025', type:{ es:'Dirección creativa & IA', en:'Creative direction & AI' }, accent:'#0012FF',
-    kind:{ es:'Restaurante mexicano en Los Cabos', en:'Mexican restaurant in Los Cabos' }, // qué es, destacado bajo el título y en el hover
+    kind:{ es:'Restaurante mexicano · Los Cabos', en:'Mexican restaurant · Los Cabos' }, // qué es, destacado bajo el título y en el hover
     cards:[11, 13], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
     client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     links:[ { label:{ es:'Conocé Humo Los Cabos', en:'Meet Humo Los Cabos' }, url:'https://www.instagram.com/humoloscabos/' } ],
@@ -3085,6 +3089,12 @@ var pvFooterDirty = false; // updateFooterScroll dejó estilos inline en la vist
 const projectViewEl = document.getElementById('projectView');
 const SITE_URL = 'https://www.camilarrietacruz.com';
 
+/* textos todavía no escritos: lo que está entre [corchetes] y las
+   descripciones "(placeholder)" no se muestran nunca en el sitio */
+function publicText(t){
+  t = (t || '').replace(/\s*\[[^\]]*\]/g, '').trim();
+  return /\(placeholder\)/i.test(t) ? '' : t;
+}
 function tr(v){ return (v && typeof v === 'object' && !Array.isArray(v)) ? (v[currentLang] || v.es || v.en || '') : (v || ''); }
 // coords { lat, lng, label } → "34.6179° S · 58.4404° O — BUENOS AIRES"
 // (sin signos: N/S y E/O; en inglés el oeste es W). Sin coords → ''.
@@ -3175,7 +3185,8 @@ const ProjectView = (() => {
     const coordsText = formatCoords(p.coords);
     coordsEl.textContent = coordsText;
     coordsEl.hidden = !coordsText;
-    $('pvDesc').textContent = tr(p.description);
+    $('pvDesc').textContent = publicText(tr(p.description));
+    $('pvDesc').hidden = !$('pvDesc').textContent;
     const linksEl = $('pvLinks');
     linksEl.innerHTML = '';
     (p.links || []).forEach(l => {
@@ -3868,7 +3879,8 @@ const About = (() => {
     b.style.left = st.x + '%'; b.style.top = st.y + '%';
     b.style.setProperty('--s', st.size + 'px');
     b.style.transitionDelay = (0.35 + i * 0.25) + 's, 0s';
-    b.setAttribute('aria-label', st.name);
+    b.setAttribute('aria-label', st.name + ': ' + tr(st.title)); // "Hamal: Quién soy" (se actualiza con el idioma)
+    b.dataset.starIndex = String(ARIES_STARS.indexOf(st));
     const label = document.createElement('span');
     label.className = 'about-star-name' + (st.x > 60 ? ' is-left' : ''); // cerca del borde derecho: el nombre va a la izquierda
     label.textContent = st.name; label.setAttribute('aria-hidden', 'true');
@@ -3904,7 +3916,7 @@ const About = (() => {
       $('aboutKicker').textContent = c.introKicker;
       $('aboutTitle').textContent = c.introTitle;
       $('aboutCoords').textContent = '';
-      $('aboutBody').textContent = c.introBody;
+      $('aboutBody').textContent = publicText(c.introBody);
       return;
     }
     const st = ARIES_STARS[active];
@@ -3923,7 +3935,7 @@ const About = (() => {
         links.appendChild(a);
       });
     } else {
-      $('aboutBody').textContent = tr(st.body);
+      $('aboutBody').textContent = publicText(tr(st.body));
     }
   }
 
@@ -4029,7 +4041,13 @@ const About = (() => {
     view.style.setProperty('--py', ((e.clientY / window.innerHeight) - 0.5).toFixed(3));
   });
 
-  aboutRefreshHook = () => { if (open){ fillText(); applySeo(); } };
+  aboutRefreshHook = () => {
+    document.querySelectorAll('.about-star').forEach(b => {
+      const st = ARIES_STARS[+b.dataset.starIndex];
+      if (st) b.setAttribute('aria-label', st.name + ': ' + tr(st.title));
+    });
+    if (open){ fillText(); applySeo(); }
+  };
 
   return { show, hide, openRoute, closeRoute, isOpen: () => open };
 })();

@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://www.camilarrietacruz.com/</loc>
-    <changefreq>monthly</changefreq>
-    <priority>1.0</priority>
-  </url>
+  <url><loc>https://www.camilarrietacruz.com/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.camilarrietacruz.com/sobre-mi</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.camilarrietacruz.com/etrixia</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.camilarrietacruz.com/lacade</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.camilarrietacruz.com/bestial</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.camilarrietacruz.com/magic-styler</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.camilarrietacruz.com/eclat</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.camilarrietacruz.com/templa</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.camilarrietacruz.com/carmen</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.camilarrietacruz.com/humo</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 </urlset>
