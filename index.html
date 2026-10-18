@@ -485,6 +485,133 @@
   }
   .project-view button{ font-family:inherit; color:inherit; background:none; border:none; padding:0; }
 
+
+  /* ════════ CARD PERSONAL: "tu cielo" (Aries, /sobre-mi) ════════
+     Se abre desde la card con tu foto, distinto a los proyectos: una lente
+     redonda (como una lupa) que se agranda desde la card sobre la
+     constelación de Aries. Fondo negro azulado con grano de universo y
+     apenas luz. Línea de la constelación muy fina; las estrellas son el
+     mismo punto con glow del cursor, de distintos tamaños según su brillo
+     real. Cada estrella abre una parte tuya. */
+  .about-view{
+    position:fixed; inset:0; z-index:300;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(5,5,8,0.55);
+    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    opacity:0; visibility:hidden;
+    transition: opacity 0.4s ease, visibility 0s linear 0.4s;
+    font-family:var(--font); color:var(--cream);
+    -webkit-font-smoothing:antialiased;
+  }
+  .about-view.is-open{ opacity:1; visibility:visible; transition: opacity 0.4s ease, visibility 0s; }
+  .about-view button{ font-family:inherit; color:inherit; background:none; border:none; padding:0; }
+
+  .about-close{
+    position:absolute; top:34px; left:max(24px, 2.4vw); z-index:2;
+    font-size:15.4px; line-height:1; padding:14px; margin:-14px;
+    opacity:0.85; transition:opacity 0.2s ease;
+  }
+  html.can-hover .about-close:hover{ opacity:1; }
+
+  .about-lens{
+    --lens: min(86vmin, 640px);
+    position:relative; width:var(--lens); height:var(--lens);
+    border-radius:50%; overflow:hidden;
+    background:
+      radial-gradient(circle at 34% 28%, rgba(120,140,255,0.06), transparent 30%),
+      radial-gradient(circle at 30% 35%, rgba(0,18,255,0.16), transparent 58%),
+      radial-gradient(circle at 75% 80%, rgba(0,18,255,0.09), transparent 50%),
+      #030307;
+    box-shadow: 0 0 0 1px rgba(248,247,239,0.18), 0 0 60px rgba(0,18,255,0.18), inset 0 0 80px rgba(0,0,0,0.85);
+    transform-origin:center;
+    transition: transform 0.6s cubic-bezier(.2,.75,.2,1), opacity 0.4s ease;
+  }
+  /* grano de universo: ruido fino generado (no es una foto) */
+  .about-lens::before{
+    content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.62  0 0 0 0 0.68  0 0 0 0 1  0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    opacity:0.35; mix-blend-mode:screen;
+  }
+  /* brillo de vidrio de la lupa */
+  .about-lens::after{
+    content:''; position:absolute; inset:0; pointer-events:none; z-index:3; border-radius:50%;
+    background: radial-gradient(circle at 30% 22%, rgba(255,255,255,0.07), transparent 38%);
+  }
+  .about-sky{
+    position:absolute; inset:0; z-index:1;
+    transform: translate(calc(var(--px, 0) * 10px), calc(var(--py, 0) * 10px));
+    transition: transform 0.6s cubic-bezier(.2,.7,.2,1);
+  }
+  .about-dust{
+    position:absolute; inset:0; z-index:0; pointer-events:none;
+    transform: translate(calc(var(--px, 0) * 4px), calc(var(--py, 0) * 4px));
+    transition: transform 0.8s cubic-bezier(.2,.7,.2,1);
+  }
+  .about-dust i{
+    position:absolute; width:2px; height:2px; border-radius:50%;
+    background:rgba(200,210,255,0.55); transform:translate(-50%,-50%);
+  }
+  .about-lines{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; }
+  .about-lines polyline{
+    fill:none; stroke:rgba(248,247,239,0.6); stroke-width:0.14; /* ~0.9px en una lente de 640px */
+    stroke-linecap:round; stroke-linejoin:round;
+    stroke-dasharray: 1; stroke-dashoffset: 1;
+  }
+  .about-view.is-drawn .about-lines polyline{ stroke-dashoffset:0; transition: stroke-dashoffset 1.6s cubic-bezier(.45,0,.2,1); }
+
+  /* ".about-view .about-star" y no ".about-star": la regla de botones de la
+     vista (background:none) le sacaba el degradé y quedaba un disco oscuro */
+  .about-view .about-star{
+    position:absolute; transform:translate(-50%,-50%);
+    width:var(--s); height:var(--s); border-radius:50%;
+    background: radial-gradient(circle, rgba(248,247,239,1) 0%, rgba(205,215,255,0.95) 18%, rgba(60,80,255,0.75) 40%, rgba(0,18,255,0.25) 68%, rgba(0,18,255,0) 100%);
+    box-shadow: 0 0 calc(var(--s) * 0.9) rgba(60,80,255,0.55);
+    opacity:0; transition: opacity 0.5s ease, transform 0.35s cubic-bezier(.2,.8,.2,1.2);
+    cursor:pointer;
+  }
+  .about-star::before{ content:''; position:absolute; left:50%; top:50%; width:44px; height:44px; transform:translate(-50%,-50%); border-radius:50%; }
+  .about-view.is-drawn .about-star{ opacity:1; }
+  .about-star.is-active{ transform:translate(-50%,-50%) scale(1.45); }
+  html.can-hover .about-star:hover{ transform:translate(-50%,-50%) scale(1.25); }
+  .about-star-name{
+    position:absolute; left:calc(100% + 8px); top:50%; transform:translateY(-50%);
+    font-family:'Courier New', monospace; font-size:9px; letter-spacing:0.12em; white-space:nowrap;
+    color:var(--cream); opacity:0.45; pointer-events:none;
+  }
+  .about-star.is-active .about-star-name{ opacity:0.9; }
+  .about-star-name.is-left{ left:auto; right:calc(100% + 8px); }
+
+  .about-text{
+    position:absolute; left:16%; right:16%; top:60%; z-index:2;
+    text-align:center;
+  }
+  .about-kicker{ font-family:'Courier New', monospace; font-size:10px; letter-spacing:0.14em; opacity:0.55; margin:0 0 10px; }
+  .about-title{ font-size:11px; font-weight:400; letter-spacing:0.16em; text-transform:uppercase; margin:0 0 10px; opacity:0.85; }
+  .about-coords{ font-family:'Courier New', monospace; font-size:10px; letter-spacing:0.1em; opacity:0.4; margin:0 0 12px; }
+  .about-coords:empty{ display:none; }
+  .about-body{ font-size:clamp(13px, 2.1vmin, 16px); line-height:1.45; margin:0; opacity:0.92; }
+  .about-links{ display:flex; justify-content:center; gap:18px; margin-top:12px; font-size:12px; letter-spacing:0.08em; }
+  .about-links:empty{ display:none; }
+  .about-links a{ color:inherit; text-decoration:none; opacity:0.85; }
+  html.can-hover .about-links a:hover{ opacity:1; }
+  .about-text > *{ transition: opacity 0.3s ease; }
+  .about-text.is-swapping > *{ opacity:0 !important; }
+
+  /* celular: en una lente de ~340px los textos no entran adentro del
+     círculo; la constelación se centra en la lente y el texto va debajo */
+  html.is-narrow .about-view{ flex-direction:column; }
+  html.is-narrow .about-lens{ --lens: min(88vw, 56vh); overflow:visible; margin-top:-12vh; }
+  html.is-narrow .about-lens::before{ border-radius:50%; }
+  html.is-narrow .about-sky{ inset:16% 0 -16% 0; }
+  html.is-narrow .about-text{ left:50%; right:auto; top:calc(100% + 22px); width:min(86vw, 360px); transform:translateX(-50%); }
+  html.is-narrow .about-body{ font-size:14px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .about-lens, .about-sky, .about-dust{ transition:none; }
+    .about-lines polyline{ stroke-dashoffset:0; }
+    .about-star{ opacity:1; }
+  }
+
   /* -------- transición hero ↔ proyecto (ver enterProjectView / leaveProjectView) --------
      .pv-flyer: la imagen que viaja entre la card del hero y el carrusel; va
      por encima de todo (hero 100, proyecto 200) salvo cursor e idioma.
@@ -845,6 +972,24 @@
   <div class="lang-switch" id="langSwitch">
     <button type="button" class="lang-btn" data-lang="es">ES</button>
     <button type="button" class="lang-btn" data-lang="en">EN</button>
+  </div>
+
+  <!-- CARD PERSONAL (Aries): la llena el JS (About) -->
+  <div class="about-view" id="aboutView" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <button class="about-close" id="aboutClose" type="button" aria-label="Cerrar"><span aria-hidden="true">←</span></button>
+    <div class="about-lens" id="aboutLens">
+      <div class="about-dust" id="aboutDust" aria-hidden="true"></div>
+      <div class="about-sky" id="aboutSky">
+        <svg class="about-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline id="aboutLine" pathLength="1" points=""/></svg>
+      </div>
+      <div class="about-text" id="aboutText" aria-live="polite">
+        <p class="about-kicker" id="aboutKicker"></p>
+        <h2 class="about-title" id="aboutTitle"></h2>
+        <p class="about-coords" id="aboutCoords"></p>
+        <p class="about-body" id="aboutBody"></p>
+        <div class="about-links" id="aboutLinks"></div>
+      </div>
+    </div>
   </div>
 
   <!-- VISTA DE PROYECTO: la llena el JS (ProjectView) con los datos de PROJECTS -->
@@ -2975,6 +3120,7 @@ const ProjectView = (() => {
 })();
 
 function refreshProjectLang(){
+  if (aboutRefreshHook) aboutRefreshHook();
   if (!currentProject) return;
   ProjectView.renderText(currentProject);
   applyProjectSeo(currentProject);
@@ -3235,9 +3381,247 @@ window.addEventListener('popstate', () => {
   else { hideProject(); startHome(); }
 });
 function openProjectForCard(i){
+  // la card con tu foto no abre un proyecto: abre "tu cielo" (ver About)
+  if (i === ABOUT_CARD){ About.openRoute({ cardIndex: i }); return; }
   const p = PROJECTS.find(pr => (pr.cards || []).includes(i));
   if (p) Router.open(p.slug, { cardIndex: i });
 }
+
+/* ════════════════════════════════════════════
+   CARD PERSONAL — "tu cielo": la constelación de Aries (/sobre-mi)
+   Se abre desde la card con tu foto (ABOUT_CARD). Las posiciones de las
+   estrellas salen de sus coordenadas reales (RA/DEC proyectadas, con el
+   este a la izquierda como en un mapa del cielo), y el tamaño de cada una
+   de su brillo. Los textos entre [corchetes] son para reemplazar.
+   Coordenadas aproximadas: verificar antes de dejarlas definitivas.
+════════════════════════════════════════════ */
+const ABOUT_SLUG = 'sobre-mi';
+const ABOUT_CARD = 4; // la card del hero con tu foto
+const ABOUT_COPY = {
+  es: {
+    seoTitle: 'Sobre mí — Camila Arrieta Cruz',
+    seoDescription: 'Camila Arrieta Cruz: diseño gráfico, UX/UI y dirección creativa desde Buenos Aires.',
+    close: 'Cerrar',
+    introKicker: '♈︎ ARIES',
+    introTitle: 'Tocá una estrella',
+    introBody: 'Signo de fuego y de arranque. [Tu línea sobre Aries, en tus palabras.]',
+    contactBody: 'Escribime o hablemos por WhatsApp.',
+    email: 'Mail', whatsapp: 'WhatsApp'
+  },
+  en: {
+    seoTitle: 'About — Camila Arrieta Cruz',
+    seoDescription: 'Camila Arrieta Cruz: graphic design, UX/UI and creative direction from Buenos Aires.',
+    close: 'Close',
+    introKicker: '♈︎ ARIES',
+    introTitle: 'Tap a star',
+    introBody: 'A fire sign, the one that starts things. [Your line about Aries, in your words.]',
+    contactBody: 'Write to me or let’s talk on WhatsApp.',
+    email: 'Email', whatsapp: 'WhatsApp'
+  }
+};
+// x/y en % del cielo de la lente; size en px según brillo (Hamal es la más brillante)
+const ARIES_STARS = [
+  { id:'41ari', name:'41 ARI', x:21.1, y:16.0, size:13, coords:'RA 02h 50m · DEC +27° 15′',
+    kicker:'41 ARI', title:{ es:'Contacto', en:'Contact' }, contact:true },
+  { id:'hamal', name:'HAMAL', x:64.4, y:33.2, size:22, coords:'RA 02h 07m · DEC +23° 27′',
+    kicker:'α ARI · HAMAL', title:{ es:'Quién soy', en:'Who I am' },
+    body:{ es:'Camila Arrieta Cruz. Buenos Aires, Argentina. [Tu frase, en tus palabras.]', en:'Camila Arrieta Cruz. Buenos Aires, Argentina. [Your line, in your words.]' } },
+  { id:'sheratan', name:'SHERATAN', x:77.6, y:45.2, size:17, coords:'RA 01h 54m · DEC +20° 48′',
+    kicker:'β ARI · SHERATAN', title:{ es:'Qué hago', en:'What I do' },
+    body:{ es:'Diseño gráfico, UX/UI y dirección creativa, con workflows potenciados por IA.', en:'Graphic design, UX/UI and creative direction, with AI-powered workflows.' } },
+  { id:'mesarthim', name:'MESARTHIM', x:79.0, y:52.0, size:12, coords:'RA 01h 53m · DEC +19° 17′',
+    kicker:'γ ARI · MESARTHIM', title:{ es:'Esta web', en:'This site' },
+    body:{ es:'La dirección creativa es mía; la construí con IA. [Qué decidiste vos: tipografía, márgenes, animaciones, textos. Qué hizo la IA: el código.]', en:'The creative direction is mine; I built it with AI. [What you decided: type, margins, motion, copy. What the AI did: the code.]' } }
+];
+
+var aboutRefreshHook = null; // var: applyLang puede llamar antes de que exista About
+
+const About = (() => {
+  const $ = id => document.getElementById(id);
+  const view = $('aboutView'), lens = $('aboutLens'), sky = $('aboutSky'), dust = $('aboutDust');
+  const textEl = $('aboutText');
+  let open = false, active = null, cardIndex = null, swapTimer = 0, drawTimer = 0, lastFocus = null;
+
+  // estrellas de la constelación
+  const starEls = ARIES_STARS.map((st, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'about-star';
+    b.style.left = st.x + '%'; b.style.top = st.y + '%';
+    b.style.setProperty('--s', st.size + 'px');
+    b.style.transitionDelay = (0.35 + i * 0.25) + 's, 0s';
+    b.setAttribute('aria-label', st.name);
+    const label = document.createElement('span');
+    label.className = 'about-star-name' + (st.x > 60 ? ' is-left' : ''); // cerca del borde derecho: el nombre va a la izquierda
+    label.textContent = st.name; label.setAttribute('aria-hidden', 'true');
+    b.appendChild(label);
+    b.addEventListener('click', (e) => { e.stopPropagation(); select(i); });
+    sky.appendChild(b);
+    return b;
+  });
+  $('aboutLine').setAttribute('points', ARIES_STARS.map(st => st.x + ',' + st.y).join(' '));
+
+  // polvo de estrellas de fondo (siempre el mismo dibujo: semilla fija)
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let k = 0; k < 46; k++){
+    const a = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * 47;
+    const d = document.createElement('i');
+    d.style.left = (50 + Math.cos(a) * r) + '%';
+    d.style.top = (50 + Math.sin(a) * r) + '%';
+    d.style.opacity = (0.15 + rnd() * 0.6).toFixed(2);
+    const sz = rnd() < 0.85 ? 1.5 : 2.5;
+    d.style.width = d.style.height = sz + 'px';
+    dust.appendChild(d);
+  }
+
+  function copy(){ return ABOUT_COPY[currentLang] || ABOUT_COPY.es; }
+
+  function fillText(){
+    const c = copy();
+    $('aboutClose').setAttribute('aria-label', c.close);
+    const links = $('aboutLinks');
+    links.innerHTML = '';
+    if (active == null){
+      $('aboutKicker').textContent = c.introKicker;
+      $('aboutTitle').textContent = c.introTitle;
+      $('aboutCoords').textContent = '';
+      $('aboutBody').textContent = c.introBody;
+      return;
+    }
+    const st = ARIES_STARS[active];
+    $('aboutKicker').textContent = st.kicker;
+    $('aboutTitle').textContent = tr(st.title);
+    $('aboutCoords').textContent = st.coords;
+    if (st.contact){
+      $('aboutBody').textContent = c.contactBody;
+      const mail = document.getElementById('contactEmailLink');
+      const wa = document.getElementById('contactPhoneLink');
+      [[mail, c.email], [wa, c.whatsapp]].forEach(([src, label]) => {
+        if (!src || !src.href || src.getAttribute('href') === '#') return;
+        const a = document.createElement('a');
+        a.href = src.href; a.textContent = '↗ ' + label;
+        if (!a.href.startsWith('mailto:')){ a.target = '_blank'; a.rel = 'noopener'; }
+        links.appendChild(a);
+      });
+    } else {
+      $('aboutBody').textContent = tr(st.body);
+    }
+  }
+
+  function select(i){
+    if (active === i) return;
+    active = i;
+    starEls.forEach((b, k) => b.classList.toggle('is-active', k === i));
+    if (prefersReducedMotion){ fillText(); return; }
+    clearTimeout(swapTimer);
+    textEl.classList.add('is-swapping');
+    swapTimer = setTimeout(() => { fillText(); textEl.classList.remove('is-swapping'); }, 220);
+  }
+
+  function applySeo(){
+    const c = copy(), url = SITE_URL + '/' + ABOUT_SLUG;
+    document.title = c.seoTitle;
+    setSeo({ description:c.seoDescription, canonical:url, ogTitle:c.seoTitle, ogDescription:c.seoDescription, ogUrl:url,
+             ogImage:SEO_DEFAULTS.ogImage, twTitle:c.seoTitle, twDescription:c.seoDescription, twImage:SEO_DEFAULTS.twImage });
+  }
+
+  // la lente "sale" de la card: arranca chica y centrada sobre ella
+  function lensFromCard(){
+    const card = cardIndex != null ? stackImgs[cardIndex] : null;
+    if (!card) return 'scale(0.6)';
+    const r = card.getBoundingClientRect();
+    if (!r.width) return 'scale(0.6)';
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const lensSize = lens.offsetWidth || Math.min(vw, vh) * 0.86;
+    const dx = (r.left + r.width / 2) - vw / 2, dy = (r.top + r.height / 2) - vh / 2;
+    return 'translate(' + dx + 'px,' + dy + 'px) scale(' + Math.max(0.08, r.width / lensSize) + ')';
+  }
+
+  function show(opts){
+    opts = opts || {};
+    if (open) return;
+    open = true;
+    cardIndex = opts.cardIndex != null ? opts.cardIndex : null;
+    active = null;
+    starEls.forEach(b => b.classList.remove('is-active'));
+    fillText();
+    applySeo();
+    enableCursorTracking();
+    lastFocus = document.activeElement;
+    view.setAttribute('aria-hidden', 'false');
+    if (prefersReducedMotion){
+      view.classList.add('is-open', 'is-drawn');
+    } else {
+      lens.style.transition = 'none';
+      lens.style.transform = lensFromCard();
+      lens.style.opacity = '0.2';
+      view.classList.add('is-open');
+      void lens.offsetWidth;
+      lens.style.transition = '';
+      lens.style.transform = '';
+      lens.style.opacity = '';
+      clearTimeout(drawTimer);
+      drawTimer = setTimeout(() => view.classList.add('is-drawn'), 420);
+    }
+    setTimeout(() => $('aboutClose').focus({ preventScroll:true }), 50);
+  }
+
+  function hide(){
+    if (!open) return;
+    open = false;
+    clearTimeout(drawTimer);
+    if (!prefersReducedMotion) lens.style.transform = lensFromCard();
+    view.classList.remove('is-open', 'is-drawn');
+    view.setAttribute('aria-hidden', 'true');
+    setTimeout(() => { if (!open) lens.style.transform = ''; }, 450);
+    if (!currentProject) restoreHomeSeo();
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll:true });
+  }
+
+  // abrir/cerrar con historial propio: /sobre-mi
+  function openRoute(opts){
+    if (open) return;
+    history.pushState({ about:true, fromHome:true }, '', '/' + ABOUT_SLUG);
+    show(opts);
+  }
+  function closeRoute(){
+    if (!open) return;
+    if (history.state && history.state.about && history.state.fromHome) history.back();
+    else { history.replaceState({}, '', '/'); hide(); startHome(); }
+  }
+
+  $('aboutClose').addEventListener('click', closeRoute);
+  // tocar afuera de la lente cierra
+  view.addEventListener('click', (e) => { if (e.target === view) closeRoute(); });
+  document.addEventListener('keydown', (e) => { if (open && e.key === 'Escape') closeRoute(); });
+  // celular: deslizar hacia abajo cierra
+  let ty = null, tx = null;
+  view.addEventListener('touchstart', (e) => { const t = e.touches[0]; ty = t.clientY; tx = t.clientX; }, { passive:true });
+  view.addEventListener('touchend', (e) => {
+    if (ty == null) return;
+    const t = e.changedTouches[0];
+    if (t.clientY - ty > 90 && Math.abs(t.clientX - tx) < 70) closeRoute();
+    ty = tx = null;
+  }, { passive:true });
+  // parallax suave con el mouse (las estrellas se mueven un poco más que el polvo)
+  view.addEventListener('mousemove', (e) => {
+    if (!canHover || prefersReducedMotion) return;
+    view.style.setProperty('--px', ((e.clientX / window.innerWidth) - 0.5).toFixed(3));
+    view.style.setProperty('--py', ((e.clientY / window.innerHeight) - 0.5).toFixed(3));
+  });
+
+  aboutRefreshHook = () => { if (open){ fillText(); applySeo(); } };
+
+  return { show, hide, openRoute, closeRoute, isOpen: () => open };
+})();
+
+// navegación del historial hacia/desde /sobre-mi (el listener de proyectos
+// corre antes y no hace nada con esta ruta)
+window.addEventListener('popstate', () => {
+  if (slugFromPath() === ABOUT_SLUG) About.show();
+  else About.hide();
+});
 
 // se resuelve cuando terminó de cargar todo el script: showProject usa
 // cosas del footer que se definen más abajo
@@ -3246,6 +3630,11 @@ queueMicrotask(function initRoute(){
   if (slug && projectBySlug(slug)){
     history.replaceState({ project: slug }, '', '/' + slug);
     showProject(slug);
+  } else if (slug === ABOUT_SLUG){
+    // la card personal se abre sobre el home, que arranca detrás
+    history.replaceState({ about: true }, '', '/' + ABOUT_SLUG);
+    startHome();
+    About.show();
   } else {
     if (slug) history.replaceState({}, '', '/'); // ruta desconocida → home
     startHome();
@@ -3368,6 +3757,20 @@ function updateFooterScroll(){
     const clampedTop = Math.max(stopTop, rawTop);
     const compensation = clampedTop - rawTop;
     nameText.style.transform = 'translateY(calc(-50% + ' + compensation + 'px))';
+  }
+
+  // desde un proyecto el hero está oculto (y con él tu nombre), pero en el
+  // footer el nombre tiene que estar igual que desde el home: se muestra
+  // solo él (visibility:visible le gana al hero oculto) y aparece a medida
+  // que el footer se destapa; arriba de todo, sobre el proyecto, no se ve
+  if (currentProject){
+    const k = Math.min(1, Math.max(0, (p - 0.35) / 0.4));
+    if (k > 0 && nameText.style.visibility !== 'visible') centerNameText();
+    nameText.style.visibility = k > 0 ? 'visible' : '';
+    nameText.style.opacity = k > 0 ? String(k) : '';
+  } else if (nameText.style.visibility){
+    nameText.style.visibility = '';
+    nameText.style.opacity = '';
   }
 }
 document.addEventListener('scroll', () => requestAnimationFrame(updateFooterScroll), { passive:true });
