@@ -1906,7 +1906,7 @@ function setupNameScramble(){
     });
   }
   nameText.addEventListener('mouseenter', () => { if (canHover) toggleName(); });
-  nameText.addEventListener('click', scrollToFooter);
+  nameText.addEventListener('click', nameScrollToggle);
   startAutoNameSwap(toggleName);
 }
 
@@ -1942,6 +1942,8 @@ const SNAP_MS = 1000; // conversión al footer / vuelta disparada por un gesto t
 let nameScrollFrame = null;
 let snapping = false;
 function scrollToFooter(){ scrollToY(appH, NAME_SCROLL_MS); }
+// el nombre: arriba lleva al footer; ya en el footer (pasando la mitad) vuelve arriba
+function nameScrollToggle(){ scrollToY(window.scrollY > appH * 0.5 ? 0 : appH, NAME_SCROLL_MS); }
 function scrollToY(to, ms){
   if (!document.body.classList.contains('stage-active') && !currentProject) return;
   const from = window.scrollY;
