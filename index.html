@@ -485,6 +485,29 @@
   }
   .project-view button{ font-family:inherit; color:inherit; background:none; border:none; padding:0; }
 
+  /* -------- transición hero ↔ proyecto (ver enterProjectView / leaveProjectView) --------
+     .pv-flyer: la imagen que viaja entre la card del hero y el carrusel; va
+     por encima de todo (hero 100, proyecto 200) salvo cursor e idioma.
+     .pv-chrome-out: panel/barra de info, volver, contador y contacto
+     afuera; al sacarla entran con transición.
+     .pv-feed-hidden: el feed invisible mientras la imagen viaja (si no, la
+     foto real aparecería antes de que llegue la que vuela). */
+  .pv-flyer{ position:fixed; z-index:260; pointer-events:none; overflow:hidden; }
+  .pv-flyer img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:opacity 0.35s ease; }
+  .project-view.pv-flying{ transition: opacity 0.45s ease, visibility 0s; }
+  .pv-feed{ transition: opacity 0.3s ease; }
+  .project-view.pv-feed-hidden .pv-feed{ opacity:0; }
+  .pv-info{ transition: transform 0.55s cubic-bezier(.2,.7,.2,1), opacity 0.45s ease; }
+  .pv-back, .pv-counter, .pv-index{ transition: opacity 0.45s ease; }
+  .project-view.pv-chrome-out .pv-info{ transform:translateX(-28px); opacity:0; }
+  html.is-narrow .project-view.pv-chrome-out .pv-info{ transform:translateY(-100%); opacity:1; }
+  .project-view.pv-chrome-out .pv-back,
+  .project-view.pv-chrome-out .pv-counter,
+  .project-view.pv-chrome-out .pv-contact{ opacity:0 !important; }
+  @media (prefers-reduced-motion: reduce){
+    .pv-info{ transition:none; }
+  }
+
   /* solo la flecha (11px + 40%); "Salir de órbita" queda como aria-label.
      Área de toque de 44px sin mover la flecha de lugar. */
   .pv-back{
@@ -2933,7 +2956,21 @@ const ProjectView = (() => {
       renderFeed(p);
     },
     renderText,
-    clear(){ feed.innerHTML = ''; items = []; total = 0; copyH = 0; }
+    clear(){ feed.innerHTML = ''; items = []; total = 0; copyH = 0; },
+    // el auto-scroll espera a que termine la entrada
+    pauseAuto(ms){ autoPauseUntil = performance.now() + ms; autoAcc = 0; },
+    // el item del feed que ocupa el borde de arriba (con la imagen que se ve)
+    topItem(){
+      const fr = feed.getBoundingClientRect();
+      const probe = fr.top + 2;
+      for (const el of feed.children){
+        const r = el.getBoundingClientRect();
+        if (r.top <= probe && r.bottom > probe) return el;
+      }
+      return feed.children[0] || null;
+    },
+    feedRect(){ return feed.getBoundingClientRect(); },
+    feedEl(){ return feed; }
   };
 })();
 
@@ -2947,16 +2984,178 @@ function refreshProjectLang(){
    TRANSICIÓN: por ahora un fade simple (.is-open en el CSS). La animación
    final de entrada/salida se enchufa SOLO en enterProjectView() y
    leaveProjectView(), sin tocar el resto. */
-function enterProjectView(){
-  projectViewEl.classList.add('is-open');
-  loader.style.visibility = 'hidden';
+/* -------- transición hero ↔ proyecto --------
+   Abrir desde una card: la imagen de la card viaja y crece hasta el lugar de
+   la primera foto del carrusel; mientras tanto el negro de la vista se funde
+   por encima del hero (sin destello crema). Al llegar se funde con la foto
+   real, y el panel de info entra (en celular la barra baja desde arriba).
+   Volver: al revés — la foto que se ve se achica hacia su card (siguiéndola
+   en vivo, porque el anillo sigue girando) mientras el hero reaparece.
+   Entrando por link directo, sin hero, o con "reducir movimiento": fundido
+   simple. Si llega otra navegación en medio (atrás del navegador, gesto de
+   iPhone), la transición en curso se termina al instante antes de seguir. */
+const PV_FLY_MS = 760;
+let pvTransition = null;
+function finishPvTransition(){
+  if (!pvTransition) return;
+  const t = pvTransition;
+  pvTransition = null;
+  t.finish();
 }
-function leaveProjectView(){
-  projectViewEl.classList.remove('is-open');
-  loader.style.visibility = '';
+function easeInOutCubic(t){ return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+function plainRect(r){ return { left:r.left, top:r.top, width:r.width, height:r.height }; }
+function lerpRect(a, b, e){
+  return { left:lerp(a.left, b.left, e), top:lerp(a.top, b.top, e), width:lerp(a.width, b.width, e), height:lerp(a.height, b.height, e) };
+}
+function placeFlyer(el, r){
+  el.style.left = r.left + 'px'; el.style.top = r.top + 'px';
+  el.style.width = r.width + 'px'; el.style.height = r.height + 'px';
+}
+// imagen voladora con dos capas: "under" de base y "over" encima (se funde)
+function makeFlyer(underSrc, overSrc, rect){
+  const el = document.createElement('div');
+  el.className = 'pv-flyer';
+  el.setAttribute('aria-hidden', 'true');
+  const under = document.createElement('img'); under.alt = ''; under.src = underSrc; el.appendChild(under);
+  let over = null;
+  if (overSrc){ over = document.createElement('img'); over.alt = ''; over.src = overSrc; el.appendChild(over); }
+  placeFlyer(el, rect);
+  document.body.appendChild(el);
+  return { el, under, over };
+}
+function itemImageSrc(item){
+  const media = item && item.querySelector('img, video');
+  if (!media) return null;
+  return media.tagName === 'IMG' ? (media.currentSrc || media.src) : (media.poster || null);
+}
+// la parte visible de un item del feed (puede ser más alto que la pantalla)
+function visibleItemRect(item){
+  const r = item.getBoundingClientRect(), f = ProjectView.feedRect();
+  const top = Math.max(r.top, f.top), bottom = Math.min(r.bottom, f.bottom);
+  return { left:r.left, top, width:r.width, height:Math.max(1, bottom - top) };
+}
+function cardForProject(p){
+  const i = p && p.cards && p.cards.length ? p.cards[0] : null;
+  return i != null ? stackImgs[i] : null;
+}
+function canFlyWith(card){
+  if (!card || prefersReducedMotion || !homeStarted || !document.body.classList.contains('stage-active')) return false;
+  const r = card.getBoundingClientRect();
+  return r.width > 2 && r.bottom > 0 && r.top < window.innerHeight;
+}
+function revealChrome(){
+  // dos frames: el estado "afuera" se pinta antes de que arranque la transición
+  requestAnimationFrame(() => requestAnimationFrame(() => projectViewEl.classList.remove('pv-chrome-out')));
 }
 
-function showProject(slug){
+function enterProjectView(opts){
+  finishPvTransition();
+  const card = opts && opts.cardIndex != null ? stackImgs[opts.cardIndex] : null;
+  const target = ProjectView.topItem();
+
+  if (!canFlyWith(card) || !target){
+    // entrada simple (link directo, sin hero o con "reducir movimiento"): el
+    // fondo negro aparece de una (si se fundiera, durante el fundido se vería
+    // el footer que está detrás) y lo que entra con transición son las fotos
+    // y el panel
+    // estado inicial aplicado sin transiciones (panel afuera, fotos ocultas),
+    // y recién después se sueltan para que entren
+    const parts = [projectViewEl, ProjectView.feedEl(), projectViewEl.querySelector('.pv-info')];
+    parts.forEach(el => { el.style.transition = 'none'; });
+    projectViewEl.classList.add('is-open');
+    if (!prefersReducedMotion) projectViewEl.classList.add('pv-chrome-out', 'pv-feed-hidden');
+    void projectViewEl.offsetWidth;
+    parts.forEach(el => { el.style.transition = ''; });
+    loader.style.visibility = 'hidden';
+    if (!prefersReducedMotion){
+      ProjectView.pauseAuto(900);
+      requestAnimationFrame(() => requestAnimationFrame(() => projectViewEl.classList.remove('pv-chrome-out', 'pv-feed-hidden')));
+    }
+    return;
+  }
+
+  const from = plainRect(card.getBoundingClientRect());
+  const to = plainRect(target.getBoundingClientRect());
+  if (typeof LiquidDistort !== 'undefined') LiquidDistort.leave();
+  card.style.visibility = 'hidden';
+  const realSrc = itemImageSrc(target);
+  // base: la foto real del proyecto; encima: la de la card, que se funde al llegar
+  const fly = makeFlyer(realSrc || card.src, realSrc ? card.src : null, from);
+  projectViewEl.classList.add('pv-flying', 'pv-feed-hidden', 'pv-chrome-out', 'is-open');
+  ProjectView.pauseAuto(PV_FLY_MS + 900);
+
+  const t0 = performance.now();
+  let raf = 0, chromeIn = false;
+  const finish = () => {
+    cancelAnimationFrame(raf);
+    placeFlyer(fly.el, to);
+    projectViewEl.classList.remove('pv-feed-hidden', 'pv-chrome-out');
+    loader.style.visibility = 'hidden';
+    card.style.visibility = '';
+    fly.el.style.transition = 'opacity 0.3s ease';
+    requestAnimationFrame(() => { fly.el.style.opacity = '0'; });
+    setTimeout(() => { fly.el.remove(); projectViewEl.classList.remove('pv-flying'); }, 340);
+  };
+  const tick = (now) => {
+    const t = Math.min(1, (now - t0) / PV_FLY_MS);
+    const e = easeInOutCubic(t);
+    placeFlyer(fly.el, lerpRect(from, to, e));
+    if (fly.over && t > 0.55) fly.over.style.opacity = '0';
+    if (!chromeIn && t > 0.55){ chromeIn = true; projectViewEl.classList.remove('pv-chrome-out'); }
+    if (t < 1) raf = requestAnimationFrame(tick);
+    else { pvTransition = null; finish(); }
+  };
+  pvTransition = { finish };
+  raf = requestAnimationFrame(tick);
+}
+
+function leaveProjectView(project){
+  finishPvTransition();
+  const card = cardForProject(project);
+  const top = ProjectView.topItem();
+
+  if (window.scrollY > 0.5 || !top || !canFlyWith(card)){
+    projectViewEl.classList.remove('is-open');
+    loader.style.visibility = '';
+    return;
+  }
+
+  const from = visibleItemRect(top);
+  const topSrc = itemImageSrc(top);
+  // base: la imagen de la card; encima: la foto del proyecto, que se funde en el camino
+  const fly = makeFlyer(card.src, topSrc, from);
+  card.style.visibility = 'hidden';
+  loader.style.visibility = '';
+  loader.style.transition = 'opacity 0.5s ease';
+  loader.style.opacity = '0';
+  projectViewEl.classList.add('pv-flying', 'pv-feed-hidden', 'pv-chrome-out');
+  projectViewEl.classList.remove('is-open');
+  requestAnimationFrame(() => { loader.style.opacity = '1'; });
+
+  const t0 = performance.now();
+  let raf = 0;
+  const finish = () => {
+    cancelAnimationFrame(raf);
+    fly.el.remove();
+    card.style.visibility = '';
+    loader.style.transition = '';
+    loader.style.opacity = '';
+    projectViewEl.classList.remove('pv-flying', 'pv-feed-hidden', 'pv-chrome-out');
+  };
+  const tick = (now) => {
+    const t = Math.min(1, (now - t0) / PV_FLY_MS);
+    const e = easeInOutCubic(t);
+    // la card sigue moviéndose con el anillo: el destino se mide en cada frame
+    placeFlyer(fly.el, lerpRect(from, plainRect(card.getBoundingClientRect()), e));
+    if (fly.over && t > 0.3) fly.over.style.opacity = '0';
+    if (t < 1) raf = requestAnimationFrame(tick);
+    else { pvTransition = null; finish(); }
+  };
+  pvTransition = { finish };
+  raf = requestAnimationFrame(tick);
+}
+
+function showProject(slug, opts){
   const p = projectBySlug(slug);
   if (!p) return false;
   const wasOpen = !!currentProject;
@@ -2967,8 +3166,10 @@ function showProject(slug){
   document.body.classList.add('project-open');
   projectViewEl.setAttribute('aria-hidden', 'false');
   enableCursorTracking();
-  if (!wasOpen) enterProjectView(); // visible antes de renderizar: el feed necesita medidas reales
+  // se renderiza primero (oculta, pero con medidas reales) para saber a
+  // dónde tiene que viajar la imagen de la card
   ProjectView.render(p);
+  if (!wasOpen) enterProjectView(opts);
   applyProjectSeo(p);
   updateFooterScroll();
   return true;
@@ -2976,8 +3177,9 @@ function showProject(slug){
 
 function hideProject(){
   if (!currentProject) return;
+  const leaving = currentProject;
   currentProject = null;
-  leaveProjectView();
+  leaveProjectView(leaving);
   projectViewEl.setAttribute('aria-hidden', 'true');
   projectViewEl.style.transform = '';
   document.documentElement.classList.remove('project-open');
@@ -3002,11 +3204,11 @@ function startHome(){
   runLoader();
 }
 const Router = {
-  open(slug){
+  open(slug, opts){
     if (currentProject && currentProject.slug === slug) return;
     if (!projectBySlug(slug)) return;
     history.pushState({ project: slug, fromHome: true }, '', '/' + slug);
-    showProject(slug);
+    showProject(slug, opts);
   },
   home(){
     // si se llegó desde el home, "volver" es el atrás del navegador (no
@@ -3026,7 +3228,7 @@ window.addEventListener('popstate', () => {
 });
 function openProjectForCard(i){
   const p = PROJECTS.find(pr => (pr.cards || []).includes(i));
-  if (p) Router.open(p.slug);
+  if (p) Router.open(p.slug, { cardIndex: i });
 }
 
 // se resuelve cuando terminó de cargar todo el script: showProject usa
