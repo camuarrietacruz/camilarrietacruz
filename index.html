@@ -1819,13 +1819,53 @@ class TextScramble {
   }
 }
 
+// hover de una card del anillo (compu): el centro muestra el proyecto. Lo arma setupNameScramble.
+var cardLabel = null;
+
 function setupNameScramble(){
   const scrambler = new TextScramble(nameText, centerNameText);
   let showingCreative = false;
   let animating = false;
   nameText.dataset.state = 'name';
+
+  /* hover de una card: el nombre se decodifica al del proyecto y "Buenos Aires —
+     Argentina" a año / tipo (mismo scramble que el nombre). Al salir de la card
+     vuelve lo que había; entre cards vecinas se espera un poco para no titilar. */
+  const subScrambler = subLocationEl ? new TextScramble(subLocationEl) : null;
+  let subOriginal = null, labelIndex = null, restoreTimer = null;
+  function labelFor(i){
+    if (i === ABOUT_CARD) return { name: currentLang === 'es' ? 'SOBRE MÍ' : 'ABOUT ME', sub: '♈︎ Aries' };
+    const p = PROJECTS.find(pr => pr.cards && pr.cards.indexOf(i) !== -1);
+    if (!p) return null;
+    return { name: tr(p.name).toUpperCase(), sub: p.year + ' / ' + tr(p.type) };
+  }
+  cardLabel = {
+    show(i){
+      clearTimeout(restoreTimer);
+      if (labelIndex === i) return;
+      const l = labelFor(i);
+      if (!l) return;
+      labelIndex = i;
+      if (subOriginal === null && subLocationEl) subOriginal = subLocationEl.textContent;
+      nameText.dataset.state = 'project';
+      animating = false; // un scramble interrumpido no resuelve su promesa
+      scrambler.setText(l.name);
+      if (subScrambler) subScrambler.setText(l.sub);
+    },
+    hide(){
+      clearTimeout(restoreTimer);
+      restoreTimer = setTimeout(() => {
+        if (labelIndex === null) return;
+        labelIndex = null;
+        nameText.dataset.state = showingCreative ? 'role' : 'name';
+        scrambler.setText(showingCreative ? NAME_B : NAME_A);
+        if (subScrambler && subOriginal !== null) subScrambler.setText(subOriginal).then(() => { subOriginal = null; });
+      }, 160);
+    }
+  };
+
   function toggleName(){
-    if (animating) return;
+    if (animating || labelIndex !== null) return;
     animating = true;
     showingCreative = !showingCreative;
     nameText.dataset.state = showingCreative ? 'role' : 'name';
@@ -2280,11 +2320,13 @@ function explodeCards(){
       c.hovering = true;
       c.img.classList.add('hover-mass');
       LiquidDistort.attach(c);
+      if (cardLabel && !currentProject && scrollP < 0.05) cardLabel.show(stackImgs.indexOf(c.img));
     });
     c.img.addEventListener('mouseleave', () => {
       c.hovering = false;
       c.img.classList.remove('hover-mass');
       LiquidDistort.leave();
+      if (cardLabel) cardLabel.hide();
     });
   });
 
@@ -2345,15 +2387,20 @@ function startOrbit(cards, ringPoint, geom){
   let autoK = 1;  // 0..1: cuánto pesa el giro automático (vuelve suave después de soltar)
   let vel = 0;    // inercia después de soltar, en fracción de vuelta por ms
   let drag = null;
+  // con el mouse sobre una card el anillo desacelera hasta el 25% (y vuelve
+  // igual de suave al salir): da tiempo a leer el nombre y hacer click
+  let hoverK = 1;
 
   function frame(now){
     const dt = Math.min(50, now - last);
     last = now;
+    const hoverTarget = cards.some(c => c.hovering) ? 0.25 : 1;
+    hoverK += (hoverTarget - hoverK) * (1 - Math.exp(-dt / 220));
     if (!(drag && drag.active)){
       if (Math.abs(vel) > 0.0000005){ arcRotation += vel * dt; vel *= Math.pow(0.994, dt); }
       else vel = 0;
       autoK = Math.min(1, autoK + dt / 1500);
-      if (!prefersReducedMotion) arcRotation += autoK * dt / ORBIT_LAP_MS;
+      if (!prefersReducedMotion) arcRotation += autoK * hoverK * dt / ORBIT_LAP_MS;
     }
 
     // implosión: 0 = anillo normal (scroll arriba del todo), 1 = todas
