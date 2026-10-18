@@ -137,6 +137,37 @@
      Aparece con fade-in junto con el resto del stage (mismo momento
      que dispara la explosión de las cards) via la clase stage-active
      que ya se agrega al body en onNameHitsPile(). */
+  /* ---- celular girado (html.is-landscape-phone, lo pone el JS) ---- */
+  /* hero: nombre / rol y ciudad centrados en el margen de arriba (el nombre sube
+     ahí al explotar), con el mismo tamaño que en el celular vertical y bien juntos */
+  html.is-landscape-phone #name-text.ls-top{
+    top:calc(var(--m) + 10px);
+    font-size:17.24px; letter-spacing:0.01em;
+    transition: top 0.65s cubic-bezier(.2,.7,.2,1);
+  }
+  html.is-landscape-phone #sub-location{ top:calc(var(--m) + 22px); font-size:10px; }
+  /* el carrusel queda centrado en el lugar libre entre los textos de arriba
+     (nombre, ciudad, sello) y los de abajo (proyecto): 8.5px más abajo del medio */
+  html.is-landscape-phone body.stage-active #center-wrap{ top:calc(50% + 8.5px); transition: top 0.65s cubic-bezier(.2,.7,.2,1); }
+  /* el sello CX-XX va arriba de la card, en un lugar más justo: más chico */
+  html.is-landscape-phone .cf-label-pill{ font-size:8.5px; line-height:10px; padding:3px 9px; }
+  /* proyecto: título / qué es / año más juntos, y la descripción 20% más chica */
+  html.is-landscape-phone .pv-title{ margin-bottom:4px; }
+  html.is-landscape-phone .pv-kind{ margin:0 0 8px; }
+  html.is-landscape-phone .pv-desc{ font-size:17.25px; }
+  /* el panel es más alto que la pantalla: título / qué es / año quedan fijos
+     arriba (con fondo) y la descripción scrollea por debajo, así nunca pasa
+     por debajo de la flecha de volver */
+  html.is-landscape-phone .pv-head{ position:sticky; top:0; z-index:1; } /* top:0 = el borde del padding del panel (Chrome/Safari descuentan el padding) */
+  html.is-landscape-phone .pv-head::before{
+    content:''; position:absolute; z-index:-1; pointer-events:none;
+    left:calc(-1 * var(--pv-pad)); right:calc(-1 * var(--pv-pad));
+    top:calc(-1 * (var(--m) + 64px)); bottom:-18px;
+    background:linear-gradient(#07070a calc(100% - 18px), rgba(7,7,10,0));
+  }
+  /* el sello se ubica contra la cabecera (ahora posicionada): misma altura que la flecha */
+  html.is-landscape-phone .pv-index{ top:-64px; right:0; }
+
   /* celular: proyecto de la card del frente del carrusel (Coverflow), apoyado
      abajo a 32px (el margen inferior del celular). Para que no se lea como un
      segundo "nombre + ciudad", el qué es va en la letra de telemetría (la de
@@ -911,7 +942,7 @@
   html.is-narrow .pv-info{
     --sh-edge: var(--pv-bar-h, 120px);
     left:0; right:0; width:auto; bottom:0;
-    padding:67px 24px 16px; overflow:hidden; /* el título (17.24px, interlineado 1.05 → 18.1px) queda centrado a 76px, en la línea del CX-XX y del nombre del hero */
+    padding:69px 24px 16px; overflow:hidden; /* +2px: aire entre la fila de arriba (flecha / ES-EN) y el título */ /* el título (17.24px, interlineado 1.05 → 18.1px) queda centrado a 76px, en la línea del CX-XX y del nombre del hero */
     pointer-events:none;
     /* el glow azul queda en el margen inferior izquierdo del panel (igual que en desktop,
        heredado de .pv-info) y se destapa con la cortina al abrir */
@@ -940,7 +971,7 @@
   }
   /* año / tipo y coordenadas siempre visibles; el + info va debajo, así no salta al abrir */
   html.is-narrow .pv-info-toggle{
-    margin-top:12px; pointer-events:auto;
+    margin-top:15.4px; pointer-events:auto; /* mismo aire sobre "+ info" que entre la fila de arriba y el título (~25px de tinta a tinta) */
     display:inline-flex; gap:6px; align-items:center;
     font-size:14px; font-weight:400; color:#F5CD0A; /* amarillo complementario del azul (el mismo del punto del cursor en el footer) */
   }
@@ -994,6 +1025,7 @@
      selector sube a la esquina de arriba a la derecha, por encima del
      nombre (centrado a 76px del borde). Texto de ~10px: top 36 → centro a 41px. */
   html.is-narrow .lang-switch{ bottom:auto; top: calc(env(safe-area-inset-top, 0px) + 36px); right:24px; }
+  html.is-narrow .lang-btn{ font-size:10.8px; } /* +20%: a 9px se veía muy chico */
   .lang-btn{
     position:relative;
     background:none; border:none; padding:0; margin:0;
@@ -1201,6 +1233,23 @@ function applyNarrowMode(){
 applyNarrowMode();
 narrowMQ.addEventListener('change', applyNarrowMode);
 
+// celular girado (touch, bajo y ancho): hero con el carrusel plano del celu y
+// el bloque del nombre arriba a la izquierda; proyecto con tipografía más chica
+let landscapePhone = false;
+function applyLandscapeMode(){
+  landscapePhone = !canHover && window.innerHeight < 500 && window.innerWidth > window.innerHeight;
+  document.documentElement.classList.toggle('is-landscape-phone', landscapePhone);
+  // girado después de cargar (con el hero ya armado): el nombre va a su esquina
+  const nt = document.getElementById('name-text');
+  if (landscapePhone && nt && document.body && document.body.classList.contains('stage-active') && !nt.classList.contains('ls-top')){
+    nt.classList.add('ls-top');
+    setTimeout(() => { if (typeof refreshScrollLayoutRefs === 'function') refreshScrollLayoutRefs(); }, 750);
+  }
+}
+applyLandscapeMode();
+window.addEventListener('resize', applyLandscapeMode);
+hoverMQ.addEventListener('change', applyLandscapeMode);
+
 let appH = window.innerHeight;
 let appW = window.innerWidth;
 document.documentElement.style.setProperty('--app-h', appH + 'px');
@@ -1363,7 +1412,7 @@ function finishLoader(){
   percentText.classList.add('fade-out');
   // en celular el nombre ya está centrado arriba: no viaja, la explosión
   // arranca directo en el mismo momento en que arrancaría el viaje
-  setTimeout(isNarrow ? onNameHitsPile : startNameTravel, 550);
+  setTimeout(isNarrow ? onNameHitsPile : (landscapePhone ? startNameRise : startNameTravel), 550);
 }
 
 const centerWrap = document.getElementById('center-wrap');
@@ -1718,6 +1767,16 @@ function easeOutBack(t, s = 1.7){
   return 1 + (s + 1) * Math.pow(t - 1, 3) + s * Math.pow(t - 1, 2);
 }
 
+/* celular girado: el nombre no viaja al centro de la pantalla (ahí está el
+   carrusel): sube al margen de arriba, centrado (CSS .ls-top), mientras explotan las cards */
+function startNameRise(){
+  nameText.classList.add('ls-top');
+  requestAnimationFrame(centerNameText); // cambia de tamaño: se recentra
+  onNameHitsPile();
+  // el nombre ya está arriba: el scroll lo deja quieto (como en celular vertical)
+  setTimeout(refreshScrollLayoutRefs, 750);
+}
+
 function startNameTravel(){
   const rect = nameText.getBoundingClientRect();
   const startLeft = rect.left;
@@ -1789,7 +1848,8 @@ const SCRAMBLE_CHARS = '!<>-_\\/[]{}—=+*^?#0123456789ABCDEFGHIJKLMNOPQRSTUVWXY
 
 function centerNameText(){
   const w = nameText.getBoundingClientRect().width;
-  nameText.style.left = ((window.innerWidth - w) / 2) + 'px';
+  const centered = (window.innerWidth - w) / 2;
+  nameText.style.left = centered + 'px';
 }
 
 class TextScramble {
@@ -2328,7 +2388,7 @@ function explodeCards(){
   // dispara cada una hacia su lado (la del centro arriba) y aterriza en su
   // pose. Tablet (touch + ancha) se ve igual que desktop: mismo anillo, que
   // ahí se gira arrastrando (ver startOrbit).
-  const useCoverflow = !canHover && isNarrow;
+  const useCoverflow = !canHover && (isNarrow || landscapePhone);
   if (useCoverflow){
     cards.forEach((c, i) => {
       const d = Coverflow.wrap(i);
@@ -2602,8 +2662,12 @@ const Coverflow = (() => {
     // card del centro: grande pero con tope, porque las fotos son de 480px.
     // +20px sobre el tamaño anterior: la del centro crece 20px, las vecinas (escala ~0.7) unos 14px
     // y las de atrás (escala ~0.5) ≥ 10px
-    const size = Math.min(vw * 0.56 + 20, appH * 0.4 + 20, 320);
-    return { center: size / 140, step: Math.min(vw * 0.34, size * 0.95) };
+    let size = Math.min(vw * 0.56 + 20, appH * 0.4 + 20, 320);
+    // celular girado: cards 15% más grandes y 15% más juntas, pero sin tocar
+    // los textos: arriba nombre + ciudad + sello (~99px), abajo el proyecto (~82px)
+    if (landscapePhone) size = Math.min(size * 1.15, appH - 181);
+    const step = Math.min(vw * 0.34, size * 0.95) * (landscapePhone ? 0.85 : 1);
+    return { center: size / 140, step };
   }
 
   function pose(d){
@@ -2643,7 +2707,7 @@ const Coverflow = (() => {
     nameScr = new TextScramble(labelName);
     subScr = new TextScramble(labelSub);
   }
-  function cardPx(){ const vw = window.innerWidth; return Math.min(vw * 0.56 + 20, appH * 0.4 + 20, 320); }
+  function cardPx(){ return geometry().center * 140; }
   function updateLabel(){
     let bi = 0, bd = Infinity;
     cards.forEach((c, i) => { const a = Math.abs(wrap(i - pos)); if (a < bd){ bd = a; bi = i; } });
@@ -2666,9 +2730,16 @@ const Coverflow = (() => {
     const vis = 1 - Math.min(1, Math.max(0, (bd - 0.25) / 0.2));
     const scrollFade = 1 - Math.min(1, scrollP * 6);
     label.style.opacity = labelPill.style.opacity = String(vis * scrollFade);
-    // el sello, 16px debajo de la card del frente
     const r = centerWrap.getBoundingClientRect();
-    labelPill.style.top = (r.top + r.height / 2 + cardPx() / 2 + 16) + 'px';
+    const cardTop = r.top + r.height / 2 - cardPx() / 2;
+    if (landscapePhone && subLocationEl){
+      // celular girado: arriba de la card, centrado en el aire entre "Buenos Aires — Argentina" y la card
+      const subBottom = subLocationEl.getBoundingClientRect().bottom;
+      labelPill.style.top = ((subBottom + cardTop) / 2 - labelPill.offsetHeight / 2) + 'px';
+    } else {
+      // el sello, 16px debajo de la card del frente
+      labelPill.style.top = (cardTop + cardPx() + 16) + 'px';
+    }
   }
 
   function centerCard(){
@@ -3870,6 +3941,7 @@ queueMicrotask(function initRoute(){
    con la misma sombra-que-se-levanta calcada del video de referencia
    nuageboi.fr. -------- */
 const footerShadowEl = document.getElementById('footerShadow');
+const themeColorEl = document.querySelector('meta[name="theme-color"]');
 const pvContactEl = document.getElementById('pvContact');
 const FOOTER_START_OPACITY = 0.55;
 const FOOTER_FADE_END = 0.65;
@@ -3952,6 +4024,12 @@ function updateFooterScroll(){
   // un proyecto abierto se funde (no sube como cortina)
   if (currentProject && p >= 0.002) pvFooterFade(p);
   else if (pvFooterDirty) pvFooterReset();
+  // celular girado: las franjas a los costados (zona de la cámara) toman el
+  // color de theme-color: oscuro sobre el hero/proyecto, azul en el footer
+  if (themeColorEl){
+    const tc = landscapePhone && p < 0.5 ? '#111111' : '#0012FF';
+    if (themeColorEl.content !== tc) themeColorEl.content = tc;
+  }
   if (p > 0.01) triggerFooterWordsReveal();
   // CX de contacto de la vista de proyecto: fijo en pantalla, se desvanece apenas arranca el scroll
   // (apagado del todo al 3% del recorrido: antes de que asome el footer, así nunca se pisa con CAMUXI)
@@ -3980,7 +4058,7 @@ function updateFooterScroll(){
   if (footerLinksTop !== null){
     const rawTop = nameStartTop - p * vh;
     // en celular el nombre ya está arriba: se queda ahí todo el scroll
-    const stopTop = isNarrow ? nameStartTop : footerLinksTop;
+    const stopTop = (isNarrow || nameText.classList.contains('ls-top')) ? nameStartTop : footerLinksTop;
     // desde un proyecto el nombre ya está quieto en su lugar final (no sube con el scroll)
     const clampedTop = currentProject ? stopTop : Math.max(stopTop, rawTop);
     const compensation = clampedTop - rawTop;
