@@ -461,24 +461,6 @@
     transition: opacity 0.35s ease, visibility 0s linear 0.35s;
     will-change: transform;
   }
-  /* al subir como cortina hacia el footer, el borde inferior de la vista se
-     recorta con la panza difuminada (en vez de colgar una pieza negra debajo:
-     el borde de un proyecto es una foto, no negro). Círculo cuyo punto más
-     bajo queda --curve-blur por encima del borde de la pantalla y cuyas
-     esquinas suben --curve más; hacia afuera se desvanece a lo largo de
-     --curve-blur (que el JS lleva de 0 a 56px al arrancar el scroll, así en
-     reposo la máscara no se nota). Más un rectángulo sólido que cubre todo lo
-     de arriba. */
-  .project-view{
-    -webkit-mask-image: radial-gradient(circle var(--curve-r, 99999px) at 50% calc(var(--app-h, 100vh) - var(--curve-blur, 0px) - var(--curve-r, 99999px)), #000 calc(var(--curve-r, 99999px) - 1px), transparent calc(var(--curve-r, 99999px) + var(--curve-blur, 0px))), linear-gradient(#000, #000);
-            mask-image: radial-gradient(circle var(--curve-r, 99999px) at 50% calc(var(--app-h, 100vh) - var(--curve-blur, 0px) - var(--curve-r, 99999px)), #000 calc(var(--curve-r, 99999px) - 1px), transparent calc(var(--curve-r, 99999px) + var(--curve-blur, 0px))), linear-gradient(#000, #000);
-    -webkit-mask-size: 100% 100%, 100% calc(var(--app-h, 100vh) - var(--curve-blur, 0px) - var(--curve, 0px));
-            mask-size: 100% 100%, 100% calc(var(--app-h, 100vh) - var(--curve-blur, 0px) - var(--curve, 0px));
-    -webkit-mask-repeat: no-repeat;
-            mask-repeat: no-repeat;
-    -webkit-mask-position: 0 0;
-            mask-position: 0 0;
-  }
   .project-view.is-open{
     opacity:1; visibility:visible;
     transition: opacity 0.35s ease, visibility 0s;
@@ -635,12 +617,71 @@
     .pv-info{ transition:none; }
   }
 
-  /* solo la flecha (11px + 40%); "Salir de órbita" queda como aria-label.
-     Área de toque de 44px sin mover la flecha de lugar. */
+  /* "+ info" en celular, sin cortina (elegida la B): la máscara se abre de
+     golpe, el fondo del panel (en un ::before) se funde y los textos entran
+     en cascada subiendo apenas. La clase pv-sheet-fade la pone el JS. */
+  html.is-narrow.pv-sheet-fade .pv-info{
+    background: linear-gradient(#07070a, #07070a) 0 0 / 100% var(--pv-bar-h, 120px) no-repeat;
+  }
+  html.is-narrow.pv-sheet-fade .pv-info::before{
+    content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(ellipse 90% 60% at 15% 100%, rgba(0,18,255,0.38) 0%, transparent 70%),
+      #07070a;
+    opacity:0; transition: opacity 0.3s ease 0.06s;
+  }
+  html.is-narrow.pv-sheet-fade .pv-info.is-expanded::before{ opacity:1; transition: opacity 0.5s ease; }
+  html.is-narrow.pv-sheet-fade .pv-desc,
+  html.is-narrow.pv-sheet-fade .pv-links,
+  html.is-narrow.pv-sheet-fade .pv-row{
+    opacity:0; transform:translateY(10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  html.is-narrow.pv-sheet-fade .pv-info.is-expanded .pv-desc,
+  html.is-narrow.pv-sheet-fade .pv-info.is-expanded .pv-links,
+  html.is-narrow.pv-sheet-fade .pv-info.is-expanded .pv-row{
+    opacity:1; transform:none;
+    transition: opacity 0.7s ease var(--d), transform 0.8s cubic-bezier(.2,.7,.2,1) var(--d);
+  }
+  html.is-narrow.pv-sheet-fade .pv-desc{ --d:0.15s; }
+  html.is-narrow.pv-sheet-fade .pv-links{ --d:0.27s; }
+  html.is-narrow.pv-sheet-fade .pv-row:nth-child(1){ --d:0.39s; }
+  html.is-narrow.pv-sheet-fade .pv-row:nth-child(2){ --d:0.51s; }
+  html.is-narrow.pv-sheet-fade .pv-row:nth-child(3){ --d:0.63s; }
+
+  /* entrada del panel de info desde el hero (elegida la C, "telemetría"):
+     el fondo del panel ya está; los textos entran en cascada y los de arriba
+     además se decodifican (JS: scramble). La clase pv-telemetry la pone el JS. */
+  html.pv-telemetry .project-view.pv-chrome-out .pv-info.pv-info{ transform:none; opacity:1; }
+  html.pv-telemetry .pv-title, html.pv-telemetry .pv-meta, html.pv-telemetry .pv-coords, html.pv-telemetry .pv-info-toggle,
+  html.pv-telemetry:not(.is-narrow) .pv-index,
+  html.pv-telemetry:not(.is-narrow) .pv-desc, html.pv-telemetry:not(.is-narrow) .pv-links, html.pv-telemetry:not(.is-narrow) .pv-row{
+    transition: opacity 0.8s ease var(--pd, 0s);
+  }
+  html.pv-telemetry .project-view.pv-chrome-out :is(.pv-title, .pv-meta, .pv-coords, .pv-info-toggle),
+  html.pv-telemetry:not(.is-narrow) .project-view.pv-chrome-out :is(.pv-index, .pv-desc, .pv-links, .pv-row){
+    opacity:0; transition:none;
+  }
+  html.pv-telemetry .pv-title{ --pd:0.15s; }
+  html.pv-telemetry .pv-index{ --pd:0.2s; }
+  html.pv-telemetry .pv-meta{ --pd:0.27s; }
+  html.pv-telemetry .pv-coords{ --pd:0.37s; }
+  html.pv-telemetry .pv-info-toggle, html.pv-telemetry .pv-desc{ --pd:0.45s; }
+  html.pv-telemetry .pv-links{ --pd:0.57s; }
+  html.pv-telemetry .pv-row:nth-child(1){ --pd:0.67s; }
+  html.pv-telemetry .pv-row:nth-child(2){ --pd:0.77s; }
+  html.pv-telemetry .pv-row:nth-child(3){ --pd:0.87s; }
+  @media (prefers-reduced-motion: reduce){
+    html.is-narrow.pv-sheet-fade .pv-info *, html.pv-telemetry .pv-info *{ transition:none !important; transform:none !important; }
+  }
+
+  /* solo la flecha (15.4px + 30%); "Salir de órbita" queda como aria-label.
+     Área de click de ~64px sin mover la flecha de lugar (queda donde estaba:
+     pv-pad − 14px; el padding va con .project-view para ganarle al reset de botones). */
+  .project-view .pv-back{ padding:22px; margin:-36px; }
   .pv-back{
     position:absolute; top:34px; left:var(--pv-pad); z-index:3;
-    font-size:15.4px; line-height:1;
-    padding:14px; margin:-14px;
+    font-size:20px; line-height:1;
     opacity:0.85; transition:opacity 0.2s ease;
   }
   html.can-hover .pv-back:hover{ opacity:1; }
@@ -812,7 +853,7 @@
   /* alineada con el selector de idioma (mismo top y mismo margen de 32px, pero del lado izquierdo); flecha +15% */
   /* arriba a 32px; su centro (41px) coincide con el del ES/EN. El padding de 14px (área de toque de 44px)
      lo pisaba `.project-view button{ padding:0 }` y el margin negativo la subía 14px: se fuerza con más especificidad */
-  html.is-narrow .project-view .pv-back{ padding:14px; }
+  html.is-narrow .project-view .pv-back{ padding:22px; margin:-22px; }
   html.is-narrow .pv-back{ top:calc(env(safe-area-inset-top, 0px) + 32px); left:24px; width:auto; font-size:17.71px; }
   /* el panel ocupa siempre toda la pantalla pero se ve recortado por una máscara:
      cerrado = solo la barra de arriba; "+ info" corre el borde inferior hacia
@@ -2746,6 +2787,7 @@ const PROJECTS = [
 ];
 
 var currentProject = null; // var: applyLang lo consulta (vía refreshProjectLang) antes de esta línea
+var pvFooterDirty = false; // updateFooterScroll dejó estilos inline en la vista de proyecto
 const projectViewEl = document.getElementById('projectView');
 const SITE_URL = 'https://www.camilarrietacruz.com';
 
@@ -2998,8 +3040,17 @@ const ProjectView = (() => {
     info.style.setProperty('--sh-r', ((halfW * halfW + arc * arc) / (2 * arc)) + 'px');
     info.style.setProperty('--sh-blur', (SHEET_BLUR * Math.min(1, p * 6)) + 'px');
   }
+  let sheetDemoT = null;
   function animateSheet(open, fast){
     cancelAnimationFrame(sheetFrame);
+    clearTimeout(sheetDemoT);
+    // sin cortina: la máscara se abre de golpe y el fondo y los textos entran con fade (CSS .pv-sheet-fade);
+    // al cerrar se espera a que se desvanezcan antes de recortar
+    if (isNarrow){
+      if (open) applySheet(1);
+      else sheetDemoT = setTimeout(() => { applySheet(0); info.scrollTop = 0; }, 360);
+      return;
+    }
     const from = sheetP, to = open ? 1 : 0;
     if (prefersReducedMotion || from === to){
       applySheet(to);
@@ -3623,6 +3674,49 @@ window.addEventListener('popstate', () => {
   else About.hide();
 });
 
+// panel de info: entrada "telemetría" desde el hero y "+ info" con fade en celular
+document.documentElement.classList.add('pv-telemetry', 'pv-sheet-fade');
+(function(){
+  // panel C (telemetría): al entrar los textos de arriba se "decodifican":
+  // letras al azar que se van fijando de izquierda a derecha
+  const CH = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  function scramble(){
+    if (prefersReducedMotion) return;
+    const items = [];
+    projectViewEl.querySelectorAll('.pv-title, .pv-index, .pv-meta, .pv-coords').forEach((el, i) => {
+      const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      let n;
+      while ((n = w.nextNode())) if (n.data.trim()) items.push({ n, orig: n.data, last: null, start: 90 + i * 60 });
+    });
+    const t0 = performance.now(), DUR = 380;
+    function frame(now){
+      let done = true;
+      items.forEach(it => {
+        if (it.dead) return;
+        if (it.last !== null && it.n.data !== it.last){ it.dead = true; return; } // cambió el idioma: se deja
+        const k = (now - t0 - it.start) / DUR;
+        if (k >= 1){ it.n.data = it.orig; it.dead = true; return; }
+        done = false;
+        const fixed = Math.max(0, Math.floor(k * it.orig.length));
+        let s = it.orig.slice(0, fixed);
+        for (let j = fixed; j < it.orig.length; j++){
+          const c = it.orig[j];
+          s += /[\s\/·.,°]/.test(c) ? c : CH[Math.random() * CH.length | 0];
+        }
+        it.n.data = s; it.last = s;
+      });
+      if (!done) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  let wasOut = projectViewEl.classList.contains('pv-chrome-out');
+  new MutationObserver(() => {
+    const out = projectViewEl.classList.contains('pv-chrome-out');
+    if (wasOut && !out) scramble();
+    wasOut = out;
+  }).observe(projectViewEl, { attributes: true, attributeFilter: ['class'] });
+})();
+
 // se resuelve cuando terminó de cargar todo el script: showProject usa
 // cosas del footer que se definen más abajo
 queueMicrotask(function initRoute(){
@@ -3691,14 +3785,31 @@ function triggerFooterWordsReveal(){
   });
 })();
 
+/* proyecto → footer: la vista de proyecto no sube como cortina, queda quieta
+   y se funde mientras se destapa el footer; panel, flecha y contador se van
+   primero (en el primer 15% del recorrido) para que nada quede a medias. */
+function smoothstep01(x){ x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); }
+function pvChromeEls(){ return projectViewEl.querySelectorAll('.pv-info, .pv-back, .pv-counter'); }
+function pvFooterFade(p){
+  pvFooterDirty = true;
+  const cf = 1 - smoothstep01(p / 0.15);
+  pvChromeEls().forEach(c => { c.style.transition = 'none'; c.style.opacity = String(cf); });
+  projectViewEl.style.transition = 'none';
+  projectViewEl.style.opacity = String(1 - smoothstep01(p / 0.7));
+  projectViewEl.style.pointerEvents = p > 0.5 ? 'none' : '';
+}
+function pvFooterReset(){
+  pvFooterDirty = false;
+  ['transition', 'opacity', 'pointerEvents'].forEach(k => { projectViewEl.style[k] = ''; });
+  pvChromeEls().forEach(c => { c.style.transition = ''; c.style.opacity = ''; });
+}
+
 function updateFooterScroll(){
   if (!document.body.classList.contains('stage-active') && !currentProject) return;
   const vh = appH;
   const p = Math.max(0, Math.min(1, window.scrollY / vh));
   scrollP = p; // lo lee startOrbit() para blendear la implosión de las cards
   loader.style.transform = 'translateY(' + (-p * 100) + '%)';
-  // un proyecto abierto hace de cortina igual que el hero
-  if (currentProject) projectViewEl.style.transform = 'translateY(' + (-p * 100) + '%)';
   // panza del borde inferior: 0 al inicio y al final, máxima a mitad
   // el radio sale de la flecha del arco: R = (ancho²/4 + alto²) / (2·alto)
   // (sobre el lado más corto de la pantalla, así en celular vertical no se pasa de profunda)
@@ -3706,25 +3817,11 @@ function updateFooterScroll(){
   const curve = Math.sin(p * Math.PI) * Math.min(vh, halfW * 2) * CURTAIN_CURVE_MAX;
   // (con curva ~0 el radio queda enorme: arco casi recto, pero igual difuminado)
   const arc = Math.max(curve, 0.5);
-  const curveR = ((halfW * halfW + arc * arc) / (2 * arc)) + 'px';
-  [loader, projectViewEl].forEach(el => {
-    el.style.setProperty('--curve', curve + 'px');
-    el.style.setProperty('--curve-r', curveR);
-  });
-  // la vista de proyecto se recorta por dentro: el difuminado arranca en 0 (reposo sin máscara visible)
-  const pvBlur = 56 * Math.min(1, p * 6);
-  projectViewEl.style.setProperty('--curve-blur', pvBlur + 'px');
-  // Safari/iOS no recorta con la máscara a los hijos que scrollean (el feed): el borde quedaba
-  // recto. Por eso además se recorta con clip-path (arco exterior de la misma máscara: círculo de
-  // radio R + difuminado), que sí respeta todo el contenido; la máscara aporta el difuminado.
-  if (p < 0.002) projectViewEl.style.clipPath = '';
-  else {
-    const W = projectViewEl.clientWidth, H = projectViewEl.clientHeight;
-    const R = parseFloat(curveR), R2 = R + pvBlur;
-    const cy = H - pvBlur - R;
-    const yc = cy + Math.sqrt(Math.max(0, R2 * R2 - (W / 2) * (W / 2)));
-    projectViewEl.style.clipPath = 'path("M0 0H' + W + 'V' + yc.toFixed(1) + 'A' + R2.toFixed(1) + ' ' + R2.toFixed(1) + ' 0 0 1 0 ' + yc.toFixed(1) + 'Z")';
-  }
+  loader.style.setProperty('--curve', curve + 'px');
+  loader.style.setProperty('--curve-r', ((halfW * halfW + arc * arc) / (2 * arc)) + 'px');
+  // un proyecto abierto se funde (no sube como cortina)
+  if (currentProject && p >= 0.002) pvFooterFade(p);
+  else if (pvFooterDirty) pvFooterReset();
   if (p > 0.01) triggerFooterWordsReveal();
   // CX de contacto de la vista de proyecto: fijo en pantalla, se desvanece apenas arranca el scroll
   // (apagado del todo al 3% del recorrido: antes de que asome el footer, así nunca se pisa con CAMUXI)
