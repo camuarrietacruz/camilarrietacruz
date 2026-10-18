@@ -664,17 +664,18 @@
      el fondo del panel ya está; los textos entran en cascada y los de arriba
      además se decodifican (JS: scramble). La clase pv-telemetry la pone el JS. */
   html.pv-telemetry .project-view.pv-chrome-out .pv-info.pv-info{ transform:none; opacity:1; }
-  html.pv-telemetry .pv-title, html.pv-telemetry .pv-meta, html.pv-telemetry .pv-coords, html.pv-telemetry .pv-info-toggle,
+  html.pv-telemetry .pv-title, html.pv-telemetry .pv-kind, html.pv-telemetry .pv-meta, html.pv-telemetry .pv-coords, html.pv-telemetry .pv-info-toggle,
   html.pv-telemetry:not(.is-narrow) .pv-index,
   html.pv-telemetry:not(.is-narrow) .pv-desc, html.pv-telemetry:not(.is-narrow) .pv-links, html.pv-telemetry:not(.is-narrow) .pv-row{
     transition: opacity 0.8s ease var(--pd, 0s);
   }
-  html.pv-telemetry .project-view.pv-chrome-out :is(.pv-title, .pv-meta, .pv-coords, .pv-info-toggle),
+  html.pv-telemetry .project-view.pv-chrome-out :is(.pv-title, .pv-kind, .pv-meta, .pv-coords, .pv-info-toggle),
   html.pv-telemetry:not(.is-narrow) .project-view.pv-chrome-out :is(.pv-index, .pv-desc, .pv-links, .pv-row){
     opacity:0; transition:none;
   }
   html.pv-telemetry .pv-title{ --pd:0.15s; }
   html.pv-telemetry .pv-index{ --pd:0.2s; }
+  html.pv-telemetry .pv-kind{ --pd:0.22s; }
   html.pv-telemetry .pv-meta{ --pd:0.27s; }
   html.pv-telemetry .pv-coords{ --pd:0.37s; }
   html.pv-telemetry .pv-info-toggle, html.pv-telemetry .pv-desc{ --pd:0.45s; }
@@ -726,6 +727,13 @@
     text-transform:uppercase;
     line-height:1.05; letter-spacing:0.01em; margin:0 0 12px;
   }
+  /* qué es el proyecto (bodegón, joyería, productora…): destacado entre el título y año / tipo */
+  .pv-kind{
+    font-size:clamp(13px, 1.05vw, 17px); line-height:1.3; letter-spacing:0.005em;
+    margin:-4px 0 14px; opacity:0.9;
+  }
+  .pv-kind[hidden]{ display:none; }
+  html.is-narrow .pv-kind{ font-size:14px; margin:-2px 0 10px; padding-right:80px; }
   .pv-meta{
     font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase;
     opacity:0.7; display:flex; gap:10px;
@@ -1058,6 +1066,7 @@
       <header class="pv-head">
         <span class="pv-index" id="pvIndex"></span>
         <h1 class="pv-title" id="pvTitle"></h1>
+        <p class="pv-kind" id="pvKind"></p>
         <div class="pv-meta"><span id="pvYear"></span><span>/</span><span id="pvType"></span></div>
         <div class="pv-coords" id="pvCoords" hidden></div>
         <button class="pv-info-toggle" id="pvInfoToggle" type="button" aria-expanded="false"><span class="pv-info-icon" aria-hidden="true"><svg class="pv-ico-plus" width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><path d="M5.36133 9.14648C5.36133 9.28711 5.30859 9.4082 5.20312 9.50977C5.10156 9.61523 4.97852 9.66797 4.83398 9.66797C4.68945 9.66797 4.56641 9.61523 4.46484 9.50977C4.36328 9.4082 4.3125 9.28711 4.3125 9.14648V0.521484C4.3125 0.380859 4.36328 0.259766 4.46484 0.158203C4.56641 0.0527344 4.68945 0 4.83398 0C4.97852 0 5.10156 0.0527344 5.20312 0.158203C5.30859 0.259766 5.36133 0.380859 5.36133 0.521484V9.14648ZM0.521484 5.35547C0.380859 5.35547 0.257812 5.30469 0.152344 5.20312C0.0507812 5.10156 0 4.97852 0 4.83398C0 4.68945 0.0507812 4.56641 0.152344 4.46484C0.257812 4.35938 0.380859 4.30664 0.521484 4.30664H9.14648C9.28711 4.30664 9.4082 4.35938 9.50977 4.46484C9.61523 4.56641 9.66797 4.68945 9.66797 4.83398C9.66797 4.97852 9.61523 5.10156 9.50977 5.20312C9.4082 5.30469 9.28711 5.35547 9.14648 5.35547H0.521484Z"/></svg><svg class="pv-ico-minus" width="10" height="2" viewBox="0 0 10 2" xmlns="http://www.w3.org/2000/svg"><path d="M0.521484 1.04883C0.427734 1.04883 0.341797 1.02539 0.263672 0.978516C0.185547 0.931641 0.121094 0.869141 0.0703125 0.791016C0.0234375 0.708984 0 0.619141 0 0.521484C0 0.427734 0.0234375 0.341797 0.0703125 0.263672C0.121094 0.181641 0.185547 0.117188 0.263672 0.0703125C0.341797 0.0234375 0.427734 0 0.521484 0H9.14648C9.24023 0 9.32617 0.0234375 9.4043 0.0703125C9.48633 0.117188 9.55078 0.181641 9.59766 0.263672C9.64453 0.341797 9.66797 0.427734 9.66797 0.521484C9.66797 0.619141 9.64453 0.708984 9.59766 0.791016C9.55078 0.869141 9.48633 0.931641 9.4043 0.978516C9.32617 1.02539 9.24023 1.04883 9.14648 1.04883H0.521484Z"/></svg></span><span id="pvInfoToggleLabel"></span></button>
@@ -1837,7 +1846,7 @@ function setupNameScramble(){
     if (i === ABOUT_CARD) return { name: 'CAMUXI', sub: currentLang === 'es' ? 'Desde 1995' : 'Since 1995' };
     const p = PROJECTS.find(pr => pr.cards && pr.cards.indexOf(i) !== -1);
     if (!p) return null;
-    return { name: tr(p.name).toUpperCase(), sub: (p.year ? p.year + ' / ' : '') + tr(p.type) };
+    return { name: tr(p.name).toUpperCase(), sub: p.kind ? tr(p.kind) + ' · ' + tr(p.type) : (p.year ? p.year + ' / ' : '') + tr(p.type) };
   }
   cardLabel = {
     show(i){
@@ -2697,6 +2706,7 @@ const Coverflow = (() => {
    (ABOUT_CARD) no es un proyecto: abre la card personal de Aries. */
 const PROJECTS = [
   { slug:'etrixia', name:'Etrixia', year:'2023', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    kind:{ es:'Cosmética facial', en:'Facial skincare' }, // qué es, destacado bajo el título y en el hover
     cards:[0, 12], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
     client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
@@ -2706,6 +2716,7 @@ const PROJECTS = [
     coords:null, // pendiente: { lat, lng, label }
     media:[] },
   { slug:'lacade', name:'LACADÉ BODEGÓN', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    kind:{ es:'Bodegón de Racing Club', en:'Racing Club’s bodegón' }, // qué es, destacado bajo el título y en el hover
     cards:[1], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
     // sin cliente/servicios/créditos: esa zona se oculta y la descripción baja a ocupar su lugar
     client:null, services:null, credits:[],
@@ -2734,6 +2745,7 @@ const PROJECTS = [
       { type:'image', src:'/assets/lacade/12.jpg', w:1600, h:900, alt:'Patrón tipográfico de LACADÉ en azul marino sobre fondo celeste' },
       { type:'image', src:'/assets/lacade/13.jpg?v=2', w:2000, h:878, alt:'Marca secundaria de LACADÉ en celeste sobre azul marino: copa, estrella, escudo y monograma LCD con "ESTD 2025"' } ] },
   { slug:'bestial', name:'Bestial', year:'2025', type:{ es:'Branding & Espacio', en:'Branding & Space' }, accent:'#0012FF',
+    kind:{ es:'Gimnasio', en:'Gym' }, // qué es, destacado bajo el título y en el hover
     cards:[2, 5], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
     client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
@@ -2743,6 +2755,7 @@ const PROJECTS = [
     coords:null, // pendiente: { lat, lng, label }
     media:[] },
   { slug:'magic-styler', name:'Magic Styler', year:'2025', type:{ es:'Branding & Web', en:'Branding & Web' }, accent:'#0012FF',
+    kind:{ es:'Hair tech', en:'Hair tech' }, // qué es, destacado bajo el título y en el hover
     cards:[3, 14], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
     client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
@@ -2752,6 +2765,7 @@ const PROJECTS = [
     coords:null, // pendiente: { lat, lng, label }
     media:[] },
   { slug:'eclat', name:'Eclat', year:'2024', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    kind:{ es:'Joyería', en:'Jewelry' }, // qué es, destacado bajo el título y en el hover
     cards:[6, 9], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
     client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
@@ -2761,6 +2775,7 @@ const PROJECTS = [
     coords:null, // pendiente: { lat, lng, label }
     media:[] },
   { slug:'templa', name:'Templa', year:'2022', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    kind:{ es:'Marca de moda', en:'Fashion label' }, // qué es, destacado bajo el título y en el hover
     cards:[8], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
     client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
@@ -2770,6 +2785,7 @@ const PROJECTS = [
     coords:null, // pendiente: { lat, lng, label }
     media:[] },
   { slug:'carmen', name:'Carmen', year:'2024', type:{ es:'UX/UI', en:'UX/UI' }, accent:'#0012FF',
+    kind:{ es:'Productora audiovisual', en:'Film production company' }, // qué es, destacado bajo el título y en el hover
     cards:[7, 10], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
     client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
@@ -2779,8 +2795,10 @@ const PROJECTS = [
     coords:null, // pendiente: { lat, lng, label }
     media:[] },
   { slug:'humo', name:'HUMO', year:'2025', type:{ es:'Dirección creativa & IA', en:'Creative direction & AI' }, accent:'#0012FF',
+    kind:{ es:'Restaurante mexicano en Los Cabos', en:'Mexican restaurant in Los Cabos' }, // qué es, destacado bajo el título y en el hover
     cards:[11, 13], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
     client:null, services:null, credits:[], // pendiente (paso 9: contenido)
+    links:[ { label:{ es:'Conocé Humo Los Cabos', en:'Meet Humo Los Cabos' }, url:'https://www.instagram.com/humoloscabos/' } ],
     description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
     seoTitle:{ es:'HUMO — Camila Arrieta Cruz', en:'HUMO — Camila Arrieta Cruz' },
     seoDescription:{ es:'HUMO: dirección creativa & ia por Camila Arrieta Cruz.', en:'HUMO: creative direction & ai by Camila Arrieta Cruz.' },
@@ -2874,6 +2892,8 @@ const ProjectView = (() => {
     projectViewEl.style.setProperty('--pv-accent', p.accent || 'var(--blue)');
     $('pvIndex').textContent = 'CX-' + String(PROJECTS.indexOf(p) + 1).padStart(2, '0');
     $('pvTitle').textContent = p.name;
+    $('pvKind').textContent = tr(p.kind);
+    $('pvKind').hidden = !p.kind;
     $('pvYear').textContent = p.year || '';
     // sin año: no queda la barra suelta delante del tipo
     $('pvYear').hidden = !p.year; $('pvYear').nextElementSibling.hidden = !p.year;
