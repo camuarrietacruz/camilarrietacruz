@@ -3474,6 +3474,19 @@ function placeFlyer(el, r){
   el.style.left = r.left + 'px'; el.style.top = r.top + 'px';
   el.style.width = r.width + 'px'; el.style.height = r.height + 'px';
 }
+/* la caja de la imagen voladora (clip) y la imagen de adentro (img) van por
+   separado: la primera foto del carrusel puede ser más alta que la pantalla y
+   quedar cortada; la voladora tiene que llegar con ESE mismo encuadre (no la
+   foto entera achicada), o al aterrizar cambia de golpe */
+function placeFlyerImgs(fly, clip, img){
+  placeFlyer(fly.el, clip);
+  [fly.under, fly.over].forEach(im => {
+    if (!im) return;
+    im.style.inset = 'auto';
+    im.style.left = (img.left - clip.left) + 'px'; im.style.top = (img.top - clip.top) + 'px';
+    im.style.width = img.width + 'px'; im.style.height = img.height + 'px';
+  });
+}
 // imagen voladora con dos capas: "under" de base y "over" encima (se funde)
 function makeFlyer(underSrc, overSrc, rect){
   const el = document.createElement('div');
@@ -3541,6 +3554,7 @@ function enterProjectView(opts){
   // destino: lo que efectivamente se ve de la primera foto del carrusel
   // (puede ser más alta que la pantalla; así no hay re-encuadre al llegar)
   const to = visibleItemRect(target);
+  const fullTo = plainRect(target.getBoundingClientRect()); // la foto entera (puede pasarse de la pantalla)
   if (typeof LiquidDistort !== 'undefined') LiquidDistort.leave();
   // la capa del efecto líquido (hover de desktop) se apaga en el acto: si no,
   // quedaba un instante la card "fantasma" en su lugar mientras la otra volaba
@@ -3564,7 +3578,7 @@ function enterProjectView(opts){
   let raf = 0, chromeIn = false;
   const finish = () => {
     cancelAnimationFrame(raf);
-    placeFlyer(fly.el, to);
+    placeFlyerImgs(fly, to, fullTo);
     projectViewEl.classList.remove('pv-feed-hidden', 'pv-chrome-out');
     loader.style.visibility = 'hidden';
     card.style.visibility = '';
@@ -3575,7 +3589,7 @@ function enterProjectView(opts){
   const tick = (now) => {
     const t = Math.min(1, (now - t0) / PV_FLY_MS);
     const e = easeOutQuart(t);
-    placeFlyer(fly.el, lerpRect(from, to, e));
+    placeFlyerImgs(fly, lerpRect(from, to, e), lerpRect(from, fullTo, e));
     if (fly.over && t > 0.45) fly.over.style.opacity = '0';
     if (!chromeIn && t > 0.5){ chromeIn = true; projectViewEl.classList.remove('pv-chrome-out'); }
     if (t < 1) raf = requestAnimationFrame(tick);
@@ -3597,9 +3611,11 @@ function leaveProjectView(project){
   }
 
   const from = visibleItemRect(top);
+  const fullFrom = plainRect(top.getBoundingClientRect());
   const topSrc = itemImageSrc(top);
   // base: la imagen de la card; encima: la foto del proyecto, que se funde en el camino
   const fly = makeFlyer(card.src, topSrc, from);
+  placeFlyerImgs(fly, from, fullFrom); // arranca con el mismo encuadre que el carrusel
   card.style.visibility = 'hidden';
   loader.style.visibility = '';
   loader.style.transition = 'opacity 0.5s ease';
@@ -3622,7 +3638,8 @@ function leaveProjectView(project){
     const t = Math.min(1, (now - t0) / PV_BACK_MS);
     const e = easeInOutCubic(t);
     // la card sigue moviéndose con el anillo: el destino se mide en cada frame
-    placeFlyer(fly.el, lerpRect(from, plainRect(card.getBoundingClientRect()), e));
+    const cardR = plainRect(card.getBoundingClientRect());
+    placeFlyerImgs(fly, lerpRect(from, cardR, e), lerpRect(fullFrom, cardR, e));
     if (fly.over && t > 0.3) fly.over.style.opacity = '0';
     if (t < 1) raf = requestAnimationFrame(tick);
     else { pvTransition = null; finish(); }
