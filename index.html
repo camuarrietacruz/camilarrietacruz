@@ -813,7 +813,9 @@
      anima es translateY de la marca de adentro (±5px, 5s, ease-in-out),
      así nunca puede salirse de su lugar. Va en crema, sin halo. */
   .pv-contact{
-    position:fixed; right:calc(var(--m) - 6.8px); top:50%; z-index:201; /* la marca (30.4px en una caja de 44) queda a --m del borde */ /* por encima de la vista de proyecto (z-index 200) */
+    /* excepción al margen: el CX es más angosto, así que va centrado en el mismo eje
+       vertical que el contador (52px a --m del borde: centro a --m + 26px) */
+    position:fixed; right:calc(var(--m) + 4px); top:50%; z-index:201; /* por encima de la vista de proyecto (z-index 200) */
     transform:translateY(-50%);
     width:44px; height:44px;
     display:none; align-items:center; justify-content:center;
