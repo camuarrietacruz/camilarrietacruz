@@ -1009,9 +1009,9 @@
       <img class="stack-img" alt="Primer plano en blanco y negro de los ojos de Camila Arrieta Cruz, retrato" src="/assets/home/card-05.jpg">
       <img class="stack-img" alt="Render 3D de bloques geométricos grises apilados, estudio de forma" src="/assets/home/card-06.jpg">
       <img class="stack-img" alt="Fachada de un edificio clásico en blanco y negro con arcos y cartel tipográfico elegante" src="/assets/home/card-07.jpg">
-      <img class="stack-img" alt="Vidriera de la joyería Celal Jewellers con cartel publicitario en la calle y peatón desenfocado" src="/assets/home/card-08.jpg">
-      <img class="stack-img" alt="Cajas de packaging de cartón marca Templa apiladas" src="/assets/home/card-09.jpg">
       <img class="stack-img" alt="Cartel con el logo Carmen sobre fondo de persianas verticales oscuras" src="/assets/home/card-10.jpg">
+      <img class="stack-img" alt="Cajas de packaging de cartón marca Templa apiladas" src="/assets/home/card-09.jpg">
+      <img class="stack-img" alt="Vidriera de la joyería Celal Jewellers con cartel publicitario en la calle y peatón desenfocado" src="/assets/home/card-08.jpg">
       <img class="stack-img" alt="Laptop mostrando el diseño de un sitio web con una fotografía deportiva, mockup de UI" src="/assets/home/card-11.jpg">
       <img class="stack-img" alt="Primer plano de una chaqueta oscura con un broche metálico, fotografía de moda y accesorios" src="/assets/home/card-12.jpg">
       <img class="stack-img" alt="Cajas de packaging beige minimalista para aceite facial, de pie sobre arena" src="/assets/home/card-13.jpg">
@@ -1834,10 +1834,10 @@ function setupNameScramble(){
   const subScrambler = subLocationEl ? new TextScramble(subLocationEl) : null;
   let subOriginal = null, labelIndex = null, restoreTimer = null;
   function labelFor(i){
-    if (i === ABOUT_CARD) return { name: currentLang === 'es' ? 'SOBRE MÍ' : 'ABOUT ME', sub: '♈︎ Aries' };
+    if (i === ABOUT_CARD) return { name: 'CAMUXI', sub: currentLang === 'es' ? 'Desde 1995' : 'Since 1995' };
     const p = PROJECTS.find(pr => pr.cards && pr.cards.indexOf(i) !== -1);
     if (!p) return null;
-    return { name: tr(p.name).toUpperCase(), sub: p.year + ' / ' + tr(p.type) };
+    return { name: tr(p.name).toUpperCase(), sub: (p.year ? p.year + ' / ' : '') + tr(p.type) };
   }
   cardLabel = {
     show(i){
@@ -2693,16 +2693,17 @@ const Coverflow = (() => {
    media: [{ type:'image'|'video', src, w, h, alt?, poster? }] — vacío =
    placeholder con fotos de las cards (hasta cargar el contenido real).
 ════════════════════════════════════════════ */
+/* Varias cards pueden abrir el mismo proyecto (cards:[a, b]). La card 4
+   (ABOUT_CARD) no es un proyecto: abre la card personal de Aries. */
 const PROJECTS = [
-  { slug:'proyecto-01', name:'Proyecto 01', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
-    cards:[0], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+  { slug:'etrixia', name:'Etrixia', year:'2023', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[0, 12], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 01 — Camila Arrieta Cruz', en:'Project 01 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 01 de Camila Arrieta Cruz (placeholder).', en:'Project 01 by Camila Arrieta Cruz (placeholder).' },
+    seoTitle:{ es:'Etrixia — Camila Arrieta Cruz', en:'Etrixia — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Etrixia: branding por Camila Arrieta Cruz.', en:'Etrixia: branding by Camila Arrieta Cruz.' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
+    coords:null, // pendiente: { lat, lng, label }
     media:[] },
   { slug:'lacade', name:'LACADÉ BODEGÓN', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[1], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -2732,135 +2733,59 @@ const PROJECTS = [
       { type:'image', src:'/assets/lacade/11.jpg', w:1600, h:900, alt:'Ñoquis con rayas celestes en salsa cremosa sobre una mesa de LACADÉ, junto al afiche "Pasión"' },
       { type:'image', src:'/assets/lacade/12.jpg', w:1600, h:900, alt:'Patrón tipográfico de LACADÉ en azul marino sobre fondo celeste' },
       { type:'image', src:'/assets/lacade/13.jpg?v=2', w:2000, h:878, alt:'Marca secundaria de LACADÉ en celeste sobre azul marino: copa, estrella, escudo y monograma LCD con "ESTD 2025"' } ] },
-  { slug:'proyecto-03', name:'Proyecto 03', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
-    cards:[2], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+  { slug:'bestial', name:'Bestial', year:'2025', type:{ es:'Branding & Espacio', en:'Branding & Space' }, accent:'#0012FF',
+    cards:[2, 5], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 03 — Camila Arrieta Cruz', en:'Project 03 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 03 de Camila Arrieta Cruz (placeholder).', en:'Project 03 by Camila Arrieta Cruz (placeholder).' },
+    seoTitle:{ es:'Bestial — Camila Arrieta Cruz', en:'Bestial — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Bestial: branding & espacio por Camila Arrieta Cruz.', en:'Bestial: branding & space by Camila Arrieta Cruz.' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
+    coords:null, // pendiente: { lat, lng, label }
     media:[] },
-  { slug:'proyecto-04', name:'Proyecto 04', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
-    cards:[3], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+  { slug:'magic-styler', name:'Magic Styler', year:'2025', type:{ es:'Branding & Web', en:'Branding & Web' }, accent:'#0012FF',
+    cards:[3, 14], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 04 — Camila Arrieta Cruz', en:'Project 04 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 04 de Camila Arrieta Cruz (placeholder).', en:'Project 04 by Camila Arrieta Cruz (placeholder).' },
+    seoTitle:{ es:'Magic Styler — Camila Arrieta Cruz', en:'Magic Styler — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Magic Styler: branding & web por Camila Arrieta Cruz.', en:'Magic Styler: branding & web by Camila Arrieta Cruz.' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
+    coords:null, // pendiente: { lat, lng, label }
     media:[] },
-  { slug:'proyecto-05', name:'Proyecto 05', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
-    cards:[4], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+  { slug:'eclat', name:'Eclat', year:'2024', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    cards:[6, 9], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 05 — Camila Arrieta Cruz', en:'Project 05 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 05 de Camila Arrieta Cruz (placeholder).', en:'Project 05 by Camila Arrieta Cruz (placeholder).' },
+    seoTitle:{ es:'Eclat — Camila Arrieta Cruz', en:'Eclat — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Eclat: branding por Camila Arrieta Cruz.', en:'Eclat: branding by Camila Arrieta Cruz.' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
+    coords:null, // pendiente: { lat, lng, label }
     media:[] },
-  { slug:'proyecto-06', name:'Proyecto 06', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
-    cards:[5], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
-    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 06 — Camila Arrieta Cruz', en:'Project 06 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 06 de Camila Arrieta Cruz (placeholder).', en:'Project 06 by Camila Arrieta Cruz (placeholder).' },
-    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
-    media:[] },
-  { slug:'proyecto-07', name:'Proyecto 07', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
-    cards:[6], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
-    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 07 — Camila Arrieta Cruz', en:'Project 07 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 07 de Camila Arrieta Cruz (placeholder).', en:'Project 07 by Camila Arrieta Cruz (placeholder).' },
-    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
-    media:[] },
-  { slug:'proyecto-08', name:'Proyecto 08', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
-    cards:[7], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
-    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 08 — Camila Arrieta Cruz', en:'Project 08 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 08 de Camila Arrieta Cruz (placeholder).', en:'Project 08 by Camila Arrieta Cruz (placeholder).' },
-    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
-    media:[] },
-  { slug:'proyecto-09', name:'Proyecto 09', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+  { slug:'templa', name:'Templa', year:'2022', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     cards:[8], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+    client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 09 — Camila Arrieta Cruz', en:'Project 09 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 09 de Camila Arrieta Cruz (placeholder).', en:'Project 09 by Camila Arrieta Cruz (placeholder).' },
+    seoTitle:{ es:'Templa — Camila Arrieta Cruz', en:'Templa — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Templa: branding por Camila Arrieta Cruz.', en:'Templa: branding by Camila Arrieta Cruz.' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
+    coords:null, // pendiente: { lat, lng, label }
     media:[] },
-  { slug:'proyecto-10', name:'Proyecto 10', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
-    cards:[9], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+  { slug:'carmen', name:'Carmen', year:'2024', type:{ es:'UX/UI', en:'UX/UI' }, accent:'#0012FF',
+    cards:[7, 10], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 10 — Camila Arrieta Cruz', en:'Project 10 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 10 de Camila Arrieta Cruz (placeholder).', en:'Project 10 by Camila Arrieta Cruz (placeholder).' },
+    seoTitle:{ es:'Carmen — Camila Arrieta Cruz', en:'Carmen — Camila Arrieta Cruz' },
+    seoDescription:{ es:'Carmen: UX/UI por Camila Arrieta Cruz.', en:'Carmen: UX/UI by Camila Arrieta Cruz.' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
+    coords:null, // pendiente: { lat, lng, label }
     media:[] },
-  { slug:'proyecto-11', name:'Proyecto 11', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
-    cards:[10], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
+  { slug:'humo', name:'HUMO', year:'2025', type:{ es:'Dirección creativa & IA', en:'Creative direction & AI' }, accent:'#0012FF',
+    cards:[11, 13], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
+    client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 11 — Camila Arrieta Cruz', en:'Project 11 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 11 de Camila Arrieta Cruz (placeholder).', en:'Project 11 by Camila Arrieta Cruz (placeholder).' },
+    seoTitle:{ es:'HUMO — Camila Arrieta Cruz', en:'HUMO — Camila Arrieta Cruz' },
+    seoDescription:{ es:'HUMO: dirección creativa & ia por Camila Arrieta Cruz.', en:'HUMO: creative direction & ai by Camila Arrieta Cruz.' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
-    media:[] },
-  { slug:'proyecto-12', name:'Proyecto 12', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
-    cards:[11], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
-    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 12 — Camila Arrieta Cruz', en:'Project 12 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 12 de Camila Arrieta Cruz (placeholder).', en:'Project 12 by Camila Arrieta Cruz (placeholder).' },
-    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
-    media:[] },
-  { slug:'proyecto-13', name:'Proyecto 13', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
-    cards:[12], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
-    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 13 — Camila Arrieta Cruz', en:'Project 13 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 13 de Camila Arrieta Cruz (placeholder).', en:'Project 13 by Camila Arrieta Cruz (placeholder).' },
-    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
-    media:[] },
-  { slug:'proyecto-14', name:'Proyecto 14', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
-    cards:[13], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
-    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 14 — Camila Arrieta Cruz', en:'Project 14 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 14 de Camila Arrieta Cruz (placeholder).', en:'Project 14 by Camila Arrieta Cruz (placeholder).' },
-    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
-    media:[] },
-  { slug:'proyecto-15', name:'Proyecto 15', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
-    cards:[14], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:'Cliente', services:{ es:'Branding, dirección de arte', en:'Branding, art direction' },
-    credits:[ { name:'Camila Arrieta Cruz', role:{ es:'Dirección creativa', en:'Creative direction' } } ],
-    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
-    seoTitle:{ es:'Proyecto 15 — Camila Arrieta Cruz', en:'Project 15 — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Proyecto 15 de Camila Arrieta Cruz (placeholder).', en:'Project 15 by Camila Arrieta Cruz (placeholder).' },
-    ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:{ lat:-34.6179, lng:-58.4404, label:'BUENOS AIRES' }, // placeholder: reemplazar por las reales (null = no se muestra)
+    coords:null, // pendiente: { lat, lng, label }
     media:[] }
 ];
 
@@ -2886,10 +2811,10 @@ function formatCoords(c){
 function projectBySlug(slug){ return PROJECTS.find(p => p.slug === slug) || null; }
 function projectMedia(p){
   if (p.media && p.media.length) return p.media;
-  const base = (p.cards && p.cards.length) ? p.cards[0] : 0;
-  return Array.from({ length: 6 }, (_, k) => {
-    const img = stackImgs[(base + k) % stackImgs.length];
-    return { type:'image', src: img.src, w:480, h:480, alt: img.alt };
+  // sin fotos cargadas: las de sus propias cards del home (no las de otros proyectos)
+  return (p.cards && p.cards.length ? p.cards : [0]).map(i => {
+    const img = stackImgs[i];
+    return { type:'image', src: img.src, w: img.naturalWidth || 480, h: img.naturalHeight || 480, alt: img.alt };
   });
 }
 
@@ -2949,7 +2874,9 @@ const ProjectView = (() => {
     projectViewEl.style.setProperty('--pv-accent', p.accent || 'var(--blue)');
     $('pvIndex').textContent = 'CX-' + String(PROJECTS.indexOf(p) + 1).padStart(2, '0');
     $('pvTitle').textContent = p.name;
-    $('pvYear').textContent = p.year;
+    $('pvYear').textContent = p.year || '';
+    // sin año: no queda la barra suelta delante del tipo
+    $('pvYear').hidden = !p.year; $('pvYear').nextElementSibling.hidden = !p.year;
     $('pvType').textContent = tr(p.type);
     const coordsEl = $('pvCoords');
     const coordsText = formatCoords(p.coords);
