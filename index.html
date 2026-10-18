@@ -1101,7 +1101,7 @@
     <div id="center-wrap">
       <img id="ojito" alt="" src="/assets/home/ojito.gif">
       <img class="stack-img" alt="Botella de vidrio ámbar de sérum facial sobre arena mojada, fotografía de producto cosmético" src="/assets/home/card-01.jpg">
-      <img class="stack-img" alt="Afiche gráfico en blanco y negro con una boca y una etiqueta azul, diseño editorial" src="/assets/home/card-02.jpg">
+      <img class="stack-img" alt="Afiche gráfico en blanco y negro con una boca y una etiqueta azul, diseño editorial" src="/assets/home/card-02.jpg?v=2">
       <img class="stack-img" alt="Primer plano de manos sosteniendo una pesa rusa (kettlebell), fotografía deportiva en tonos oscuros" src="/assets/home/card-03.jpg">
       <img class="stack-img" alt="Mujer usando un secador de pelo profesional negro y dorado, fotografía de campaña de belleza" src="/assets/home/card-04.jpg">
       <img class="stack-img" alt="Primer plano en blanco y negro de los ojos de Camila Arrieta Cruz, retrato" src="/assets/home/card-05.jpg">
@@ -2967,6 +2967,8 @@ const PROJECTS = [
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
     coords:{ lat:-34.6039, lng:-58.4914, label:'VILLA DEL PARQUE' },
     media:[
+      // la primera es la misma foto que la card del home (la transición no cambia de imagen)
+      { type:'image', src:'/assets/lacade/00.jpg', w:2000, h:1996, alt:'Afiche de LACADÉ en blanco y negro: una boca gritando con la palabra "Pasión" en celeste, sobre fondo azul marino' },
       { type:'image', src:'/assets/lacade/01.jpg', w:1121, h:1400, alt:'Fachada de LACADÉ Bodegón de noche, con el cartel azul luminoso y el neón "Bodegón"' },
       { type:'image', src:'/assets/lacade/02.jpg', w:1600, h:900, alt:'Escudo de LACADÉ en azul y blanco sobre fondo azul marino' },
       { type:'image', src:'/assets/lacade/03.jpg', w:1280, h:852, alt:'Vista cenital de la mesa de LACADÉ con parrillada, empanadas, vino y entradas sobre manteles de rayas celestes' },
@@ -3548,7 +3550,14 @@ function enterProjectView(opts){
   const realSrc = itemImageSrc(target);
   // base: la foto real del proyecto; encima: la de la card, que se funde al llegar
   const fly = makeFlyer(realSrc || card.src, realSrc ? card.src : null, from);
+  // las fotos del carrusel se ocultan EN EL ACTO (sin su fade de 0.3s): si no, se
+  // veían un instante en su lugar mientras la imagen todavía volaba (doble imagen
+  // que "saltaba" al llegar)
+  const feedEl = ProjectView.feedEl();
+  feedEl.style.transition = 'none';
   projectViewEl.classList.add('pv-flying', 'pv-feed-hidden', 'pv-chrome-out', 'is-open');
+  void feedEl.offsetWidth;
+  feedEl.style.transition = '';
   ProjectView.pauseAuto(PV_FLY_MS + 700);
 
   const t0 = performance.now();
