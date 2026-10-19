@@ -3045,6 +3045,7 @@ const PROJECTS = [
     seoDescription:{ es:'Magic Styler: identidad de marca y diseño web para un e-commerce de estilismo capilar, por Camila Arrieta Cruz.', en:'Magic Styler: brand identity and web design for a hair styling e-commerce, by Camila Arrieta Cruz.' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
     coords:{ lat:40.7128, lng:-74.0060, label:{ es:'NUEVA YORK', en:'NEW YORK' } },
+    cardCrop:{ x:700 / 3459, y:0, w:2613 / 3459, h:1 }, // la card-04 es este recorte cuadrado de la 00 (corrido a la derecha)
     // la 00 es también la card del home (card-04); la 3 es el video del celular
     media:[
       { type:'image', src:'/assets/magic-styler/00.jpg', w:2400, h:1813, alt:'Mujer de pelo largo castaño al viento sosteniendo el secador Magic Styler negro y dorado, fotografía de estudio' },
@@ -3546,18 +3547,36 @@ function placeFlyer(el, r){
   el.style.left = r.left + 'px'; el.style.top = r.top + 'px';
   el.style.width = r.width + 'px'; el.style.height = r.height + 'px';
 }
-/* la caja de la imagen voladora (clip) y la imagen de adentro (img) van por
-   separado: la primera foto del carrusel puede ser más alta que la pantalla y
-   quedar cortada; la voladora tiene que llegar con ESE mismo encuadre (no la
-   foto entera achicada), o al aterrizar cambia de golpe */
-function placeFlyerImgs(fly, clip, img){
+/* qué parte de la primera foto del carrusel muestra la card del home (en
+   fracciones de la foto). Por defecto: recorte cuadrado centrado; un proyecto
+   puede definir cardCrop si su card está recortada en otro lugar. */
+function cardCropFor(p, target){
+  if (!p || !p.media || !p.media.length) return { x:0, y:0, w:1, h:1 }; // sin fotos: la card ES la imagen
+  if (p.cardCrop) return p.cardCrop;
+  const r = target.getBoundingClientRect(), a = r.width / r.height; // proporción de la foto
+  return a >= 1 ? { x:(1 - 1 / a) / 2, y:0, w:1 / a, h:1 } : { x:0, y:(1 - a) / 2, w:1, h:a };
+}
+// a partir de la caja de la card, la caja que tendría la foto entera con ese recorte
+function expandCrop(r, c){
+  const w = r.width / c.w, h = r.height / c.h;
+  return { left: r.left - c.x * w, top: r.top - c.y * h, width: w, height: h };
+}
+function cropOf(img, c){
+  return { left: img.left + c.x * img.width, top: img.top + c.y * img.height, width: c.w * img.width, height: c.h * img.height };
+}
+/* una sola foto vuela (la grande), encuadrada siempre igual que la card: clip =
+   la caja visible, img = la foto entera; la imagen chica de la card (over) va
+   pegada a su recorte dentro de la foto, así si se funde no hay doble imagen */
+function placeFlyerAligned(fly, clip, img, crop){
   placeFlyer(fly.el, clip);
-  [fly.under, fly.over].forEach(im => {
+  const set = (im, r) => {
     if (!im) return;
     im.style.inset = 'auto';
-    im.style.left = (img.left - clip.left) + 'px'; im.style.top = (img.top - clip.top) + 'px';
-    im.style.width = img.width + 'px'; im.style.height = img.height + 'px';
-  });
+    im.style.left = (r.left - clip.left) + 'px'; im.style.top = (r.top - clip.top) + 'px';
+    im.style.width = r.width + 'px'; im.style.height = r.height + 'px';
+  };
+  set(fly.under, img);
+  set(fly.over, cropOf(img, crop));
 }
 // imagen voladora con dos capas: "under" de base y "over" encima (se funde)
 function makeFlyer(underSrc, overSrc, rect){
@@ -3634,8 +3653,12 @@ function enterProjectView(opts){
   if (liquidCanvas){ liquidCanvas.style.transition = 'none'; liquidCanvas.style.opacity = '0'; requestAnimationFrame(() => { liquidCanvas.style.transition = ''; }); }
   card.style.visibility = 'hidden';
   const realSrc = itemImageSrc(target);
-  // base: la foto real del proyecto; encima: la de la card, que se funde al llegar
+  const crop = cardCropFor(currentProject, target);
+  const fromImg = expandCrop(from, crop); // la foto entera, encuadrada como la card
+  // base: la foto real del proyecto; encima: la de la card (pegada a su recorte),
+  // que se funde apenas la grande está cargada
   const fly = makeFlyer(realSrc || card.src, realSrc ? card.src : null, from);
+  placeFlyerAligned(fly, from, fromImg, crop);
   // las fotos del carrusel se ocultan EN EL ACTO (sin su fade de 0.3s): si no, se
   // veían un instante en su lugar mientras la imagen todavía volaba (doble imagen
   // que "saltaba" al llegar)
@@ -3658,15 +3681,19 @@ function enterProjectView(opts){
     if (finished) return;
     finished = true;
     cancelAnimationFrame(raf);
-    placeFlyerImgs(fly, to, fullTo);
+    placeFlyerAligned(fly, to, fullTo, crop);
     projectViewEl.classList.remove('pv-chrome-out');
     loader.style.visibility = 'hidden';
     card.style.visibility = '';
     targetReady.then(() => {
+      // cambio en el acto (sin fundido): la foto del carrusel es la misma, en el
+      // mismo lugar, así que no se nota; un fundido cruzado oscurecía a mitad de camino
+      const fe = ProjectView.feedEl();
+      fe.style.transition = 'none';
       if (currentProject) projectViewEl.classList.remove('pv-feed-hidden'); // (si ya volvió al home, no)
-      fly.el.style.transition = 'opacity 0.3s ease';
-      requestAnimationFrame(() => { fly.el.style.opacity = '0'; });
-      setTimeout(() => { fly.el.remove(); projectViewEl.classList.remove('pv-flying'); }, 340);
+      void fe.offsetWidth;
+      fe.style.transition = '';
+      requestAnimationFrame(() => { fly.el.remove(); projectViewEl.classList.remove('pv-flying'); });
       // la pantalla ya está armada: el carrusel arranca solo, desde esa misma foto
       ProjectView.pauseAuto(700);
     });
@@ -3674,7 +3701,7 @@ function enterProjectView(opts){
   const tick = (now) => {
     const t = Math.min(1, (now - t0) / PV_FLY_MS);
     const e = easeOutQuart(t);
-    placeFlyerImgs(fly, lerpRect(from, to, e), lerpRect(from, fullTo, e));
+    placeFlyerAligned(fly, lerpRect(from, to, e), lerpRect(fromImg, fullTo, e), crop);
     // la imagen de la card se cambia por la foto grande solo si esa ya cargó
     if (fly.over && t > 0.45 && fly.under.complete && fly.under.naturalWidth) fly.over.style.opacity = '0';
     if (!chromeIn && t > 0.5){ chromeIn = true; projectViewEl.classList.remove('pv-chrome-out'); }
@@ -3699,9 +3726,12 @@ function leaveProjectView(project){
   const from = visibleItemRect(top);
   const fullFrom = plainRect(top.getBoundingClientRect());
   const topSrc = itemImageSrc(top);
-  // base: la imagen de la card; encima: la foto del proyecto, que se funde en el camino
-  const fly = makeFlyer(card.src, topSrc, from);
-  placeFlyerImgs(fly, from, fullFrom); // arranca con el mismo encuadre que el carrusel
+  // vuelve una sola foto (la del carrusel) y se va encuadrando como la card;
+  // al aterrizar se cambia por la card en el acto (es la misma imagen)
+  const isFirst = top.dataset.index === '0'; // la card corresponde a la primera foto
+  const crop = isFirst ? cardCropFor(project, top) : { x:0, y:0, w:1, h:1 };
+  const fly = makeFlyer(topSrc || card.src, null, from);
+  placeFlyerAligned(fly, from, fullFrom, crop); // arranca con el mismo encuadre que el carrusel
   card.style.visibility = 'hidden';
   loader.style.visibility = '';
   loader.style.transition = 'opacity 0.5s ease';
@@ -3725,8 +3755,7 @@ function leaveProjectView(project){
     const e = easeInOutCubic(t);
     // la card sigue moviéndose con el anillo: el destino se mide en cada frame
     const cardR = plainRect(card.getBoundingClientRect());
-    placeFlyerImgs(fly, lerpRect(from, cardR, e), lerpRect(fullFrom, cardR, e));
-    if (fly.over && t > 0.3) fly.over.style.opacity = '0';
+    placeFlyerAligned(fly, lerpRect(from, cardR, e), lerpRect(fullFrom, expandCrop(cardR, crop), e), crop);
     if (t < 1) raf = requestAnimationFrame(tick);
     else { pvTransition = null; finish(); }
   };
