@@ -3031,15 +3031,18 @@ const PROJECTS = [
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
     coords:null, // pendiente: { lat, lng, label }
     media:[] },
-  { slug:'magic-styler', name:'Magic Styler', year:'2025', type:{ es:'Branding & Web', en:'Branding & Web' }, accent:'#0012FF',
-    kind:{ es:'Hair tech', en:'Hair tech' }, // qué es, destacado bajo el título y en el hover
+  { slug:'magic-styler', name:'Magic Styler', year:'2025', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
+    kind:{ es:'Hair technology product', en:'Hair technology product' }, // qué es, destacado bajo el título y en el hover
     cards:[3, 14], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
-    client:null, services:null, credits:[], // pendiente (paso 9: contenido)
-    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    client:null, services:null, credits:[], // sin link: todavía no tiene web ni Instagram
+    description:{
+      es:'Identidad de marca completa y diseño web para un e-commerce de productos de estilismo capilar, desde el logo hasta la experiencia de compra.',
+      en:'Complete brand identity and web design for a hair styling e-commerce, from the logo to the shopping experience.'
+    },
     seoTitle:{ es:'Magic Styler — Camila Arrieta Cruz', en:'Magic Styler — Camila Arrieta Cruz' },
-    seoDescription:{ es:'Magic Styler: branding & web por Camila Arrieta Cruz.', en:'Magic Styler: branding & web by Camila Arrieta Cruz.' },
+    seoDescription:{ es:'Magic Styler: identidad de marca y diseño web para un e-commerce de estilismo capilar, por Camila Arrieta Cruz.', en:'Magic Styler: brand identity and web design for a hair styling e-commerce, by Camila Arrieta Cruz.' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // pendiente: { lat, lng, label }
+    coords:{ lat:40.7128, lng:-74.0060, label:{ es:'NUEVA YORK', en:'NEW YORK' } },
     media:[] },
   { slug:'eclat', name:'Eclat', year:'2024', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     kind:{ es:'Joyería', en:'Jewelry' }, // qué es, destacado bajo el título y en el hover
