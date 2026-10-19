@@ -889,6 +889,8 @@
   .pv-feed::-webkit-scrollbar{ display:none; }
   .pv-item{ display:block; width:100%; background:#0a0a0a; }
   .pv-item img, .pv-item video{ display:block; width:100%; height:100%; object-fit:cover; }
+  /* videos: el fondo del video es #111, el del slide también (sin borde visible) */
+  .pv-item.is-video, .pv-item video{ background:#111; }
 
   /* contador circular: anillo de progreso + n / total */
   .pv-counter{
@@ -1112,7 +1114,7 @@
       <img class="stack-img" alt="Botella de vidrio ámbar de sérum facial sobre arena mojada, fotografía de producto cosmético" src="/assets/home/card-01.jpg">
       <img class="stack-img" alt="Afiche gráfico en blanco y negro con una boca y una etiqueta azul, diseño editorial" src="/assets/home/card-02.jpg?v=2">
       <img class="stack-img" alt="Primer plano de manos sosteniendo una pesa rusa (kettlebell), fotografía deportiva en tonos oscuros" src="/assets/home/card-03.jpg">
-      <img class="stack-img" alt="Mujer usando un secador de pelo profesional negro y dorado, fotografía de campaña de belleza" src="/assets/home/card-04.jpg">
+      <img class="stack-img" alt="Mujer de pelo largo al viento con el secador Magic Styler negro y dorado" src="/assets/home/card-04.jpg?v=2">
       <img class="stack-img" alt="Primer plano en blanco y negro de los ojos de Camila Arrieta Cruz, retrato" src="/assets/home/card-05.jpg">
       <img class="stack-img" alt="Render 3D de bloques geométricos grises apilados, estudio de forma" src="/assets/home/card-06.jpg">
       <img class="stack-img" alt="Fachada de un edificio clásico en blanco y negro con arcos y cartel tipográfico elegante" src="/assets/home/card-07.jpg">
@@ -3043,7 +3045,17 @@ const PROJECTS = [
     seoDescription:{ es:'Magic Styler: identidad de marca y diseño web para un e-commerce de estilismo capilar, por Camila Arrieta Cruz.', en:'Magic Styler: brand identity and web design for a hair styling e-commerce, by Camila Arrieta Cruz.' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
     coords:{ lat:40.7128, lng:-74.0060, label:{ es:'NUEVA YORK', en:'NEW YORK' } },
-    media:[] },
+    // la 00 es también la card del home (card-04); la 3 es el video del celular
+    media:[
+      { type:'image', src:'/assets/magic-styler/00.jpg', w:2400, h:1813, alt:'Mujer de pelo largo castaño al viento sosteniendo el secador Magic Styler negro y dorado, fotografía de estudio' },
+      { type:'image', src:'/assets/magic-styler/01.jpg', w:2400, h:1350, alt:'Logotipo de Magic Styler en blanco sobre una onda de satén dorado y negro' },
+      { type:'image', src:'/assets/magic-styler/02.jpg', w:2400, h:1350, alt:'Pelo rizado oscuro con el logo de Magic Styler y los íconos de beneficios de la marca' },
+      { type:'video', src:'/assets/magic-styler/phone-slide.mp4', poster:'/assets/magic-styler/phone-slide-poster.jpg', w:1920, h:1080 },
+      { type:'image', src:'/assets/magic-styler/04.jpg', w:2400, h:1350, alt:'Campaña "Luxury isn’t loud, it’s smart" con la tarjeta del Airstyler Pro y una mujer ondulándose el pelo' },
+      { type:'image', src:'/assets/magic-styler/06.jpg', w:2400, h:1350, alt:'Antes y después del pelo de una mujer: lacio a la izquierda y con ondas a la derecha' },
+      { type:'image', src:'/assets/magic-styler/07.jpg', w:2400, h:1350, alt:'Pieza "All-in-one magic" con fotos de producto: cepillo alisador y secador' },
+      { type:'image', src:'/assets/magic-styler/08.jpg', w:2400, h:1350, alt:'Primer plano de ojos y rulos con las palabras Magic y Styler' },
+      { type:'image', src:'/assets/magic-styler/09.jpg', w:2000, h:1918, alt:'Diseño web de Magic Styler: sección "Shop by need" con los productos y el footer' } ] },
   { slug:'eclat', name:'Eclat', year:'2024', type:{ es:'Branding', en:'Branding' }, accent:'#0012FF',
     kind:{ es:'Joyería', en:'Jewelry' }, // qué es, destacado bajo el título y en el hover
     cards:[6, 9], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
@@ -3235,7 +3247,14 @@ const ProjectView = (() => {
         let el;
         if (m.type === 'video'){
           el = document.createElement('video');
-          el.muted = true; el.loop = true; el.playsInline = true; el.preload = 'metadata';
+          // como una imagen más que se mueve: sin sonido ni controles, en loop.
+          // Safari de iPhone solo reproduce solo si muted/playsinline están como atributos
+          el.muted = true; el.loop = true; el.playsInline = true; el.autoplay = true; el.preload = 'metadata';
+          el.setAttribute('muted', ''); el.setAttribute('playsinline', ''); el.setAttribute('autoplay', '');
+          el.setAttribute('aria-hidden', 'true');
+          // autoplay arranca TODAS las copias del carrusel: la que no se ve se frena sola
+          el.addEventListener('play', () => { if (el.dataset.vis !== '1') el.pause(); });
+          wrap.classList.add('is-video');
           if (m.poster) el.poster = m.poster;
           el.src = m.src;
           videoObserver.observe(el);
@@ -3331,7 +3350,11 @@ const ProjectView = (() => {
   }, { passive:true });
 
   const videoObserver = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) e.target.play().catch(() => {}); else e.target.pause(); });
+    // solo se reproduce el video que está en pantalla; fuera de pantalla, en pausa (batería)
+    entries.forEach(e => {
+      e.target.dataset.vis = e.isIntersecting ? '1' : '0';
+      if (e.isIntersecting) e.target.play().catch(() => {}); else e.target.pause();
+    });
   }, { root: feed, threshold: 0.25 });
 
   // celular: alto de la barra colapsada (el feed arranca debajo)
