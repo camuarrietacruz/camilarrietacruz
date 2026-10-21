@@ -122,14 +122,16 @@
      scramble cambia el ancho del texto. */
   /* sistema de márgenes del celular (igual en loader, hero, proyecto y footer):
        · lateral 24px · superior e inferior 32px
-       · fila de arriba (ES/EN y flecha de volver): arriba a 32px, centro a 41px
-       · fila del nombre (hero) / título (proyecto): centro a 76px, 17.24px regular
+       · fila de arriba: el nombre (hero) y los botones del proyecto (flecha · título ·
+         contador), todos con el centro a 36px; mismo tamaño de letra (15.9px), así al
+         abrir un proyecto el nombre queda quieto y los botones se arman a su alrededor
+       · el ES/EN, siempre abajo a la derecha
      El nombre sigue centrado en horizontal (lo centra centerNameText). */
   html.is-narrow #name-text{
-    top: calc(env(safe-area-inset-top, 0px) + 76px);
-    font-size:17.24px; font-weight:400; letter-spacing:0.01em;
+    top: calc(env(safe-area-inset-top, 0px) + 36px);
+    font-size:15.9px; font-weight:400; letter-spacing:0.01em;
   }
-  html.is-narrow #sub-location{ top: calc(env(safe-area-inset-top, 0px) + 93px); }
+  html.is-narrow #sub-location{ top: calc(env(safe-area-inset-top, 0px) + 53px); }
   html.is-narrow #percent-text{ left:0; right:0; text-align:center; top: calc(50% + 70px + 32px); }
   /* touch: el arrastre horizontal sobre el hero mueve el cover-flow; el
      vertical sigue siendo el scroll de la página (pan-y) */
@@ -215,7 +217,8 @@
      segundo "nombre + ciudad", el qué es va en la letra de telemetría (la de
      las coordenadas) y el sello CX-XX del panel va aparte, debajo de la card. */
   .cf-label{
-    position:fixed; left:24px; right:24px; bottom:calc(env(safe-area-inset-bottom, 0px) + 32px); z-index:9999;
+    /* (sube 28px: abajo de todo, a la derecha, ahora va siempre el ES/EN) */
+    position:fixed; left:24px; right:24px; bottom:calc(env(safe-area-inset-bottom, 0px) + 60px); z-index:9999;
     display:flex; flex-direction:column; align-items:center; gap:8px;
     text-align:center; color:var(--cream); font-family:var(--font);
     pointer-events:none; opacity:0; transition:opacity 0.25s ease;
@@ -448,7 +451,9 @@
      centro y se pisaba con la firma centrada — la firma pasa a la
      derecha, con su base alineada a la última línea del legal, y el
      legal deja libre ese lugar (si no entra, corta en una línea más) */
-  html.is-narrow .footer-signature-mark{ left:auto; right:0; transform:none; }
+  html.is-narrow .footer-bottom{ flex-direction:column; align-items:flex-start; justify-content:flex-end; gap:14px; }
+  html.is-narrow .footer-signature-mark{ position:relative; left:auto; right:auto; bottom:auto; transform:none; order:-1; }
+  html.is-narrow .footer-signature-mark svg{ height:15.43px; } /* 15% más chica */
   /* márgenes del celular: 24px a los lados, 32px arriba y abajo */
   html.is-narrow .footer-content{ padding:32px 24px 32px 24px; }
   html.is-narrow .footer-contact{ padding:0 24px; }
@@ -563,6 +568,14 @@
     opacity:0; visibility:hidden;
     transition: opacity 0.35s ease, visibility 0s linear 0.35s;
     will-change: transform;
+  }
+  /* compu: la vista de proyecto sube al footer como la cortina del home (misma panza
+     difuminada en el borde de abajo; el JS pone --curve / --curve-r) */
+  .project-view::after{
+    content:''; position:absolute; left:0; right:0; top:100%;
+    height:calc(var(--curve, 0px) + 56px); background:var(--black); pointer-events:none;
+    -webkit-mask-image:radial-gradient(circle var(--curve-r, 0px) at 50% calc(var(--curve, 0px) - var(--curve-r, 0px)), #000 calc(var(--curve-r, 0px) - 1px), transparent calc(var(--curve-r, 0px) + 56px));
+            mask-image:radial-gradient(circle var(--curve-r, 0px) at 50% calc(var(--curve, 0px) - var(--curve-r, 0px)), #000 calc(var(--curve-r, 0px) - 1px), transparent calc(var(--curve-r, 0px) + 56px));
   }
   .project-view.is-open{
     opacity:1; visibility:visible;
@@ -1041,7 +1054,7 @@
   /* misma posición que la firma CAMUXI del footer: borde derecho a 24px y centro vertical en su línea
      (CAMUXI: 18.15px de alto a 32px del borde de abajo → centro a 41.1px; la marca CX mide 30.4×22.3px
      dentro de un botón de 44px → right 24−6.8 = 17.2px, bottom 41.1−22 = 19.1px) */
-  html.is-narrow .pv-contact{ right:17.2px; left:auto; top:auto; bottom:19.1px; transform:none; }
+  html.is-narrow .pv-contact{ right:14px; left:auto; top:50%; bottom:auto; transform:translateY(-50%); } /* (abajo a la derecha va el ES/EN) */
   /* el contador va por debajo del panel de info (z-index 1 < 2): con la info abierta
      queda tapado y la cortina lo tapa/destapa a su paso, sin saltos */
 
@@ -1071,7 +1084,9 @@
   /* celular: abajo a la derecha ahora va la firma CAMUXI, así que el
      selector sube a la esquina de arriba a la derecha, por encima del
      nombre (centrado a 76px del borde). Texto de ~10px: top 36 → centro a 41px. */
-  html.is-narrow .lang-switch{ bottom:auto; top: calc(env(safe-area-inset-top, 0px) + 36px); right:24px; }
+  /* celular: el ES/EN va siempre abajo a la derecha (como en compu), en todas las
+     pantallas, y no se mueve nunca; la firma CAMUXI del footer sube arriba del legal */
+  html.is-narrow .lang-switch{ top:auto; bottom:calc(env(safe-area-inset-bottom, 0px) + 32px); right:24px; left:auto; }
   html.is-narrow .lang-btn{ font-size:10.8px; } /* +20%: a 9px se veía muy chico */
   .lang-btn{
     position:relative;
@@ -1203,7 +1218,6 @@
   html.pv-pill:not(.is-landscape-phone) .pv-counter{ top:calc(var(--pill-top) + var(--pill-h) + 16px); right:calc(var(--pill-side) + 8px); }
   html.pv-pill:not(.is-landscape-phone) .project-view:has(.pv-info.is-expanded) .pv-counter{ opacity:0; pointer-events:none; }
   /* celu: arriba ahora va la barra, el ES/EN baja a la esquina de abajo a la izquierda */
-  html.pv-pill.is-narrow.project-open .lang-switch{ top:auto; bottom:calc(env(safe-area-inset-bottom, 0px) + 32px); left:24px; right:auto; }
 
   /* entrada desde el hero: el nombre sube; la barra nace chiquita alrededor del
      nombre y se abre hacia los dos lados (en "botones", la píldora del nombre
@@ -1303,26 +1317,13 @@
 
   /* velocidad del carrusel. Compu: barrita abajo a la izquierda (todo a la
      izquierda = quieto, solo a mano). Celu: botón de pausa / play. Mismo vidrio. */
-  .pv-speed, .pv-play{ display:none; }
-  html.pv-pill:not(.is-narrow, .is-landscape-phone) .pv-speed{
+  .pv-speed{ display:none; }
+  html.pv-pill:not(.is-landscape-phone) .pv-speed{
     position:absolute; left:calc(var(--pill-side) + 8px); bottom:calc(var(--pill-side) + 8px); z-index:4;
     display:block; transition:opacity 0.5s ease 0.6s;
   }
-  html.pv-pill.is-narrow .pv-play{
-    position:absolute; left:var(--pill-side); bottom:calc(env(safe-area-inset-bottom, 0px) + var(--pill-side)); z-index:4;
-    width:44px; height:44px; padding:0; border-radius:50%; display:grid; place-items:center;
-    background:var(--g-bg); color:var(--g-color);
-    -webkit-backdrop-filter:var(--g-filter); backdrop-filter:var(--g-filter); box-shadow:var(--g-shadow);
-    transition:opacity 0.5s ease 0.6s;
-  }
-  html.pv-pill .project-view.pv-chrome-out :is(.pv-speed, .pv-play){ opacity:0; transition:none; }
-  html.pv-pill:not(.is-landscape-phone) .pv-play::after{
-    content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; padding:var(--g-rim-w);
-    background:var(--g-rim);
-    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
-    mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  }
-  .pv-play svg{ display:block; fill:currentColor; flex:none; }
+  html.pv-pill.is-narrow .pv-speed{ left:50%; transform:translateX(-50%); bottom:calc(env(safe-area-inset-bottom, 0px) + 24px); } /* centrada, en la línea del ES/EN */
+  html.pv-pill .project-view.pv-chrome-out .pv-speed{ opacity:0; transition:none; }
   .pv-speed-track{ position:relative; width:140px; height:28px; --v:0.5; }
   /* la barrita: una línea plana, crema al 60% (el glow lo tiene solo la perilla) */
   .pv-speed-track::before{
@@ -1340,13 +1341,11 @@
   /* el control de verdad es un range invisible encima (teclado, lectores, arrastre) */
   .pv-speed input{
     position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer;
+    pointer-events:none; /* el arrastre lo maneja el JS (también en iPhone, donde el range nativo solo se agarra del círculo) */
   }
+  .pv-speed-track{ cursor:pointer; touch-action:none; }
   .pv-speed:has(input:focus-visible){ outline:2px solid var(--cream); outline-offset:3px; }
-  .pv-play .pv-play-ico-play{ display:none; }
-  .pv-play.is-stopped .pv-play-ico-play{ display:block; }
-  .pv-play.is-stopped .pv-play-ico-pause{ display:none; }
   /* celu: el ES/EN se corre a la derecha del botón de pausa */
-  html.pv-pill.is-narrow.project-open .lang-switch{ left:calc(var(--pill-side, 12px) + 44px + 18px); bottom:calc(env(safe-area-inset-bottom, 0px) + 12px + 16px); }
   /* botones: sin "+ info". La gota de la derecha es el contador de fotos y su
      canto azul se llena (desde arriba, hacia los dos lados) a medida que avanzan
      las fotos. El nombre abre la info, que baja en el mismo lugar. */
@@ -1494,7 +1493,6 @@
     <div class="pv-speed" id="pvSpeed">
       <div class="pv-speed-track"><span class="pv-speed-knob"></span><input type="range" id="pvSpeedInput" min="0" max="100" step="1" value="50" aria-label="Velocidad del carrusel"></div>
     </div>
-    <button class="pv-play" id="pvPlay" type="button" aria-label="Pausar el carrusel"><svg class="pv-play-ico-pause" width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><rect x="0.5" y="0.5" width="3" height="11" rx="1"/><rect x="6.5" y="0.5" width="3" height="11" rx="1"/></svg><svg class="pv-play-ico-play" width="11" height="12" viewBox="0 0 11 12" aria-hidden="true"><path d="M1 1.1v9.8c0 .6.6.9 1.1.6l8-4.9c.4-.3.4-.9 0-1.2l-8-4.9C1.6.2 1 .5 1 1.1z"/></svg></button>
   </section>
   <!-- CX de contacto: fuera de la vista de proyecto para que NO suba con la cortina; queda fijo a la pantalla y se desvanece al scrollear hacia el footer -->
     <button class="pv-contact" id="pvContact" type="button" aria-label="Contacto"><span class="pv-contact-mark"><span class="pv-contact-orbit" aria-hidden="true"><svg viewBox="0 0 88 88"><defs><path id="pvOrbitPath" d="M44,44 m-34,0 a34,34 0 1,1 68,0 a34,34 0 1,1 -68,0"/></defs><text><textPath href="#pvOrbitPath" id="pvOrbitText">Contactame</textPath></text></svg></span><svg viewBox="0 0 532 391" aria-hidden="true" focusable="false"><path d="M419.639 192.13C419.639 192.13 417.253 189.119 417.253 188.116C425.432 182.43 433.612 177.079 441.451 171.058C475.192 145.304 542.333 90.4517 522.225 37.2715C514.386 16.869 494.278 11.5175 476.214 10.5141C464.967 9.8452 448.267 9.51074 437.361 10.5141C434.975 10.5141 429.863 11.5175 432.249 15.5311C433.953 18.2069 452.698 16.869 456.788 17.5379C475.192 19.5447 490.87 33.5923 495.3 53.6604C504.502 95.4687 470.761 134.267 443.496 158.014C440.088 161.024 414.527 181.092 412.822 181.092C411.8 181.092 411.118 180.089 410.437 179.42C388.283 147.98 362.381 118.881 340.228 87.4416C324.891 66.0357 296.263 21.5515 340.91 17.2035C347.726 16.5345 357.951 18.5413 363.745 17.2035C365.789 16.5345 368.175 13.5243 366.471 11.852C365.789 11.1831 363.063 10.8486 361.7 10.8486C346.363 9.51074 323.187 9.8452 307.85 10.8486C261.158 13.5243 280.244 62.3565 300.012 87.4416L385.216 202.164C350.453 226.245 312.622 253.672 289.105 291.801C273.428 317.22 259.113 369.732 295.24 381.438C311.259 386.789 349.771 386.789 366.812 385.117C369.198 385.117 375.332 384.114 372.947 380.1C371.243 377.424 356.928 378.762 353.52 378.428C313.985 375.418 302.057 353.008 311.94 310.865C322.165 267.05 356.928 231.931 390.669 209.522L475.192 323.91C482.69 335.616 492.914 349.998 490.188 365.384C486.78 385.452 455.084 376.421 442.473 378.762C436.68 379.766 438.043 384.783 444.518 385.452C460.878 386.789 487.121 386.455 503.821 385.452C546.082 382.441 530.745 342.64 513.704 317.889C484.394 275.412 448.608 235.61 419.298 192.799L419.639 192.13Z"/><path d="M125.111 362.374C167.031 385.118 225.165 385.023 261.632 350.907C264.181 349.689 310.356 303.239 310.356 303.239C310.356 303.239 286.438 340.535 263.998 360.335C253.693 369.428 241.671 376.422 233.832 379.432C155.103 411.206 59.6738 369.398 20.139 287.453C-40.1858 162.028 42.6329 6.83572 167.372 0.146383C206.225 -1.86042 259.393 16.8697 285.636 49.982C322.444 96.1384 283.591 150.656 233.15 135.605C212.701 129.251 205.203 122.896 182.368 129.251C178.96 130.254 157.829 139.285 156.466 138.616C151.695 136.274 159.193 132.595 160.897 131.926C172.144 126.24 192.593 118.882 204.521 117.879C224.97 116.206 252.236 134.602 264.165 104.166C275.411 75.4015 257.007 44.9649 235.195 30.5829C189.525 0.480844 122.725 6.16679 82.8494 45.2994C-4.3999 130.588 21.843 306.853 125.111 362.374Z"/></svg></span></button>
@@ -4576,29 +4574,28 @@ document.getElementById('pvTitle').addEventListener('keydown', e => {
    La barrita (compu) y el botón de pausa (celu) comparten el valor, que se recuerda. */
 var pvFeedSpeed = 1;
 (function(){
-  const input = document.getElementById('pvSpeedInput'), box = document.getElementById('pvSpeed'), play = document.getElementById('pvPlay');
+  const input = document.getElementById('pvSpeedInput'), box = document.getElementById('pvSpeed');
   const track = box.querySelector('.pv-speed-track');
-  let lastMoving = 50;
   function apply(v){
     v = Math.max(0, Math.min(100, Math.round(v)));
     pvFeedSpeed = v <= 2 ? 0 : (v <= 50 ? v / 50 : 1 + (v - 50) / 25);
     input.value = v; track.style.setProperty('--v', v / 100);
     box.classList.toggle('is-stopped', pvFeedSpeed === 0);
     box.classList.toggle('is-fast', v >= 90);
-    play.classList.toggle('is-stopped', pvFeedSpeed === 0);
     const en = typeof currentLang !== 'undefined' && currentLang === 'en';
     input.setAttribute('aria-label', en ? 'Carousel speed' : 'Velocidad del carrusel');
     input.setAttribute('aria-valuetext', pvFeedSpeed === 0 ? (en ? 'Stopped' : 'Quieto') : (Math.round(pvFeedSpeed * 10) / 10 + '×'));
-    play.setAttribute('aria-label', pvFeedSpeed === 0 ? (en ? 'Play the carousel' : 'Reanudar el carrusel') : (en ? 'Pause the carousel' : 'Pausar el carrusel'));
-    if (pvFeedSpeed > 0) lastMoving = v;
     try { localStorage.setItem('pvSpeed', String(v)); } catch(e){}
   }
   let saved = 50; try { const x = parseFloat(localStorage.getItem('pvSpeed')); if (!isNaN(x)) saved = x; } catch(e){}
   apply(saved);
   input.addEventListener('input', () => apply(+input.value));
-  play.addEventListener('click', () => apply(pvFeedSpeed === 0 ? (lastMoving > 2 ? lastMoving : 50) : 0));
+  // arrastrar (mouse o dedo) en cualquier punto de la barrita
+  const fromX = x => { const b = track.getBoundingClientRect(); apply((x - b.left - 7) / Math.max(1, b.width - 14) * 100); };
+  track.addEventListener('pointerdown', e => { e.preventDefault(); track.setPointerCapture(e.pointerId); fromX(e.clientX); input.focus({ preventScroll: true }); });
+  track.addEventListener('pointermove', e => { if (track.hasPointerCapture(e.pointerId)) fromX(e.clientX); });
   // que tocar los controles no cuente como "agarrar" el carrusel ni cierre la info
-  [box, play].forEach(el => ['pointerdown', 'touchstart', 'click'].forEach(t => el.addEventListener(t, e => e.stopPropagation(), { passive: true })));
+  ['pointerdown', 'touchstart', 'click'].forEach(t => box.addEventListener(t, e => e.stopPropagation(), { passive: true }));
 })();
 /* A y A + C: la píldora del nombre se estira en dos gotas que se cortan y se
    asientan como la flecha y el contador. Corre cuando la vista se termina de armar
@@ -4816,9 +4813,19 @@ function pvFooterFade(p){
   projectViewEl.style.opacity = String(1 - smoothstep01((p - 0.15) / 0.2));
   projectViewEl.style.pointerEvents = p > 0.3 ? 'none' : '';
 }
+// compu: la vista entera sube como cortina (igual que el hero en el home)
+function pvFooterCurtain(p, curve, r){
+  pvFooterDirty = true;
+  projectViewEl.style.transition = 'none';
+  projectViewEl.style.transform = 'translateY(' + (-p * 100) + '%)';
+  projectViewEl.style.setProperty('--curve', curve + 'px');
+  projectViewEl.style.setProperty('--curve-r', r + 'px');
+  projectViewEl.style.pointerEvents = p > 0.3 ? 'none' : '';
+}
 function pvFooterReset(){
   pvFooterDirty = false;
-  ['transition', 'opacity', 'pointerEvents'].forEach(k => { projectViewEl.style[k] = ''; });
+  ['transition', 'opacity', 'pointerEvents', 'transform'].forEach(k => { projectViewEl.style[k] = ''; });
+  projectViewEl.style.removeProperty('--curve'); projectViewEl.style.removeProperty('--curve-r');
   pvChromeEls().forEach(c => { c.style.transition = ''; c.style.opacity = ''; });
 }
 
@@ -4837,8 +4844,11 @@ function updateFooterScroll(){
   const arc = Math.max(curve, 0.5);
   loader.style.setProperty('--curve', curve + 'px');
   loader.style.setProperty('--curve-r', ((halfW * halfW + arc * arc) / (2 * arc)) + 'px');
-  // un proyecto abierto se funde (no sube como cortina)
-  if (currentProject && p >= 0.002) pvFooterFade(p);
+  // un proyecto abierto: en compu sube como cortina (igual que el home); en celular se funde
+  if (currentProject && p >= 0.002){
+    if (isNarrow) pvFooterFade(p);
+    else pvFooterCurtain(p, curve, (halfW * halfW + arc * arc) / (2 * arc));
+  }
   else if (pvFooterDirty) pvFooterReset();
   updateThemeColor();
   if (p > 0.01) triggerFooterWordsReveal();
