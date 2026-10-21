@@ -451,9 +451,9 @@
      centro y se pisaba con la firma centrada — la firma pasa a la
      derecha, con su base alineada a la última línea del legal, y el
      legal deja libre ese lugar (si no entra, corta en una línea más) */
-  html.is-narrow .footer-bottom{ flex-direction:column; align-items:flex-start; justify-content:flex-end; gap:14px; }
+  html.is-narrow .footer-bottom{ flex-direction:column; align-items:flex-start; justify-content:flex-end; gap:0; }
   html.is-narrow .footer-signature-mark{ position:relative; left:auto; right:auto; bottom:auto; transform:none; order:-1; }
-  html.is-narrow .footer-signature-mark svg{ height:15.43px; } /* 15% más chica */
+  html.is-narrow .footer-signature-mark svg{ height:13.89px; } /* ~23% más chica: se lee como una línea más del legal */
   /* márgenes del celular: 24px a los lados, 32px arriba y abajo */
   html.is-narrow .footer-content{ padding:32px 24px 32px 24px; }
   html.is-narrow .footer-contact{ padding:0 24px; }
@@ -569,13 +569,13 @@
     transition: opacity 0.35s ease, visibility 0s linear 0.35s;
     will-change: transform;
   }
-  /* compu: la vista de proyecto sube al footer como la cortina del home (misma panza
-     difuminada en el borde de abajo; el JS pone --curve / --curve-r) */
-  .project-view::after{
-    content:''; position:absolute; left:0; right:0; top:100%;
-    height:calc(var(--curve, 0px) + 56px); background:var(--black); pointer-events:none;
-    -webkit-mask-image:radial-gradient(circle var(--curve-r, 0px) at 50% calc(var(--curve, 0px) - var(--curve-r, 0px)), #000 calc(var(--curve-r, 0px) - 1px), transparent calc(var(--curve-r, 0px) + 56px));
-            mask-image:radial-gradient(circle var(--curve-r, 0px) at 50% calc(var(--curve, 0px) - var(--curve-r, 0px)), #000 calc(var(--curve-r, 0px) - 1px), transparent calc(var(--curve-r, 0px) + 56px));
+  /* compu: la vista de proyecto sube al footer como la cortina del home, pero sin
+     agregar nada negro: las fotos mismas se recortan abajo con la misma panza
+     difuminada (círculo de radio --curve-r que pasa 28px arriba del borde, en el centro,
+     y --curve más arriba en los costados). El JS pone las variables y .pv-curtain. */
+  .project-view.pv-curtain{
+    -webkit-mask-image:radial-gradient(circle var(--curve-r, 99999px) at 50% calc(100% - 28px - var(--curve-r, 99999px)), #000 calc(var(--curve-r, 99999px) - 1px), transparent calc(var(--curve-r, 99999px) + 28px));
+            mask-image:radial-gradient(circle var(--curve-r, 99999px) at 50% calc(100% - 28px - var(--curve-r, 99999px)), #000 calc(var(--curve-r, 99999px) - 1px), transparent calc(var(--curve-r, 99999px) + 28px));
   }
   .project-view.is-open{
     opacity:1; visibility:visible;
@@ -1344,7 +1344,7 @@
     pointer-events:none; /* el arrastre lo maneja el JS (también en iPhone, donde el range nativo solo se agarra del círculo) */
   }
   .pv-speed-track{ cursor:pointer; touch-action:none; }
-  .pv-speed:has(input:focus-visible){ outline:2px solid var(--cream); outline-offset:3px; }
+  .pv-speed:has(input:focus-visible) .pv-speed-knob{ box-shadow:0 0 0 2px rgba(248,247,239,0.5), 0 0 10px 0 rgba(248,247,239,0.5); } /* (con teclado: sin recuadro, se ilumina la perilla) */
   /* celu: el ES/EN se corre a la derecha del botón de pausa */
   /* botones: sin "+ info". La gota de la derecha es el contador de fotos y su
      canto azul se llena (desde arriba, hacia los dos lados) a medida que avanzan
@@ -3653,6 +3653,19 @@ const ProjectView = (() => {
   ['wheel', 'keydown'].forEach(type => {
     feed.addEventListener(type, () => { autoPauseUntil = performance.now() + FEED_RESUME_MS; autoAcc = 0; }, { passive:true });
   });
+  /* compu: pasada la última foto, la rueda / el trackpad mueven la cortina hacia el
+     footer al ritmo de la mano (como en el home); para arriba, la bajan hasta volver */
+  feed.addEventListener('wheel', e => {
+    if (!canHover || isNarrow || !copyH) return;
+    const lim = copyH * 2 - feed.clientHeight;
+    const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? feed.clientHeight : 1);
+    const atEnd = feed.scrollTop >= lim - 1;
+    if (window.scrollY > 0.5 || (dy > 0 && atEnd)){
+      e.preventDefault();
+      if (atEnd || window.scrollY > 0.5) setFeedTop(lim);
+      window.scrollTo(0, Math.max(0, Math.min(appH, window.scrollY + dy)));
+    }
+  }, { passive:false });
 
   feed.addEventListener('scroll', () => {
     if (!copyH) return;
@@ -3664,7 +3677,12 @@ const ProjectView = (() => {
        (ver "gesto touch ↔ footer"). */
     /* (en compu, con los botones, pasa lo mismo con la rueda / el trackpad: ya no hay
        panel al costado por donde bajar al footer) */
-    if ((!canHover || document.documentElement.classList.contains('pv-pill')) && feed.scrollTop !== lastSetTop){
+    // compu: la última foto es el tope; de ahí en más la rueda mueve la página (ver "wheel" abajo)
+    if (canHover && !isNarrow && feed.scrollTop !== lastSetTop){
+      const lim = copyH * 2 - feed.clientHeight;
+      if (feed.scrollTop > lim && (prevTop <= lim || window.scrollY > 0)) setFeedTop(lim);
+    }
+    else if (!canHover && feed.scrollTop !== lastSetTop){
       const top = feed.scrollTop;
       const lim = copyH * 2 - feed.clientHeight;
       if (top > lim && prevTop <= lim){ setFeedTop(lim); if (!snapping) scrollToY(appH, SNAP_MS); }
@@ -4193,13 +4211,17 @@ document.addEventListener('keydown', (e) => {
   if (inf && inf.classList.contains('is-expanded')) document.getElementById('pvInfoToggle').click(); // primero se cierra la info
   else Router.home();
 });
+let lastInputKeyboard = false;
+document.addEventListener('keydown', () => { lastInputKeyboard = true; }, true);
+document.addEventListener('pointerdown', () => { lastInputKeyboard = false; }, true);
 function showProject(slug, opts){
   const p = projectBySlug(slug);
   if (!p) return false;
   const wasOpen = !!currentProject;
   if (!wasOpen){
     focusBeforeProject = document.activeElement;
-    requestAnimationFrame(() => { const b = document.getElementById('pvBack'); if (b) b.focus({ preventScroll: true }); });
+    // (solo si se entró con el teclado: con el dedo o el mouse el foco dejaba un aro blanco en la flecha)
+    if (lastInputKeyboard) requestAnimationFrame(() => { const b = document.getElementById('pvBack'); if (b) b.focus({ preventScroll: true }); });
   }
   currentProject = p;
   window.scrollTo(0, 0);
@@ -4592,7 +4614,7 @@ var pvFeedSpeed = 1;
   input.addEventListener('input', () => apply(+input.value));
   // arrastrar (mouse o dedo) en cualquier punto de la barrita
   const fromX = x => { const b = track.getBoundingClientRect(); apply((x - b.left - 7) / Math.max(1, b.width - 14) * 100); };
-  track.addEventListener('pointerdown', e => { e.preventDefault(); track.setPointerCapture(e.pointerId); fromX(e.clientX); input.focus({ preventScroll: true }); });
+  track.addEventListener('pointerdown', e => { e.preventDefault(); track.setPointerCapture(e.pointerId); fromX(e.clientX); });
   track.addEventListener('pointermove', e => { if (track.hasPointerCapture(e.pointerId)) fromX(e.clientX); });
   // que tocar los controles no cuente como "agarrar" el carrusel ni cierre la info
   ['pointerdown', 'touchstart', 'click'].forEach(t => box.addEventListener(t, e => e.stopPropagation(), { passive: true }));
@@ -4818,14 +4840,14 @@ function pvFooterCurtain(p, curve, r){
   pvFooterDirty = true;
   projectViewEl.style.transition = 'none';
   projectViewEl.style.transform = 'translateY(' + (-p * 100) + '%)';
-  projectViewEl.style.setProperty('--curve', curve + 'px');
   projectViewEl.style.setProperty('--curve-r', r + 'px');
+  projectViewEl.classList.add('pv-curtain');
   projectViewEl.style.pointerEvents = p > 0.3 ? 'none' : '';
 }
 function pvFooterReset(){
   pvFooterDirty = false;
   ['transition', 'opacity', 'pointerEvents', 'transform'].forEach(k => { projectViewEl.style[k] = ''; });
-  projectViewEl.style.removeProperty('--curve'); projectViewEl.style.removeProperty('--curve-r');
+  projectViewEl.style.removeProperty('--curve-r'); projectViewEl.classList.remove('pv-curtain');
   pvChromeEls().forEach(c => { c.style.transition = ''; c.style.opacity = ''; });
 }
 
