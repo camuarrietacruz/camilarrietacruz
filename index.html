@@ -718,6 +718,8 @@
   .project-view.pv-chrome-out .pv-info{ transform:translateX(-28px); opacity:0; }
   html.is-narrow .project-view.pv-chrome-out .pv-info{ transform:translateY(-100%); opacity:1; }
   .project-view.pv-chrome-out .pv-back,
+  .project-view.pv-chrome-out .pv-counter{ transition:none !important; }
+  .project-view.pv-chrome-out .pv-back,
   .project-view.pv-chrome-out .pv-counter,
   .project-view.pv-chrome-out .pv-contact{ opacity:0 !important; }
   @media (prefers-reduced-motion: reduce){
@@ -1099,7 +1101,307 @@
     .footer-contact-label{ animation: none; }
   }
 
-  </style>
+  
+  .pv-coords-body{ display:none; }
+  /* el nombre del hero mientras su copia viaja (le gana a la visibilidad que pone el scroll del footer) */
+  #name-text.pv-name-away{ visibility:hidden !important; }
+  .pv-name-flyer{
+    position:fixed; left:0; top:0; z-index:270; pointer-events:none;
+    color:var(--cream); font-family:var(--font); text-transform:uppercase; white-space:nowrap;
+    transform-origin:0 0; line-height:1.05; letter-spacing:0.01em;
+    text-shadow:0 0 1px rgba(0,0,0,0.35), 0 1px 14px rgba(0,0,0,0.45); /* que se lea mientras pasa por encima de la foto */
+  }
+  /* ════ proyecto: botones flotantes de vidrio (compu y celu; en el celu acostado sigue el layout de antes) ════
+     html.pv-pill.pv-split: la flecha, el nombre y el contador son tres píldoras sueltas
+     de vidrio ahumado con un canto azul. El nombre abre la info, una segunda píldora
+     12px debajo, a la derecha. (Las reglas con :not(.pv-split) son de la barra única,
+     que quedó sin uso.) */
+  html.pv-pill:not(.is-landscape-phone) .project-view{
+    --pill-h:60px; --pill-side:24px; --pill-top:24px; --pill-gap:10px; --pill-r:30px; --pill-card-r:24px;
+    --g-bg:rgba(8,8,12,0.55); --g-filter:blur(26px) saturate(1.05); --g-color:var(--cream);
+    --g-shadow:inset 0 1px 0 rgba(255,255,255,0.10);
+    --g-rim:linear-gradient(140deg, rgba(150,165,255,0.95), rgba(0,18,255,0.25) 35%, rgba(0,18,255,0.05) 65%, rgba(40,60,255,0.85));
+    --g-rim-w:1px;
+  }
+  html.pv-pill.is-narrow .project-view{
+    --pill-h:48px; --pill-side:12px; --pill-top:calc(env(safe-area-inset-top, 0px) + 12px); --pill-gap:8px; --pill-r:24px; --pill-card-r:20px;
+  }
+  /* las superficies de vidrio: en "barra" la barra; en "botones" el nombre y "+ info"; siempre la flecha y la info */
+  html.pv-pill:not(.is-landscape-phone, .pv-split) .pv-head,
+  html.pv-pill.pv-split:not(.is-landscape-phone) :is(.pv-title, .pv-info-toggle),
+  html.pv-pill:not(.is-landscape-phone) :is(.pv-body, .project-view .pv-back){
+    background:var(--g-bg); color:var(--g-color);
+    -webkit-backdrop-filter:var(--g-filter); backdrop-filter:var(--g-filter);
+    box-shadow:var(--g-shadow); border:0;
+  }
+  /* el canto: un aro con degradé (más claro en dos esquinas, como un borde de metal o vidrio) */
+  html.pv-pill:not(.is-landscape-phone, .pv-split) .pv-head::after,
+  html.pv-pill.pv-split:not(.is-landscape-phone) :is(.pv-title, .pv-info-toggle)::after,
+  html.pv-pill:not(.is-landscape-phone) :is(.pv-body, .project-view .pv-back)::after{
+    content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; padding:var(--g-rim-w);
+    background:var(--g-rim);
+    -webkit-mask:conic-gradient(#000 calc(var(--rim-a) / 2), #0000 0 calc(360deg - var(--rim-a) / 2), #000 0), linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:source-in, xor;
+    mask:conic-gradient(#000 calc(var(--rim-a) / 2), #0000 0 calc(360deg - var(--rim-a) / 2), #000 0) intersect, linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  }
+  html.pv-pill:not(.is-landscape-phone) .pv-feed{ left:0; top:0; }
+  html.pv-pill:not(.is-landscape-phone) .pv-info{
+    position:absolute; top:var(--pill-top); right:var(--pill-side); bottom:auto; width:auto;
+    left:calc(var(--pill-side) + var(--pill-h) + var(--pill-gap));
+    display:block; padding:0; background:none; pointer-events:none; z-index:4;
+    -webkit-mask:none; mask:none;
+  }
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-info{ left:var(--pill-side); }
+  html.pv-pill:not(.is-landscape-phone) .pv-info::before{ display:none; }
+  html.pv-pill:not(.is-landscape-phone) .pv-info.pv-info.pv-info{ overflow:visible; } /* (en celu, is-scrollable la recortaba) */
+  html.pv-pill:not(.is-landscape-phone) .pv-head{
+    position:relative; height:var(--pill-h); border-radius:var(--pill-r);
+    display:grid; grid-template-columns:minmax(0, 1fr) auto minmax(0, 1fr); align-items:center; column-gap:12px;
+    padding:0 22px; pointer-events:auto;
+    clip-path:inset(-40px round calc(var(--pill-r) + 40px));
+    transition: clip-path 0.9s cubic-bezier(.65,0,.2,1), opacity 0.35s ease;
+  }
+  html.pv-pill.is-narrow:not(.pv-split) .pv-head{ padding:0 16px; }
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-head{ padding:0; pointer-events:none; clip-path:none; }
+  html.pv-pill:not(.is-landscape-phone) .pv-head > :is(.pv-kind, .pv-meta, .pv-coords, .pv-index){ display:none; }
+  html.pv-pill:not(.is-landscape-phone) .pv-title{
+    grid-column:2; margin:0; padding:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+    font-size:clamp(14px, 1.15vw, 18px); text-align:center;
+  }
+  html.pv-pill.is-narrow .pv-title{ font-size:14px; }
+  html.pv-pill:not(.is-landscape-phone) .pv-info-toggle{
+    grid-column:3; justify-self:end; margin:0; pointer-events:auto;
+    display:inline-flex; gap:6px; align-items:center; white-space:nowrap;
+    font-size:14px; color:var(--g-color);
+  }
+  html.pv-pill.is-narrow .pv-info-toggle{ font-size:13px; }
+  /* botones: el nombre y "+ info" son píldoras del alto de la barra */
+  html.pv-pill.pv-split:not(.is-landscape-phone) :is(.pv-title, .pv-info-toggle){
+    position:relative; height:var(--pill-h); border-radius:var(--pill-r); pointer-events:auto;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-title{
+    padding:0 28px; line-height:var(--pill-h); max-width:calc(100vw - 2 * var(--pill-side) - 280px); /* deja lugar a los costados para la flecha y "+ info" */
+    justify-self:center; display:block;
+  }
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-info-toggle{ padding:0 24px; }
+  /* el nombre del botón tiene la misma letra que el del hero: al viajar solo se desplaza */
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-title{ font-size:clamp(12px, 1.05vw, 17px); letter-spacing:normal; }
+  html.pv-pill.pv-split.is-narrow .pv-title{ font-size:15.9px; letter-spacing:0.01em; } /* 1pt menos que el del hero: más aire adentro del botón */
+  html.pv-pill.pv-split.is-narrow .pv-title{ padding:0 19px; max-width:calc(100vw - 2 * var(--pill-side) - 136px); }
+  html.pv-pill.pv-split.is-narrow .pv-info-toggle{ padding:0 16px; }
+  html.pv-pill.pv-split.can-hover:not(.is-landscape-phone) .pv-info-toggle:hover{ filter:brightness(1.12); }
+  /* la flecha: burbuja propia, separada de la barra */
+  html.pv-pill:not(.is-landscape-phone) .project-view .pv-back{
+    top:var(--pill-top); left:var(--pill-side); width:var(--pill-h); height:var(--pill-h);
+    padding:0; margin:0; border-radius:50%; display:grid; place-items:center; z-index:5;
+    font-size:18px; opacity:1;
+    transition: transform 0.6s cubic-bezier(.34,1.56,.64,1) 0.35s, opacity 0.4s ease 0.35s, filter 0.25s ease;
+  }
+  html.pv-pill.is-narrow .project-view .pv-back{ font-size:16px; }
+  html.pv-pill.can-hover:not(.is-landscape-phone) .project-view .pv-back:hover{ filter:brightness(1.12); }
+  html.pv-pill:not(.is-landscape-phone) .pv-counter{ top:calc(var(--pill-top) + var(--pill-h) + 16px); right:calc(var(--pill-side) + 8px); }
+  html.pv-pill:not(.is-landscape-phone) .project-view:has(.pv-info.is-expanded) .pv-counter{ opacity:0; pointer-events:none; }
+  /* celu: arriba ahora va la barra, el ES/EN baja a la esquina de abajo a la izquierda */
+  html.pv-pill.is-narrow.project-open .lang-switch{ top:auto; bottom:calc(env(safe-area-inset-bottom, 0px) + 32px); left:24px; right:auto; }
+
+  /* entrada desde el hero: el nombre sube; la barra nace chiquita alrededor del
+     nombre y se abre hacia los dos lados (en "botones", la píldora del nombre
+     aparece alrededor del nombre que llega); la flecha brota con un rebote y
+     "+ info" sale de un desenfoque */
+  html.pv-pill:not(.is-landscape-phone, .pv-split) .project-view.pv-chrome-out .pv-head{
+    opacity:0; transition:none;
+    clip-path:inset(0 calc(50% - var(--pv-name-w, 200px) / 2) round var(--pill-r));
+  }
+  html.pv-pill:not(.is-landscape-phone) .project-view.pv-chrome-out .pv-back{ transform:scale(0.4); transition:none; }
+  html.pv-pill:not(.is-landscape-phone) .pv-head > .pv-info-toggle{
+    transition: opacity 0.7s ease 0.55s, filter 0.7s ease 0.55s, transform 0.8s cubic-bezier(.2,.7,.2,1) 0.55s;
+  }
+  html.pv-pill:not(.is-landscape-phone) .project-view.pv-chrome-out .pv-head > .pv-info-toggle{
+    opacity:0; filter:blur(6px); transform:translateX(-14px); transition:none;
+  }
+
+  /* la info: segunda píldora, 12px debajo y a la derecha; baja y aparece.
+     Textos alineados a la derecha: año / tipo, qué es, coordenadas; abajo, con más aire, la descripción */
+  html.pv-pill:not(.is-landscape-phone) .pv-body{
+    position:absolute; top:calc(100% + 12px); right:0; left:auto; width:min(420px, 100%);
+    margin:0; padding:22px 26px 24px; border-radius:var(--pill-card-r);
+    display:flex; flex-direction:column; align-items:flex-end; text-align:right;
+    max-height:calc(100svh - var(--pill-top) - var(--pill-h) - 12px - var(--pill-side) - 60px); overflow-y:auto; scrollbar-width:none;
+    opacity:0; transform:translateY(-10px); visibility:hidden; pointer-events:none;
+    transition: opacity 0.25s ease, transform 0.3s ease, visibility 0s linear 0.3s;
+  }
+  html.pv-pill:not(.is-landscape-phone) .pv-info.is-expanded .pv-body{
+    opacity:1; transform:none; visibility:visible; pointer-events:auto;
+    transition: opacity 0.45s ease, transform 0.6s cubic-bezier(.2,.7,.2,1), visibility 0s;
+  }
+  html.pv-pill.is-narrow .pv-body{ left:0; right:0; width:auto; padding:18px 20px 20px; }
+  .pv-sub{ display:none; }
+  html.pv-pill:not(.is-landscape-phone) .pv-sub{ display:block; order:-2; margin:0; }
+  html.pv-pill:not(.is-landscape-phone) .pv-sub-meta{ display:block; font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; opacity:0.7; }
+  html.pv-pill:not(.is-landscape-phone) .pv-sub-kind{ display:block; font-size:15px; line-height:1.4; margin-top:6px; }
+  html.pv-pill:not(.is-landscape-phone) .pv-coords-body:not([hidden]){ display:block; order:-1; margin:6px 0 0; }
+  html.pv-pill:not(.is-landscape-phone) .pv-desc{ font-size:19px; line-height:1.45; margin:24px 0 0; max-width:none; opacity:0.92; }
+  html.pv-pill.is-narrow .pv-desc{ font-size:17px; margin-top:20px; }
+  html.pv-pill:not(.is-landscape-phone) .pv-links{ margin:16px 0 0; justify-content:flex-end; }
+  html.pv-pill:not(.is-landscape-phone) .pv-rows{ margin-top:12px; }
+  html.pv-pill:not(.is-landscape-phone) .pv-body > *{ opacity:0; transform:translateY(6px); transition:opacity 0.2s ease, transform 0.2s ease; }
+  html.pv-pill:not(.is-landscape-phone) .pv-info.is-expanded .pv-body > *{
+    opacity:1; transform:none; transition:opacity 0.6s ease var(--cd, 0.12s), transform 0.7s cubic-bezier(.2,.7,.2,1) var(--cd, 0.12s);
+  }
+  html.pv-pill .pv-coords-body{ --cd:0.2s; }
+  html.pv-pill .pv-desc{ --cd:0.28s; }
+  html.pv-pill .pv-links, html.pv-pill .pv-rows{ --cd:0.36s; }
+  @media (prefers-reduced-motion: reduce){
+    html.pv-pill .pv-body, html.pv-pill .pv-body > *, html.pv-pill .pv-head, html.pv-pill .pv-head > *, html.pv-pill .pv-back{ transition:none !important; }
+  }
+  /* ════ entrada de los botones (pv-in-ac) ════
+     El vidrio se condensa alrededor del nombre que llega y se estira en dos gotas
+     líquidas que se cortan y se asientan como la flecha y el contador (JS:
+     pvLiquidBuild); después el canto se dibuja. Corre cada vez que la vista se
+     arma (al sacarse .pv-chrome-out). */
+  @property --rim-a{ syntax:'<angle>'; inherits:false; initial-value:360deg; }
+  /* la gota nace pegada al costado de la píldora del nombre (por debajo), crece
+     hasta formarse y recién ahí se suelta y viaja a su lugar */
+  @keyframes pv-drop{
+    0%  { transform:translateX(var(--dx, 0px)) scale(0.15); opacity:0; animation-timing-function:cubic-bezier(.3,0,.3,1); }
+    10% { opacity:1; }
+    40% { transform:translateX(var(--dx, 0px)) scale(0.8); opacity:1; animation-timing-function:cubic-bezier(.65,0,.25,1); }
+    100%{ transform:none; opacity:1; }
+  }
+  @keyframes pv-bud{
+    0%  { transform:none; }
+    45% { transform:scale(1.02, 0.985); }
+    100%{ transform:none; }
+  }
+  @keyframes pv-condense{
+    from{ background-color:rgba(8,8,12,0); -webkit-backdrop-filter:blur(0px) saturate(1); backdrop-filter:blur(0px) saturate(1); box-shadow:none; }
+  }
+  @keyframes pv-rim-draw{ from{ --rim-a:0deg; } to{ --rim-a:360deg; } }
+  @keyframes pv-fade{ from{ opacity:0; } }
+  /* dónde nacen: el centro de cada gota arranca 0.3 de su alto adentro del borde de la píldora del nombre */
+  html.pv-pill.pv-split .project-view{
+    --title-w:180px; --cnt-w:60px;
+    --drop-back-x:calc(50vw - var(--title-w) / 2 + var(--pill-h) * 0.3 - var(--pill-side) - var(--pill-h) / 2);
+    --drop-tog-x:calc(var(--title-w) / 2 - var(--pill-h) * 0.3 + var(--pill-side) + var(--cnt-w) / 2 - 50vw);
+  }
+  /* las gotas van por debajo de la píldora del nombre (salen de adentro) */
+  html.pv-pill.pv-split:not(.is-landscape-phone) .project-view .pv-back,
+  html.pv-pill.pv-split:not(.is-landscape-phone) .project-view .pv-counter{ z-index:3; }
+  html.pv-pill.pv-split .project-view .pv-back{ --dx:var(--drop-back-x); }
+  html.pv-pill.pv-split .project-view .pv-counter{ --dx:var(--drop-tog-x); }
+  /* A · gotas */
+  /* C · se condensa */
+  /* A + C */
+  @media (prefers-reduced-motion: reduce){
+    html.pv-pill .project-view :is(.pv-title, .pv-back, .pv-info-toggle), html.pv-pill .project-view :is(.pv-title, .pv-back, .pv-info-toggle)::after{ animation:none !important; }
+  }
+
+  /* el nombre también abre la info */
+  html.pv-pill:not(.is-landscape-phone) .pv-title{ cursor:pointer; }
+  html.pv-pill.can-hover:not(.is-landscape-phone) .pv-title:hover{ filter:brightness(1.12); }
+
+  /* velocidad del carrusel. Compu: barrita abajo a la izquierda (todo a la
+     izquierda = quieto, solo a mano). Celu: botón de pausa / play. Mismo vidrio. */
+  .pv-speed, .pv-play{ display:none; }
+  html.pv-pill:not(.is-narrow, .is-landscape-phone) .pv-speed{
+    position:absolute; left:calc(var(--pill-side) + 8px); bottom:calc(var(--pill-side) + 8px); z-index:4;
+    display:block; transition:opacity 0.5s ease 0.6s;
+  }
+  html.pv-pill.is-narrow .pv-play{
+    position:absolute; left:var(--pill-side); bottom:calc(env(safe-area-inset-bottom, 0px) + var(--pill-side)); z-index:4;
+    width:44px; height:44px; padding:0; border-radius:50%; display:grid; place-items:center;
+    background:var(--g-bg); color:var(--g-color);
+    -webkit-backdrop-filter:var(--g-filter); backdrop-filter:var(--g-filter); box-shadow:var(--g-shadow);
+    transition:opacity 0.5s ease 0.6s;
+  }
+  html.pv-pill .project-view.pv-chrome-out :is(.pv-speed, .pv-play){ opacity:0; transition:none; }
+  html.pv-pill:not(.is-landscape-phone) .pv-play::after{
+    content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; padding:var(--g-rim-w);
+    background:var(--g-rim);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
+    mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  }
+  .pv-play svg{ display:block; fill:currentColor; flex:none; }
+  .pv-speed-track{ position:relative; width:140px; height:28px; --v:0.5; }
+  /* la barrita: una línea plana, crema al 60% (el glow lo tiene solo la perilla) */
+  .pv-speed-track::before{
+    content:''; position:absolute; left:0; right:0; top:50%; height:3px; margin-top:-1.5px; border-radius:2px;
+    background:rgba(248,247,239,0.6);
+  }
+  /* la perilla: el mismo circulito con glow del cursor, en crema */
+  .pv-speed-knob{
+    position:absolute; top:50%; left:calc(var(--v) * (100% - 14px)); width:14px; height:14px; margin-top:-7px;
+    border-radius:50%; pointer-events:none;
+    background:radial-gradient(circle, rgba(248,247,239,0.95) 0%, rgba(248,247,239,0.55) 35%, rgba(248,247,239,0.18) 65%, rgba(248,247,239,0) 100%);
+    box-shadow:0 0 6px 0 rgba(248,247,239,0.35);
+    mix-blend-mode:screen;
+  }
+  /* el control de verdad es un range invisible encima (teclado, lectores, arrastre) */
+  .pv-speed input{
+    position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer;
+  }
+  .pv-speed:has(input:focus-visible){ outline:2px solid var(--cream); outline-offset:3px; }
+  .pv-play .pv-play-ico-play{ display:none; }
+  .pv-play.is-stopped .pv-play-ico-play{ display:block; }
+  .pv-play.is-stopped .pv-play-ico-pause{ display:none; }
+  /* celu: el ES/EN se corre a la derecha del botón de pausa */
+  html.pv-pill.is-narrow.project-open .lang-switch{ left:calc(var(--pill-side, 12px) + 44px + 18px); bottom:calc(env(safe-area-inset-bottom, 0px) + 12px + 16px); }
+  /* botones: sin "+ info". La gota de la derecha es el contador de fotos y su
+     canto azul se llena (desde arriba, hacia los dos lados) a medida que avanzan
+     las fotos. El nombre abre la info, que baja en el mismo lugar. */
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-info-toggle{ display:none; }
+  html.pv-pill.pv-split:not(.is-landscape-phone) .project-view .pv-counter{
+    top:var(--pill-top); right:var(--pill-side); left:auto; z-index:3; /* debajo de la píldora del nombre: la gota sale de adentro */
+    width:auto; min-width:var(--pill-h); height:var(--pill-h); padding:0 20px; border-radius:var(--pill-r);
+    background:var(--g-bg); color:var(--g-color);
+    -webkit-backdrop-filter:var(--g-filter); backdrop-filter:var(--g-filter); box-shadow:var(--g-shadow);
+    font-size:14px; letter-spacing:0.02em; opacity:1;
+  }
+  html.pv-pill.pv-split.is-narrow .project-view .pv-counter{ padding:0 14px; font-size:13px; }
+  html.pv-pill.pv-split:not(.is-landscape-phone) .project-view:has(.pv-info.is-expanded) .pv-counter{ opacity:1; pointer-events:auto; }
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter svg{ display:none; }
+  /* el canto apagado (lo que falta) y el azul (lo recorrido) */
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter::before,
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter::after{
+    content:''; position:absolute; inset:0; z-index:0; border-radius:inherit; pointer-events:none; padding:var(--g-rim-w);
+    -webkit-backdrop-filter:none; backdrop-filter:none;
+    -webkit-mask:conic-gradient(#000 calc(var(--rim-a) / 2), #0000 0 calc(360deg - var(--rim-a) / 2), #000 0), linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:source-in, xor;
+    mask:conic-gradient(#000 calc(var(--rim-a) / 2), #0000 0 calc(360deg - var(--rim-a) / 2), #000 0) intersect, linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  }
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter::before{ --rim-a:360deg; background:rgba(248,247,239,0.14); }
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter::before, html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter::after{ padding:1.5px; } /* un poco más grueso: que se lea el avance */
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter::after{
+    --rim-a:var(--cnt-a, 360deg); background:var(--g-rim);
+    transition:--rim-a 0.6s cubic-bezier(.3,.7,.3,1);
+  }
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter > span{ position:relative; z-index:1; }
+  /* el nombre abre la info: se marca apenas al pasar el mouse */
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-title:focus-visible{ outline:2px solid var(--cream); outline-offset:3px; }
+  /* A y A + C: "líquido". Una sola capa de vidrio con la forma de la píldora del
+     nombre; de sus costados se estiran dos brazos que se afinan, se cortan y se
+     asientan como la flecha y el contador (JS: pvLiquidBuild, forma con clip-path).
+     Al terminar se cambia por los botones de verdad y el canto se dibuja. */
+  .pv-liquid-layer{
+    position:absolute; left:0; top:0; width:100%; height:calc(var(--pill-top) + var(--pill-h) + 10px);
+    z-index:3; pointer-events:none;
+    background:var(--g-bg); -webkit-backdrop-filter:var(--g-filter); backdrop-filter:var(--g-filter);
+  }
+  .pv-liquid-layer.is-condensing{ animation:pv-condense 0.38s ease both; }
+  html.pv-pill.pv-split .project-view.pv-liquid .pv-title{ background:transparent !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; box-shadow:none !important; }
+  html.pv-pill.pv-split .project-view.pv-liquid .pv-title::after{ opacity:0; }
+  html.pv-pill.pv-split .project-view.pv-liquid :is(.pv-back, .pv-counter){ opacity:0 !important; transition:none !important; }
+  /* al llegar las gotas: la flecha y el contador ya están (sin parpadeo); solo su
+     contenido aparece con un fade suave y los cantos se dibujan */
+  @keyframes pv-rim-grow{ from{ --rim-a:0deg; } }
+  html.pv-pill.pv-split .project-view.pv-rims-draw :is(.pv-back, .pv-counter){ opacity:1 !important; transition:none !important; }
+  html.pv-pill.pv-split .project-view.pv-rims-draw :is(.pv-back > span, .pv-counter > span){ animation:pv-fade 0.45s ease both; }
+  html.pv-pill.pv-split .project-view.pv-rims-draw .pv-counter::before{ animation:pv-rim-draw 0.61s cubic-bezier(.6,0,.3,1) both; }
+  html.pv-pill.pv-split .project-view.pv-rims-draw .pv-counter::after{ animation:pv-rim-grow 0.61s cubic-bezier(.6,0,.3,1) both; }
+  html.pv-pill.pv-split .project-view.pv-rims-draw .pv-title::after,
+  html.pv-pill.pv-split .project-view.pv-rims-draw .pv-back::after{ animation:pv-rim-draw 0.61s cubic-bezier(.6,0,.3,1) both; }
+</style>
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
@@ -1166,13 +1468,15 @@
     <aside class="pv-info" id="pvInfo">
       <header class="pv-head">
         <span class="pv-index" id="pvIndex"></span>
-        <h1 class="pv-title" id="pvTitle"></h1>
+        <h1 class="pv-title" id="pvTitle" tabindex="0"></h1>
         <p class="pv-kind" id="pvKind"></p>
         <div class="pv-meta"><span id="pvYear"></span><span>/</span><span id="pvType"></span></div>
         <div class="pv-coords" id="pvCoords" hidden></div>
         <button class="pv-info-toggle" id="pvInfoToggle" type="button" aria-expanded="false"><span class="pv-info-icon" aria-hidden="true"><svg class="pv-ico-plus" width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><path d="M5.36133 9.14648C5.36133 9.28711 5.30859 9.4082 5.20312 9.50977C5.10156 9.61523 4.97852 9.66797 4.83398 9.66797C4.68945 9.66797 4.56641 9.61523 4.46484 9.50977C4.36328 9.4082 4.3125 9.28711 4.3125 9.14648V0.521484C4.3125 0.380859 4.36328 0.259766 4.46484 0.158203C4.56641 0.0527344 4.68945 0 4.83398 0C4.97852 0 5.10156 0.0527344 5.20312 0.158203C5.30859 0.259766 5.36133 0.380859 5.36133 0.521484V9.14648ZM0.521484 5.35547C0.380859 5.35547 0.257812 5.30469 0.152344 5.20312C0.0507812 5.10156 0 4.97852 0 4.83398C0 4.68945 0.0507812 4.56641 0.152344 4.46484C0.257812 4.35938 0.380859 4.30664 0.521484 4.30664H9.14648C9.28711 4.30664 9.4082 4.35938 9.50977 4.46484C9.61523 4.56641 9.66797 4.68945 9.66797 4.83398C9.66797 4.97852 9.61523 5.10156 9.50977 5.20312C9.4082 5.30469 9.28711 5.35547 9.14648 5.35547H0.521484Z"/></svg><svg class="pv-ico-minus" width="10" height="2" viewBox="0 0 10 2" xmlns="http://www.w3.org/2000/svg"><path d="M0.521484 1.04883C0.427734 1.04883 0.341797 1.02539 0.263672 0.978516C0.185547 0.931641 0.121094 0.869141 0.0703125 0.791016C0.0234375 0.708984 0 0.619141 0 0.521484C0 0.427734 0.0234375 0.341797 0.0703125 0.263672C0.121094 0.181641 0.185547 0.117188 0.263672 0.0703125C0.341797 0.0234375 0.427734 0 0.521484 0H9.14648C9.24023 0 9.32617 0.0234375 9.4043 0.0703125C9.48633 0.117188 9.55078 0.181641 9.59766 0.263672C9.64453 0.341797 9.66797 0.427734 9.66797 0.521484C9.66797 0.619141 9.64453 0.708984 9.59766 0.791016C9.55078 0.869141 9.48633 0.931641 9.4043 0.978516C9.32617 1.02539 9.24023 1.04883 9.14648 1.04883H0.521484Z"/></svg></span><span id="pvInfoToggleLabel"></span></button>
       </header>
       <div class="pv-body">
+        <p class="pv-sub" id="pvSub"></p>
+        <div class="pv-coords pv-coords-body" id="pvCoordsBody" hidden></div>
         <p class="pv-desc" id="pvDesc"></p>
         <div class="pv-links" id="pvLinks"></div>
         <div class="pv-rows">
@@ -1187,6 +1491,10 @@
       <svg viewBox="0 0 52 52" aria-hidden="true"><circle class="pv-counter-track" cx="26" cy="26" r="24"/><circle class="pv-counter-bar" id="pvCounterBar" cx="26" cy="26" r="24"/></svg>
       <span id="pvCounterNum">1</span><span class="pv-counter-total" id="pvCounterTotal">/1</span>
     </div>
+    <div class="pv-speed" id="pvSpeed">
+      <div class="pv-speed-track"><span class="pv-speed-knob"></span><input type="range" id="pvSpeedInput" min="0" max="100" step="1" value="50" aria-label="Velocidad del carrusel"></div>
+    </div>
+    <button class="pv-play" id="pvPlay" type="button" aria-label="Pausar el carrusel"><svg class="pv-play-ico-pause" width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><rect x="0.5" y="0.5" width="3" height="11" rx="1"/><rect x="6.5" y="0.5" width="3" height="11" rx="1"/></svg><svg class="pv-play-ico-play" width="11" height="12" viewBox="0 0 11 12" aria-hidden="true"><path d="M1 1.1v9.8c0 .6.6.9 1.1.6l8-4.9c.4-.3.4-.9 0-1.2l-8-4.9C1.6.2 1 .5 1 1.1z"/></svg></button>
   </section>
   <!-- CX de contacto: fuera de la vista de proyecto para que NO suba con la cortina; queda fijo a la pantalla y se desvanece al scrollear hacia el footer -->
     <button class="pv-contact" id="pvContact" type="button" aria-label="Contacto"><span class="pv-contact-mark"><span class="pv-contact-orbit" aria-hidden="true"><svg viewBox="0 0 88 88"><defs><path id="pvOrbitPath" d="M44,44 m-34,0 a34,34 0 1,1 68,0 a34,34 0 1,1 -68,0"/></defs><text><textPath href="#pvOrbitPath" id="pvOrbitText">Contactame</textPath></text></svg></span><svg viewBox="0 0 532 391" aria-hidden="true" focusable="false"><path d="M419.639 192.13C419.639 192.13 417.253 189.119 417.253 188.116C425.432 182.43 433.612 177.079 441.451 171.058C475.192 145.304 542.333 90.4517 522.225 37.2715C514.386 16.869 494.278 11.5175 476.214 10.5141C464.967 9.8452 448.267 9.51074 437.361 10.5141C434.975 10.5141 429.863 11.5175 432.249 15.5311C433.953 18.2069 452.698 16.869 456.788 17.5379C475.192 19.5447 490.87 33.5923 495.3 53.6604C504.502 95.4687 470.761 134.267 443.496 158.014C440.088 161.024 414.527 181.092 412.822 181.092C411.8 181.092 411.118 180.089 410.437 179.42C388.283 147.98 362.381 118.881 340.228 87.4416C324.891 66.0357 296.263 21.5515 340.91 17.2035C347.726 16.5345 357.951 18.5413 363.745 17.2035C365.789 16.5345 368.175 13.5243 366.471 11.852C365.789 11.1831 363.063 10.8486 361.7 10.8486C346.363 9.51074 323.187 9.8452 307.85 10.8486C261.158 13.5243 280.244 62.3565 300.012 87.4416L385.216 202.164C350.453 226.245 312.622 253.672 289.105 291.801C273.428 317.22 259.113 369.732 295.24 381.438C311.259 386.789 349.771 386.789 366.812 385.117C369.198 385.117 375.332 384.114 372.947 380.1C371.243 377.424 356.928 378.762 353.52 378.428C313.985 375.418 302.057 353.008 311.94 310.865C322.165 267.05 356.928 231.931 390.669 209.522L475.192 323.91C482.69 335.616 492.914 349.998 490.188 365.384C486.78 385.452 455.084 376.421 442.473 378.762C436.68 379.766 438.043 384.783 444.518 385.452C460.878 386.789 487.121 386.455 503.821 385.452C546.082 382.441 530.745 342.64 513.704 317.889C484.394 275.412 448.608 235.61 419.298 192.799L419.639 192.13Z"/><path d="M125.111 362.374C167.031 385.118 225.165 385.023 261.632 350.907C264.181 349.689 310.356 303.239 310.356 303.239C310.356 303.239 286.438 340.535 263.998 360.335C253.693 369.428 241.671 376.422 233.832 379.432C155.103 411.206 59.6738 369.398 20.139 287.453C-40.1858 162.028 42.6329 6.83572 167.372 0.146383C206.225 -1.86042 259.393 16.8697 285.636 49.982C322.444 96.1384 283.591 150.656 233.15 135.605C212.701 129.251 205.203 122.896 182.368 129.251C178.96 130.254 157.829 139.285 156.466 138.616C151.695 136.274 159.193 132.595 160.897 131.926C172.144 126.24 192.593 118.882 204.521 117.879C224.97 116.206 252.236 134.602 264.165 104.166C275.411 75.4015 257.007 44.9649 235.195 30.5829C189.525 0.480844 122.725 6.16679 82.8494 45.2994C-4.3999 130.588 21.843 306.853 125.111 362.374Z"/></svg></span></button>
@@ -2025,6 +2333,19 @@ function setupNameScramble(){
       animating = false; // un scramble interrumpido no resuelve su promesa
       scrambler.setText(l.name);
       if (subScrambler) subScrambler.setText(l.sub);
+    },
+    // sin scramble: el nombre que vuelve volando aterriza en un texto ya escrito
+    setNow(i){
+      const l = labelFor(i);
+      if (!l) return;
+      clearTimeout(restoreTimer);
+      labelIndex = i;
+      if (subOriginal === null && subLocationEl) subOriginal = subLocationEl.textContent;
+      nameText.dataset.state = 'project';
+      animating = false;
+      cancelAnimationFrame(scrambler.frameRequest); scrambler.queue = [];
+      nameText.textContent = l.name; centerNameText();
+      if (subScrambler){ cancelAnimationFrame(subScrambler.frameRequest); subScrambler.queue = []; subLocationEl.textContent = l.sub; }
     },
     hide(){
       clearTimeout(restoreTimer);
@@ -3052,7 +3373,7 @@ const PROJECTS = [
       { type:'image', src:'/assets/magic-styler/01.jpg', w:2400, h:1350, alt:'Logotipo de Magic Styler en blanco sobre una onda de satén dorado y negro' },
       { type:'image', src:'/assets/magic-styler/02.jpg', w:2400, h:1350, alt:'Pelo rizado oscuro con el logo de Magic Styler y los íconos de beneficios de la marca' },
       { type:'video', src:'/assets/magic-styler/phone-slide.mp4', poster:'/assets/magic-styler/phone-slide-poster.jpg', w:1920, h:1080 },
-      { type:'image', src:'/assets/magic-styler/04.jpg', w:2400, h:1350, alt:'Campaña "Luxury isn’t loud, it’s smart" con la tarjeta del Airstyler Pro y una mujer ondulándose el pelo' },
+      { type:'image', src:'/assets/magic-styler/04.jpg?v=3', w:2400, h:1350, alt:'Campaña "Luxury isn’t loud, it’s smart" con la tarjeta del Airstyler Pro y una mujer ondulándose el pelo' },
       { type:'image', src:'/assets/magic-styler/06.jpg', w:2400, h:1350, alt:'Antes y después del pelo de una mujer: lacio a la izquierda y con ondas a la derecha' },
       { type:'image', src:'/assets/magic-styler/07.jpg', w:2400, h:1350, alt:'Pieza "All-in-one magic" con fotos de producto: cepillo alisador y secador' },
       { type:'image', src:'/assets/magic-styler/08.jpg', w:2400, h:1350, alt:'Primer plano de ojos y rulos con las palabras Magic y Styler' },
@@ -3201,6 +3522,13 @@ const ProjectView = (() => {
     const coordsText = formatCoords(p.coords);
     coordsEl.textContent = coordsText;
     coordsEl.hidden = !coordsText;
+    $('pvCoordsBody').textContent = coordsText; // (en la barra de compu las coordenadas van en la info)
+    $('pvCoordsBody').hidden = !coordsText;
+    // (en la píldora: rubro y año / tipo van en la info, en una línea)
+    const sub = $('pvSub'); sub.textContent = '';
+    const subMeta = [p.year, tr(p.type)].filter(Boolean).join(' / ');
+    if (subMeta){ const sm = document.createElement('span'); sm.className = 'pv-sub-meta'; sm.textContent = subMeta; sub.appendChild(sm); }
+    if (tr(p.kind)){ const sk = document.createElement('span'); sk.className = 'pv-sub-kind'; sk.textContent = tr(p.kind); sub.appendChild(sk); }
     $('pvDesc').textContent = publicText(tr(p.description));
     $('pvDesc').hidden = !$('pvDesc').textContent;
     const linksEl = $('pvLinks');
@@ -3289,6 +3617,7 @@ const ProjectView = (() => {
     counterNum.textContent = idx + 1;
     counterTotal.textContent = '/' + total;
     counterBar.style.strokeDashoffset = RING * (1 - (idx + 1) / total);
+    $('pvCounter').style.setProperty('--cnt-a', (360 * (idx + 1) / total) + 'deg'); // botones: el canto azul se llena
   }
 
   /* scroll automático lento (como la referencia): el feed baja solo a
@@ -3306,7 +3635,7 @@ const ProjectView = (() => {
     autoLast = now;
     if (currentProject && copyH && !prefersReducedMotion){
       const paused = holding || now < autoPauseUntil || snapping || window.scrollY > 0.5; // con el footer a medio destapar el auto no corre
-      autoAcc += paused ? 0 : FEED_AUTO_PX * dt / 1000;
+      autoAcc += paused ? 0 : FEED_AUTO_PX * (typeof pvFeedSpeed === 'number' ? pvFeedSpeed : 1) * dt / 1000; // pvFeedSpeed: barrita de velocidad
       if (autoAcc >= 1){
         const px = Math.floor(autoAcc);
         autoAcc -= px;
@@ -3335,7 +3664,9 @@ const ProjectView = (() => {
        sola la animación hacia el footer (no sigue al dedo, así no queda a
        medio camino). Volver hacia arriba lo maneja el gesto global
        (ver "gesto touch ↔ footer"). */
-    if (!canHover && feed.scrollTop !== lastSetTop){
+    /* (en compu, con los botones, pasa lo mismo con la rueda / el trackpad: ya no hay
+       panel al costado por donde bajar al footer) */
+    if ((!canHover || document.documentElement.classList.contains('pv-pill')) && feed.scrollTop !== lastSetTop){
       const top = feed.scrollTop;
       const lim = copyH * 2 - feed.clientHeight;
       if (top > lim && prevTop <= lim){ setFeedTop(lim); if (!snapping) scrollToY(appH, SNAP_MS); }
@@ -3485,6 +3816,7 @@ const ProjectView = (() => {
       info.scrollTop = 0;
       renderText(p);
       measureBar();
+      if (typeof pvMeasureDrops === 'function') pvMeasureDrops();
       renderFeed(p);
     },
     renderText,
@@ -3529,6 +3861,7 @@ function refreshProjectLang(){
    simple. Si llega otra navegación en medio (atrás del navegador, gesto de
    iPhone), la transición en curso se termina al instante antes de seguir. */
 const PV_FLY_MS = 520;   // abrir: zoom in rápido desde la card
+const PV_NAME_MS = 400;  // el nombre del hero sube a su botón (y vuelve): arranca y frena suave, con su propio tiempo
 const PV_BACK_MS = 620;  // volver: un poco más calmo
 function easeOutQuart(t){ return 1 - Math.pow(1 - t, 4); } // arranca de golpe, frena suave al llegar
 let pvTransition = null;
@@ -3668,6 +4001,42 @@ function enterProjectView(opts){
   void feedEl.offsetWidth;
   feedEl.style.transition = '';
 
+  /* barra de compu: el nombre que se leía en el centro del anillo (hover) viaja
+     hasta su lugar en la barra mientras la card crece */
+  const titleEl = document.getElementById('pvTitle');
+  if (typeof pvMeasureDrops === 'function') pvMeasureDrops();
+  titleEl.style.transition = ''; titleEl.style.opacity = ''; titleEl.style.color = ''; delete titleEl.dataset.noScramble;
+  let nameFly = null, nameFrom = null, nameTo = null, nameScale = 1;
+  projectViewEl.style.setProperty('--pv-name-w', (titleEl.getBoundingClientRect().width + (document.documentElement.classList.contains('pv-pill') ? 64 : 56)) + 'px');
+  const rootCl = document.documentElement.classList;
+  if (((rootCl.contains('pv-bar') && !isNarrow) || rootCl.contains('pv-pill')) && !landscapePhone && nameText.dataset.state === 'project'){
+    // origen y destino: la caja del texto (centro y alto de línea), no la del elemento
+    const fsA = parseFloat(getComputedStyle(nameText).fontSize), fsB = parseFloat(getComputedStyle(titleEl).fontSize);
+    nameFrom = pvTextBox(nameText);
+    nameTo = pvTextBox(titleEl);
+    nameScale = fsB / fsA;
+    nameFly = document.createElement('div');
+    nameFly.className = 'pv-name-flyer';
+    nameFly.setAttribute('aria-hidden', 'true');
+    nameFly.textContent = titleEl.textContent;
+    nameFly.style.fontSize = fsA + 'px';
+    nameFly.style.letterSpacing = getComputedStyle(nameText).letterSpacing;
+    nameFly.style.transformOrigin = '50% 0';
+    document.body.appendChild(nameFly);
+    nameFrom.w = nameFly.offsetWidth;
+    nameFly.style.transform = 'translate(' + (nameFrom.cx - nameFrom.w / 2) + 'px,' + nameFrom.top + 'px)';
+    nameText.classList.add('pv-name-away');
+    titleEl.dataset.noScramble = '1';
+    titleEl.style.color = 'transparent';
+  }
+  const landName = () => {
+    if (!nameFly) return;
+    nameFly.remove(); nameFly = null;
+    titleEl.style.transition = 'none'; titleEl.style.opacity = '1'; titleEl.style.color = '';
+    // el nombre del hero sigue oculto mientras el proyecto está abierto (si no, reaparece
+    // un instante arriba, donde lo deja el scroll del footer); vuelve al cerrar o al bajar al footer
+  };
+
   const t0 = performance.now();
   let raf = 0, chromeIn = false;
   // la foto grande del carrusel puede tardar en bajar: la imagen que vuela se
@@ -3682,7 +4051,7 @@ function enterProjectView(opts){
     finished = true;
     cancelAnimationFrame(raf);
     placeFlyerAligned(fly, to, fullTo, crop);
-    projectViewEl.classList.remove('pv-chrome-out');
+    if (!nameFly) projectViewEl.classList.remove('pv-chrome-out'); // (si el nombre sigue viajando, los botones esperan a que llegue)
     loader.style.visibility = 'hidden';
     card.style.visibility = '';
     targetReady.then(() => {
@@ -3704,11 +4073,23 @@ function enterProjectView(opts){
     placeFlyerAligned(fly, lerpRect(from, to, e), lerpRect(fromImg, fullTo, e), crop);
     // la imagen de la card se cambia por la foto grande solo si esa ya cargó
     if (fly.over && t > 0.45 && fly.under.complete && fly.under.naturalWidth) fly.over.style.opacity = '0';
-    if (!chromeIn && t > 0.5){ chromeIn = true; projectViewEl.classList.remove('pv-chrome-out'); }
+    if (!chromeIn && !nameFly && t > 0.5){ chromeIn = true; projectViewEl.classList.remove('pv-chrome-out'); }
     if (t < 1) raf = requestAnimationFrame(tick);
     else { pvTransition = null; finish(); }
   };
-  pvTransition = { finish };
+  // el nombre: sube derecho a su botón; recién cuando llega se arman los botones
+  if (nameFly){
+    const nameTick = now => {
+      if (!nameFly) return;
+      const tn = Math.min(1, (now - t0) / PV_NAME_MS), en = easeInOutCubic(tn);
+      const nx = lerp(nameFrom.cx, nameTo.cx, en) - nameFrom.w / 2, ny = lerp(nameFrom.top, nameTo.top, en);
+      nameFly.style.transform = 'translate(' + nx + 'px,' + ny + 'px) scale(' + lerp(1, nameScale, en) + ')';
+      if (tn < 1) requestAnimationFrame(nameTick);
+      else { landName(); chromeIn = true; projectViewEl.classList.remove('pv-chrome-out'); }
+    };
+    requestAnimationFrame(nameTick);
+  }
+  pvTransition = { finish: () => { finish(); if (nameFly){ landName(); projectViewEl.classList.remove('pv-chrome-out'); } } };
   raf = requestAnimationFrame(tick);
 }
 
@@ -3740,6 +4121,39 @@ function leaveProjectView(project){
   projectViewEl.classList.remove('is-open');
   requestAnimationFrame(() => { loader.style.opacity = '1'; });
 
+  // botones: el nombre vuelve al centro del hero (solo se desplaza)
+  let backName = null, bnFrom = null, bnTo = null;
+  const titleB = document.getElementById('pvTitle');
+  if (document.documentElement.classList.contains('pv-pill') && !landscapePhone && cardLabel && cardLabel.setNow){
+    const ci = stackImgs.indexOf(card);
+    bnFrom = pvTextBox(titleB);
+    cardLabel.setNow(ci);
+    // destino: donde queda el nombre en el home (sin el corrimiento que le pone el scroll del footer)
+    const keepT = nameText.style.transform;
+    nameText.style.transform = 'translateY(-50%)';
+    bnTo = pvTextBox(nameText);
+    nameText.style.transform = keepT;
+    backName = document.createElement('div');
+    backName.className = 'pv-name-flyer';
+    backName.setAttribute('aria-hidden', 'true');
+    backName.textContent = nameText.textContent;
+    backName.style.fontSize = bnTo.fs + 'px';
+    backName.style.letterSpacing = getComputedStyle(nameText).letterSpacing;
+    document.body.appendChild(backName);
+    bnFrom.w = backName.offsetWidth;
+    backName.style.transform = 'translate(' + (bnFrom.cx - bnFrom.w / 2) + 'px,' + bnFrom.top + 'px)';
+    nameText.classList.add('pv-name-away');
+    titleB.style.color = 'transparent';
+  }
+  const landBackName = () => {
+    if (!backName) return;
+    backName.remove(); backName = null;
+    nameText.classList.remove('pv-name-away');
+    titleB.style.color = '';
+    // si el mouse ya no está sobre la card, el nombre vuelve a lo de siempre
+    setTimeout(() => { if (!card.matches(':hover') && cardLabel) cardLabel.hide(); }, 600);
+  };
+
   const t0 = performance.now();
   let raf = 0;
   const finish = () => {
@@ -3759,7 +4173,16 @@ function leaveProjectView(project){
     if (t < 1) raf = requestAnimationFrame(tick);
     else { pvTransition = null; finish(); }
   };
-  pvTransition = { finish };
+  if (backName){
+    const nameTick = now => {
+      if (!backName) return;
+      const tn = Math.min(1, (now - t0) / PV_NAME_MS), en = easeInOutCubic(tn);
+      backName.style.transform = 'translate(' + (lerp(bnFrom.cx, bnTo.cx, en) - bnFrom.w / 2) + 'px,' + lerp(bnFrom.top, bnTo.top, en) + 'px)';
+      if (tn < 1) requestAnimationFrame(nameTick); else landBackName();
+    };
+    requestAnimationFrame(nameTick);
+  }
+  pvTransition = { finish: () => { finish(); landBackName(); } };
   raf = requestAnimationFrame(tick);
 }
 
@@ -3767,7 +4190,10 @@ function leaveProjectView(project){
 // vuelve a la card desde la que se entró (si se entró con teclado)
 let focusBeforeProject = null;
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && currentProject) Router.home();
+  if (e.key !== 'Escape' || !currentProject) return;
+  const inf = document.getElementById('pvInfo');
+  if (inf && inf.classList.contains('is-expanded')) document.getElementById('pvInfoToggle').click(); // primero se cierra la info
+  else Router.home();
 });
 function showProject(slug, opts){
   const p = projectBySlug(slug);
@@ -3795,6 +4221,7 @@ function showProject(slug, opts){
 
 function hideProject(){
   if (!currentProject) return;
+  setTimeout(() => { if (!document.querySelector('.pv-name-flyer')) nameText.classList.remove('pv-name-away'); }, 0); // (si vuelve volando, lo saca el aterrizaje)
   if (focusBeforeProject && focusBeforeProject !== document.body && document.contains(focusBeforeProject)){
     const el = focusBeforeProject;
     // la card está oculta mientras vuelve volando (PV_BACK_MS): se enfoca al aterrizar
@@ -4121,6 +4548,149 @@ new MutationObserver(updateThemeColor).observe(document.documentElement, { attri
 
 // panel de info: entrada "telemetría" desde el hero y "+ info" con fade en celular
 document.documentElement.classList.add('pv-telemetry', 'pv-sheet-fade');
+/* proyecto: botones flotantes (flecha, nombre y contador) con entrada "líquida".
+   En el celu acostado sigue el layout de antes (las reglas excluyen .is-landscape-phone). */
+document.documentElement.classList.add('pv-pill', 'pv-split', 'pv-in-ac');
+// botones: dónde arrancan las gotas de "+ info" (su ancho cambia con el idioma)
+function pvMeasureDrops(){
+  const pv = document.getElementById('projectView'), c = document.getElementById('pvCounter'), t = document.getElementById('pvTitle');
+  if (c && c.offsetWidth) pv.style.setProperty('--cnt-w', c.offsetWidth + 'px');
+  if (t && t.offsetWidth) pv.style.setProperty('--title-w', t.offsetWidth + 'px');
+}
+// la caja del texto de un elemento (centro y alto de línea): de dónde a dónde viaja el nombre
+function pvTextBox(el){
+  const fs = parseFloat(getComputedStyle(el).fontSize);
+  const r = document.createRange(); r.selectNodeContents(el);
+  const b = r.getBoundingClientRect();
+  return { cx: b.left + b.width / 2, top: b.top + b.height / 2 - fs * 1.05 / 2, fs };
+}
+window.addEventListener('resize', pvMeasureDrops);
+// el nombre también abre / cierra la info
+document.getElementById('pvTitle').addEventListener('click', () => {
+  if (document.documentElement.classList.contains('pv-pill')) document.getElementById('pvInfoToggle').click();
+});
+document.getElementById('pvTitle').addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && document.documentElement.classList.contains('pv-pill')){ e.preventDefault(); document.getElementById('pvInfoToggle').click(); }
+});
+/* velocidad del carrusel: 0 = quieto (solo a mano), 50 = la de siempre, 100 = el triple.
+   La barrita (compu) y el botón de pausa (celu) comparten el valor, que se recuerda. */
+var pvFeedSpeed = 1;
+(function(){
+  const input = document.getElementById('pvSpeedInput'), box = document.getElementById('pvSpeed'), play = document.getElementById('pvPlay');
+  const track = box.querySelector('.pv-speed-track');
+  let lastMoving = 50;
+  function apply(v){
+    v = Math.max(0, Math.min(100, Math.round(v)));
+    pvFeedSpeed = v <= 2 ? 0 : (v <= 50 ? v / 50 : 1 + (v - 50) / 25);
+    input.value = v; track.style.setProperty('--v', v / 100);
+    box.classList.toggle('is-stopped', pvFeedSpeed === 0);
+    box.classList.toggle('is-fast', v >= 90);
+    play.classList.toggle('is-stopped', pvFeedSpeed === 0);
+    const en = typeof currentLang !== 'undefined' && currentLang === 'en';
+    input.setAttribute('aria-label', en ? 'Carousel speed' : 'Velocidad del carrusel');
+    input.setAttribute('aria-valuetext', pvFeedSpeed === 0 ? (en ? 'Stopped' : 'Quieto') : (Math.round(pvFeedSpeed * 10) / 10 + '×'));
+    play.setAttribute('aria-label', pvFeedSpeed === 0 ? (en ? 'Play the carousel' : 'Reanudar el carrusel') : (en ? 'Pause the carousel' : 'Pausar el carrusel'));
+    if (pvFeedSpeed > 0) lastMoving = v;
+    try { localStorage.setItem('pvSpeed', String(v)); } catch(e){}
+  }
+  let saved = 50; try { const x = parseFloat(localStorage.getItem('pvSpeed')); if (!isNaN(x)) saved = x; } catch(e){}
+  apply(saved);
+  input.addEventListener('input', () => apply(+input.value));
+  play.addEventListener('click', () => apply(pvFeedSpeed === 0 ? (lastMoving > 2 ? lastMoving : 50) : 0));
+  // que tocar los controles no cuente como "agarrar" el carrusel ni cierre la info
+  [box, play].forEach(el => ['pointerdown', 'touchstart', 'click'].forEach(t => el.addEventListener(t, e => e.stopPropagation(), { passive: true })));
+})();
+/* A y A + C: la píldora del nombre se estira en dos gotas que se cortan y se
+   asientan como la flecha y el contador. Corre cuando la vista se termina de armar
+   (se saca .pv-chrome-out); con .pv-chrome-out de vuelta se corta. */
+let pvLiquidRun = null;
+function pvLiquidStop(){
+  if (!pvLiquidRun) return;
+  cancelAnimationFrame(pvLiquidRun.raf);
+  pvLiquidRun.layer.remove();
+  document.getElementById('projectView').classList.remove('pv-liquid');
+  pvLiquidRun = null;
+}
+function pvLiquidBuild(){
+  const root = document.documentElement, pv = document.getElementById('projectView');
+  pvLiquidStop();
+  if (!root.classList.contains('pv-split') || !root.classList.contains('pv-in-ac')) return;
+  if (root.classList.contains('is-landscape-phone') || prefersReducedMotion) return;
+  const title = document.getElementById('pvTitle'), back = document.getElementById('pvBack'), cnt = document.getElementById('pvCounter');
+  const pr = pv.getBoundingClientRect(), tb = title.getBoundingClientRect();
+  if (!tb.width || !back.offsetWidth || !cnt.offsetWidth) return;
+  const T = { l: tb.left - pr.left, r: tb.right - pr.left }, R = tb.height / 2, cy = tb.top - pr.top + R;
+  const B = { cx: back.offsetLeft + back.offsetWidth / 2 };
+  const C = { cx: cnt.offsetLeft + cnt.offsetWidth / 2, w: cnt.offsetWidth };
+  const layer = document.createElement('div');
+  layer.className = 'pv-liquid-layer';
+  const condense = true; // el vidrio se condensa alrededor del nombre antes de estirarse
+  if (condense) layer.classList.add('is-condensing');
+  pv.appendChild(layer);
+  pv.classList.add('pv-liquid');
+  const f = n => Math.round(n * 10) / 10;
+  // contorno de varias "cápsulas" en fila, unidas por cuellos de grosor t
+  const neckTop = (a, b, t) => {
+    const x1 = a.r - a.R, y1 = cy - a.R, x2 = b.l + b.R, y2 = cy - b.R, xm = (x1 + x2) / 2, ym = cy - t / 2, h = (x2 - x1) * 0.3;
+    return ' C' + f(x1 + h) + ',' + f(y1) + ' ' + f(xm - h) + ',' + f(ym) + ' ' + f(xm) + ',' + f(ym) + ' C' + f(xm + h) + ',' + f(ym) + ' ' + f(x2 - h) + ',' + f(y2) + ' ' + f(x2) + ',' + f(y2);
+  };
+  const neckBottom = (a, b, t) => {
+    const x1 = b.l + b.R, y1 = cy + b.R, x2 = a.r - a.R, y2 = cy + a.R, xm = (x1 + x2) / 2, ym = cy + t / 2, h = (x1 - x2) * 0.3;
+    return ' C' + f(x1 - h) + ',' + f(y1) + ' ' + f(xm + h) + ',' + f(ym) + ' ' + f(xm) + ',' + f(ym) + ' C' + f(xm - h) + ',' + f(ym) + ' ' + f(x2 + h) + ',' + f(y2) + ' ' + f(x2) + ',' + f(y2);
+  };
+  const component = (S, N) => {
+    const a = S[0], z = S[S.length - 1];
+    let d = 'M' + f(a.l) + ',' + f(cy) + ' A' + f(a.R) + ',' + f(a.R) + ' 0 0 1 ' + f(a.l + a.R) + ',' + f(cy - a.R);
+    S.forEach((s, i) => { d += ' L' + f(s.r - s.R) + ',' + f(cy - s.R); if (i < S.length - 1) d += neckTop(s, S[i + 1], N[i]); });
+    d += ' A' + f(z.R) + ',' + f(z.R) + ' 0 0 1 ' + f(z.r) + ',' + f(cy) + ' A' + f(z.R) + ',' + f(z.R) + ' 0 0 1 ' + f(z.r - z.R) + ',' + f(cy + z.R);
+    for (let i = S.length - 1; i >= 0; i--){ d += ' L' + f(S[i].l + S[i].R) + ',' + f(cy + S[i].R); if (i > 0) d += neckBottom(S[i - 1], S[i], N[i - 1]); }
+    return d + ' A' + f(a.R) + ',' + f(a.R) + ' 0 0 1 ' + f(a.l) + ',' + f(cy) + ' Z';
+  };
+  const neckT = (dist, dMax, rMin) => dist >= dMax ? 0 : 2 * rMin * Math.pow(1 - dist / dMax, 0.55); // gruesa un rato y se corta rápido
+  const dMaxL = Math.min(((T.l + R) - B.cx) * 0.6, 5 * R), dMaxR = Math.min((C.cx - (T.r - R)) * 0.6, 5 * R);
+  const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const delay = condense ? 344 : 61, dur = 765, t0 = performance.now();
+  const draw = e => {
+    const thin = 1 - 0.14 * Math.sin(Math.PI * e); // en el aire la gota se afina apenas
+    const xl = lerp(T.l + R, B.cx, e), rl = R * thin;
+    const xr = lerp(T.r - R, C.cx, e), rr = R * thin, hw = Math.max(rr, lerp(R, C.w / 2, e));
+    const L = { l: xl - rl, r: xl + rl, R: rl }, P = { l: T.l, r: T.r, R: R }, Q = { l: xr - hw, r: xr + hw, R: rr };
+    const tL = neckT((T.l + R) - xl, dMaxL, rl), tR = neckT(xr - (T.r - R), dMaxR, rr);
+    const parts = [];
+    if (tL > 1.5 && tR > 1.5) parts.push(component([L, P, Q], [tL, tR]));
+    else if (tL > 1.5){ parts.push(component([L, P], [tL])); parts.push(component([Q], [])); }
+    else if (tR > 1.5){ parts.push(component([L], [])); parts.push(component([P, Q], [tR])); }
+    else { parts.push(component([L], [])); parts.push(component([P], [])); parts.push(component([Q], [])); }
+    layer.style.clipPath = "path('" + parts.join(' ') + "')";
+  };
+  draw(0);
+  const run = pvLiquidRun = { layer, raf: 0 };
+  const tick = now => {
+    if (pvLiquidRun !== run) return;
+    const p = Math.max(0, Math.min(1, (now - t0 - delay) / dur));
+    draw(ease(p));
+    if (p < 1){ run.raf = requestAnimationFrame(tick); return; }
+    // listo: los botones de verdad toman su lugar (en el mismo cuadro, sin parpadeo) y el canto se dibuja
+    pv.classList.add('pv-rims-draw');
+    pvLiquidStop();
+    setTimeout(() => pv.classList.remove('pv-rims-draw'), 850);
+  };
+  run.raf = requestAnimationFrame(tick);
+}
+new MutationObserver(records => {
+  const pv = document.getElementById('projectView');
+  const nowOut = pv.classList.contains('pv-chrome-out');
+  if (nowOut){ pvLiquidStop(); return; }
+  const wasOut = records.some(r => (r.oldValue || '').split(/\s+/).indexOf('pv-chrome-out') !== -1);
+  if (wasOut && pv.classList.contains('is-open')) pvLiquidBuild();
+}).observe(document.getElementById('projectView'), { attributes: true, attributeFilter: ['class'], attributeOldValue: true });
+// píldora: la info se cierra también tocando afuera
+document.addEventListener('click', e => {
+  const r = document.documentElement, inf = document.getElementById('pvInfo');
+  if (!r.classList.contains('pv-pill') || !inf || !inf.classList.contains('is-expanded')) return;
+  if (e.target.closest('.pv-head, .pv-body')) return;
+  document.getElementById('pvInfoToggle').click();
+});
 (function(){
   // panel C (telemetría): al entrar los textos de arriba se "decodifican":
   // letras al azar que se van fijando de izquierda a derecha
@@ -4129,6 +4699,7 @@ document.documentElement.classList.add('pv-telemetry', 'pv-sheet-fade');
     if (prefersReducedMotion) return;
     const items = [];
     projectViewEl.querySelectorAll('.pv-title, .pv-index, .pv-meta, .pv-coords').forEach((el, i) => {
+      if (el.dataset.noScramble) return; // el nombre llega volando desde el home
       const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
       let n;
       while ((n = w.nextNode())) if (n.data.trim()) items.push({ n, orig: n.data, last: null, start: 90 + i * 60 });
@@ -4311,6 +4882,7 @@ function updateFooterScroll(){
   // que el footer se destapa; arriba de todo, sobre el proyecto, no se ve
   if (currentProject){
     const k = Math.min(1, Math.max(0, (p - 0.2) / 0.25));
+    if (k > 0) nameText.classList.remove('pv-name-away');
     if (k > 0 && nameText.style.visibility !== 'visible') centerNameText();
     nameText.style.visibility = k > 0 ? 'visible' : '';
     nameText.style.opacity = k > 0 ? String(k) : '';
