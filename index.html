@@ -875,7 +875,7 @@
   /* max-width 29.5em ≈ tope de 10 palabras por renglón (medido; al ir
      en em acompaña el tamaño de letra); en notebooks el panel corta antes */
   .pv-desc[hidden]{ display:none; }
-  .pv-desc{ font-size:21.56px; line-height:1.4; font-weight:400; opacity:0.85; margin:0 0 40px; max-width:29.5em; }
+  .pv-desc{ font-size:21.56px; line-height:1.4; font-weight:400; opacity:0.85; margin:0 0 40px; max-width:29.5em; white-space:pre-line; } /* (un salto de línea en la descripción arma un párrafo aparte) */
   /* links del proyecto ("↗ Instagram") debajo de la descripción */
   .pv-links{ display:flex; flex-wrap:wrap; gap:8px 22px; margin-top:-16px; margin-bottom:40px; font-size:13px; letter-spacing:0.08em; }
   .pv-links:empty{ display:none; }
@@ -955,6 +955,8 @@
   html.project-open .pv-contact{ display:flex; }
   /* panel de info abierto (celular): el CX se esconde y reaparece cuando la cortina terminó de cerrar */
   html.is-narrow .pv-contact.is-under-panel{ opacity:0; pointer-events:none; transition:opacity 0.2s ease; }
+  /* (con los botones pasa lo mismo en compu: la info abierta queda donde está el CX) */
+  html.pv-pill .pv-contact.is-under-panel{ opacity:0; pointer-events:none; transition:opacity 0.2s ease; }
   html.can-hover .pv-contact:hover{ opacity:1; }
   .pv-contact-mark{
     position:relative;
@@ -3414,15 +3416,18 @@ const PROJECTS = [
     coords:null, // pendiente: { lat, lng, label }
     media:[] },
   { slug:'humo', name:'HUMO', year:'2025', type:{ es:'Dirección creativa & IA', en:'Creative direction & AI' }, accent:'#0012FF',
-    kind:{ es:'Restaurante mexicano · Los Cabos', en:'Mexican restaurant · Los Cabos' }, // qué es, destacado bajo el título y en el hover
+    kind:{ es:'Local gastronómico', en:'Restaurant' }, // qué es, destacado bajo el título y en el hover
     cards:[11, 13], // qué card(s) del home abren este proyecto (0-14, en el orden del HTML)
     client:null, services:null, credits:[], // pendiente (paso 9: contenido)
     links:[ { label:{ es:'Conocé Humo Los Cabos', en:'Meet Humo Los Cabos' }, url:'https://www.instagram.com/humoloscabos/' } ],
-    description:{ es:'Descripción del proyecto (placeholder).', en:'Project description (placeholder).' },
+    description:{
+      es:'Identidad de marca para Humo, restaurante en Los Cabos, Baja California Sur. Logo, tipografías, paleta y su bajada a todos los puntos de contacto: piezas impresas, interiorismo y packaging.\nProyecto realizado en conjunto con Díaz Aberastury y TheF*Money.',
+      en:'Brand identity for Humo, a restaurant in Los Cabos, Baja California Sur. Logo, typefaces, color palette and their rollout across every touchpoint: printed pieces, interior design and packaging.\nA project made together with Díaz Aberastury and TheF*Money.'
+    },
     seoTitle:{ es:'HUMO — Camila Arrieta Cruz', en:'HUMO — Camila Arrieta Cruz' },
-    seoDescription:{ es:'HUMO: dirección creativa & ia por Camila Arrieta Cruz.', en:'HUMO: creative direction & ai by Camila Arrieta Cruz.' },
+    seoDescription:{ es:'HUMO: identidad de marca para un restaurante en Los Cabos, por Camila Arrieta Cruz.', en:'HUMO: brand identity for a restaurant in Los Cabos, by Camila Arrieta Cruz.' },
     ogImage:'https://www.camilarrietacruz.com/og-image.jpg',
-    coords:null, // pendiente: { lat, lng, label }
+    coords:{ lat:22.8905, lng:-109.9167, label:{ es:'LOS CABOS', en:'LOS CABOS' } },
     media:[] }
 ];
 
