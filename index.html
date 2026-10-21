@@ -235,18 +235,20 @@
   }
   .cf-label-pill[hidden]{ display:none; }
   .cf-label-name{ font-size:14px; letter-spacing:0.01em; line-height:1.3; text-transform:uppercase; }
+  /* (la letra que antes tenía "Buenos Aires — Argentina"; las coordenadas ahora van arriba en mono) */
   .cf-label-sub{
-    font-family:'Courier New', monospace; font-size:10px; letter-spacing:0.1em; line-height:1.4;
-    text-transform:uppercase; opacity:0.55;
+    font-family:var(--font); font-size:10px; letter-spacing:0.02em; line-height:1.4;
+    opacity:0.5;
   }
+  /* tu ubicación como coordenadas, en la letra de telemetría de los proyectos */
   #sub-location{
     position:absolute; left:0; right:0;
     top: calc(50% + 14px);
     text-align:center;
-    font-family: var(--font);
+    font-family:'Courier New', monospace;
     font-weight:400;
-    font-size: clamp(10px, 0.85vw, 13px);
-    letter-spacing: 0.02em;
+    font-size: clamp(10px, 0.72vw, 11px);
+    letter-spacing: 0.1em; text-transform:uppercase;
     color: var(--cream);
     opacity:0;
     z-index:9999;
@@ -522,7 +524,7 @@
     font-weight:700;
   }
   /* Reveal de las palabras del footer (copyright + firma CAMUXI):
-     simple fade in (igual mecanismo que "Buenos Aires — Argentina"),
+     simple fade in (igual mecanismo que la ubicación de abajo del nombre),
      en secuencia, UNA sola vez la primera vez que se scrollea — no
      se repite ni se revierte al volver a scrollear hacia arriba. */
   .rv-word{
@@ -1412,7 +1414,7 @@
   <div id="loader">
     <h1 class="sr-only">Camila Arrieta Cruz — Dirección creativa</h1>
     <div class="side-text" id="name-text">CAMILA ARRIETA CRUZ</div>
-    <div id="sub-location">Buenos Aires — Argentina</div>
+    <div id="sub-location">34.6037°&nbsp;S&nbsp;·&nbsp;58.3816°&nbsp;O —&nbsp;ARGENTINA</div>
     <div id="center-wrap">
       <img id="ojito" alt="" src="/assets/home/ojito.gif">
       <img class="stack-img" alt="Botella de vidrio ámbar de sérum facial sobre arena mojada, fotografía de producto cosmético" src="/assets/home/card-01.jpg">
@@ -2624,6 +2626,8 @@ function applyLang(lang){
     nameText.textContent = NAME_B;
     centerNameText();
   }
+  // tu ubicación (coordenadas): O de Oeste en español, W en inglés
+  if (subLocationEl && (!nameText || nameText.dataset.state !== 'project')) subLocationEl.textContent = heroLocation();
 
   // label de contacto: si hay un hover activo, mostrar la versión
   // traducida de ESE estado; si no, el default
@@ -3170,7 +3174,7 @@ const Coverflow = (() => {
     const r = centerWrap.getBoundingClientRect();
     const cardTop = r.top + r.height / 2 - cardPx() / 2;
     if (landscapePhone && subLocationEl){
-      // celular girado: arriba de la card, centrado en el aire entre "Buenos Aires — Argentina" y la card
+      // celular girado: arriba de la card, centrado en el aire entre la ubicación (coordenadas) y la card
       const subBottom = subLocationEl.getBoundingClientRect().bottom;
       labelPill.style.top = ((subBottom + cardTop) / 2 - labelPill.offsetHeight / 2) + 'px';
     } else {
@@ -3436,6 +3440,7 @@ function publicText(t){
 function tr(v){ return (v && typeof v === 'object' && !Array.isArray(v)) ? (v[currentLang] || v.es || v.en || '') : (v || ''); }
 // coords { lat, lng, label } → "34.6179° S · 58.4404° O — BUENOS AIRES"
 // (sin signos: N/S y E/O; en inglés el oeste es W). Sin coords → ''.
+function heroLocation(){ return formatCoords({ lat:-34.6037, lng:-58.3816, label:{ es:'ARGENTINA', en:'ARGENTINA' } }); }
 function formatCoords(c){
   if (!c || !isFinite(c.lat) || !isFinite(c.lng)) return '';
   const ns = c.lat < 0 ? 'S' : 'N';
@@ -4889,7 +4894,7 @@ function updateFooterScroll(){
   const eased = 1 - Math.pow(1 - t, 2);
   if (footerShadowEl) footerShadowEl.style.opacity = FOOTER_START_OPACITY * (1 - eased);
 
-  // "Buenos Aires — Argentina": arranca a desvanecerse en el mismo
+  // La ubicación (coordenadas): arranca a desvanecerse en el mismo
   // momento que las cards empiezan a implosionar, pero termina rápido
   // (bien al principio del scroll) para que ya esté invisible antes
   // de que las imágenes lleguen a superponerse con el texto
