@@ -111,8 +111,11 @@
     white-space: nowrap;
     text-transform: uppercase;
   }
-  #name-text{ left:var(--m); z-index:9999; }
-  #percent-text{ right:var(--m); }
+  /* loader (compu): tu nombre y el % un poco más adentro que el margen del sitio
+     (7% del ancho: 70px en una pantalla de 1000px) */
+  :root{ --loader-side: clamp(32px, 7vw, 140px); }
+  #name-text{ left:var(--loader-side); z-index:9999; }
+  #percent-text{ right:var(--loader-side); }
 
   /* -------- celular (html.is-narrow, ancho < 600px): loader apilado --------
      nombre arriba (fijo, centrado desde el principio, no viaja), pila de
@@ -123,15 +126,15 @@
   /* sistema de márgenes del celular (igual en loader, hero, proyecto y footer):
        · lateral 24px · superior e inferior 32px
        · fila de arriba: el nombre (hero) y los botones del proyecto (flecha · título ·
-         contador), todos con el centro a 36px; mismo tamaño de letra (15.9px), así al
+         contador), todos con el centro a 51.5px (la caja del texto a 40px del borde); mismo tamaño de letra (15.9px), así al
          abrir un proyecto el nombre queda quieto y los botones se arman a su alrededor
        · el ES/EN, siempre abajo a la derecha
      El nombre sigue centrado en horizontal (lo centra centerNameText). */
   html.is-narrow #name-text{
-    top: calc(env(safe-area-inset-top, 0px) + 36px);
+    top: calc(env(safe-area-inset-top, 0px) + 51.5px); /* la caja del texto arranca a 40px del borde */
     font-size:15.9px; font-weight:400; letter-spacing:0.01em;
   }
-  html.is-narrow #sub-location{ top: calc(env(safe-area-inset-top, 0px) + 53px); }
+  html.is-narrow #sub-location{ top: calc(env(safe-area-inset-top, 0px) + 68.5px); }
   html.is-narrow #percent-text{ left:0; right:0; text-align:center; top: calc(50% + 70px + 32px); }
   /* touch: el arrastre horizontal sobre el hero mueve el cover-flow; el
      vertical sigue siendo el scroll de la página (pan-y) */
@@ -1139,7 +1142,7 @@
     --g-rim-w:1px;
   }
   html.pv-pill.is-narrow .project-view{
-    --pill-h:48px; --pill-side:12px; --pill-top:calc(env(safe-area-inset-top, 0px) + 12px); --pill-gap:8px; --pill-r:24px; --pill-card-r:20px;
+    --pill-h:48px; --pill-side:12px; --pill-top:calc(env(safe-area-inset-top, 0px) + 27.5px); --pill-gap:8px; --pill-r:24px; --pill-card-r:20px; /* centro a 51.5px: en la línea del nombre del hero */
   }
   /* las superficies de vidrio: en "barra" la barra; en "botones" el nombre y "+ info"; siempre la flecha y la info */
   html.pv-pill:not(.is-landscape-phone, .pv-split) .pv-head,
