@@ -1335,7 +1335,6 @@
   html.pv-pill.pv-split:not(.is-landscape-phone) .project-view .pv-back,
   html.pv-pill.pv-split:not(.is-landscape-phone) .project-view .pv-counter{ z-index:3; }
   html.pv-pill.pv-split .project-view .pv-back{ --dx:var(--drop-back-x); }
-  html.pv-pill.pv-split .project-view .pv-counter{ --dx:var(--drop-tog-x); }
   /* A · gotas */
   /* C · se condensa */
   /* A + C */
@@ -1378,38 +1377,17 @@
   .pv-speed-track{ cursor:pointer; touch-action:none; }
   .pv-speed:has(input:focus-visible) .pv-speed-knob{ box-shadow:0 0 0 2px rgba(248,247,239,0.5), 0 0 10px 0 rgba(248,247,239,0.5); } /* (con teclado: sin recuadro, se ilumina la perilla) */
   /* celu: el ES/EN se corre a la derecha del botón de pausa */
-  /* (en pausa) el contador como gota de la derecha, con el canto azul que se llena; hoy esa
-     gota es "+ info" y el contador no se muestra. Estas reglas quedan para reusarlo. Antes: la gota de la derecha era el contador de fotos y su
-     canto azul se llena (desde arriba, hacia los dos lados) a medida que avanzan
-     las fotos. El nombre abre la info, que baja en el mismo lugar. */
-  /* el contador queda guardado (para usarlo en otro lugar): con los botones no se muestra */
-  html.pv-pill.pv-split:not(.is-landscape-phone) .project-view .pv-counter{ display:none !important; }
+  /* contador de fotos: el anillo de antes (no una píldora, para no competir con los
+     botones), bastante más chico, centrado debajo de "+ info" */
   html.pv-pill.pv-split:not(.is-landscape-phone) .project-view .pv-counter{
-    top:var(--pill-top); right:var(--pill-side); left:auto; z-index:3; /* debajo de la píldora del nombre: la gota sale de adentro */
-    width:auto; min-width:var(--pill-h); height:var(--pill-h); padding:0 20px; border-radius:var(--pill-r);
-    background:var(--g-bg); color:var(--g-color);
-    -webkit-backdrop-filter:var(--g-filter); backdrop-filter:var(--g-filter); box-shadow:var(--g-shadow);
-    font-size:14px; letter-spacing:0.02em; opacity:1;
+    width:34px; height:34px; font-size:9.5px;
+    top:calc(var(--pill-top) + var(--pill-h) + 14px);
+    right:calc(var(--pill-side) + var(--cnt-w, 86px) / 2 - 17px); left:auto;
   }
-  html.pv-pill.pv-split.is-narrow .project-view .pv-counter{ padding:0 14px; font-size:13px; }
-  html.pv-pill.pv-split:not(.is-landscape-phone) .project-view:has(.pv-info.is-expanded) .pv-counter{ opacity:1; pointer-events:auto; }
-  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter svg{ display:none; }
-  /* el canto apagado (lo que falta) y el azul (lo recorrido) */
-  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter::before,
-  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter::after{
-    content:''; position:absolute; inset:0; z-index:0; border-radius:inherit; pointer-events:none; padding:var(--g-rim-w);
-    -webkit-backdrop-filter:none; backdrop-filter:none;
-    -webkit-mask:conic-gradient(#000 calc(var(--rim-a) / 2), #0000 0 calc(360deg - var(--rim-a) / 2), #000 0), linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite:source-in, xor;
-    mask:conic-gradient(#000 calc(var(--rim-a) / 2), #0000 0 calc(360deg - var(--rim-a) / 2), #000 0) intersect, linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  }
-  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter::before{ --rim-a:360deg; background:rgba(248,247,239,0.14); }
-  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter::before, html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter::after{ padding:1.5px; } /* un poco más grueso: que se lea el avance */
-  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter::after{
-    --rim-a:var(--cnt-a, 360deg); background:var(--g-rim);
-    transition:--rim-a 0.6s cubic-bezier(.3,.7,.3,1);
-  }
-  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter > span{ position:relative; z-index:1; }
+  html.pv-pill.pv-split.is-narrow .project-view .pv-counter{ width:30px; height:30px; font-size:8.5px; top:calc(var(--pill-top) + var(--pill-h) + 12px); right:calc(var(--pill-side) + var(--cnt-w, 72px) / 2 - 15px); }
+  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter::before{ inset:-14px; }
+  /* mientras las gotas se forman todavía no está; aparece con su fade cuando se asientan */
+  html.pv-pill.pv-split .project-view.pv-liquid .pv-counter{ opacity:0 !important; transition:none !important; }
   /* el nombre abre la info: se marca apenas al pasar el mouse */
   html.pv-pill.pv-split:not(.is-landscape-phone) .pv-title:focus-visible{ outline:2px solid var(--cream); outline-offset:3px; }
   /* A y A + C: "líquido". Una sola capa de vidrio con la forma de la píldora del
@@ -4630,6 +4608,7 @@ function pvTextBox(el){
   return { cx: b.left + b.width / 2, top: b.top + b.height / 2 - fs * 1.05 / 2, fs };
 }
 window.addEventListener('resize', pvMeasureDrops);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(pvMeasureDrops);
 // el nombre también abre / cierra la info
 document.getElementById('pvTitle').addEventListener('click', () => {
   if (document.documentElement.classList.contains('pv-pill')) document.getElementById('pvInfoToggle').click();
@@ -4690,6 +4669,7 @@ function pvLiquidBuild(){
   const T = { l: tb.left - pr.left, r: tb.right - pr.left }, R = tb.height / 2, cy = tb.top - pr.top + R;
   const B = { cx: back.offsetLeft + back.offsetWidth / 2 };
   const cb = cnt.getBoundingClientRect();
+  pv.style.setProperty('--cnt-w', cb.width + 'px'); // (el contador se centra debajo de "+ info": se mide con todo ya armado)
   const C = { cx: cb.left - pr.left + cb.width / 2, w: cb.width };
   const layer = document.createElement('div');
   layer.className = 'pv-liquid-layer';
