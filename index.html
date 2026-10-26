@@ -1243,12 +1243,12 @@
 
   /* la info: segunda píldora, 12px debajo y a la derecha; baja y aparece.
      Textos alineados a la derecha: año / tipo, qué es, coordenadas; abajo, con más aire, la descripción */
-  /* la info: un pop-up en el centro de la pantalla, sobre un fondo oscuro al 50%.
+  /* la info: un pop-up en el centro de la pantalla, sobre un fondo oscuro al 60%.
      Textos a la izquierda: año / tipo, qué es, coordenadas y, más abajo y bien
      grande (como en el panel lateral de antes), la descripción */
   html.pv-pill:not(.is-landscape-phone) .pv-info::before{
     content:''; display:block; position:fixed; inset:0; z-index:-1; pointer-events:none;
-    background:rgba(0,0,0,0.5); -webkit-mask:none; mask:none;
+    background:rgba(0,0,0,0.6); -webkit-mask:none; mask:none;
     opacity:0; transition:opacity 0.3s ease;
   }
   html.pv-pill:not(.is-landscape-phone) .pv-info.is-expanded::before{ opacity:1; transition:opacity 0.45s ease; }
@@ -3665,6 +3665,8 @@ const ProjectView = (() => {
      de moverse (FEED_RESUME_MS). Con "reducir movimiento" no corre. */
   const FEED_AUTO_PX = 30;
   const FEED_RESUME_MS = 150;
+  const AUTO_INFO_SLOW = 0.25; // con la info abierta, al 25% de la velocidad
+  let autoInfoSlow = 1;
   let lastSetTop = 0, autoPauseUntil = 0, holding = false, autoAcc = 0, autoLast = performance.now();
   let prevTop = 0;
   function setFeedTop(v){ feed.scrollTop = v; lastSetTop = prevTop = feed.scrollTop; }
@@ -3673,7 +3675,9 @@ const ProjectView = (() => {
     autoLast = now;
     if (currentProject && copyH && !prefersReducedMotion){
       const paused = holding || now < autoPauseUntil || snapping || window.scrollY > 0.5; // con el footer a medio destapar el auto no corre
-      autoAcc += paused ? 0 : FEED_AUTO_PX * (typeof pvFeedSpeed === 'number' ? pvFeedSpeed : 1) * dt / 1000; // pvFeedSpeed: barrita de velocidad
+      // con la info abierta el carrusel va más lento (frena y vuelve de a poco, sin saltos)
+      autoInfoSlow += ((info.classList.contains('is-expanded') ? AUTO_INFO_SLOW : 1) - autoInfoSlow) * Math.min(1, dt / 350);
+      autoAcc += paused ? 0 : FEED_AUTO_PX * (typeof pvFeedSpeed === 'number' ? pvFeedSpeed : 1) * autoInfoSlow * dt / 1000; // pvFeedSpeed: barrita de velocidad
       if (autoAcc >= 1){
         const px = Math.floor(autoAcc);
         autoAcc -= px;
