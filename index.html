@@ -882,6 +882,8 @@
   .pv-links a{ color:inherit; text-decoration:none; opacity:0.85; transition:opacity 0.2s ease, color 0.2s ease; }
   /* hover: el amarillo complementario del azul (el del punto del cursor en el footer) */
   html.can-hover .pv-links a:hover{ opacity:1; color:#F5CD0A; }
+  /* celular (sin hover): se pone amarillo un instante al tocarlo, mientras se abre */
+  .pv-links a.is-tapped{ opacity:1; color:#F5CD0A; transition:none; }
   /* cliente / servicios / créditos: apilados abajo de todo del panel */
   .pv-rows{ margin-top:auto; }
   .pv-rows[hidden]{ display:none; }
@@ -1378,13 +1380,14 @@
   .pv-speed:has(input:focus-visible) .pv-speed-knob{ box-shadow:0 0 0 2px rgba(248,247,239,0.5), 0 0 10px 0 rgba(248,247,239,0.5); } /* (con teclado: sin recuadro, se ilumina la perilla) */
   /* celu: el ES/EN se corre a la derecha del botón de pausa */
   /* contador de fotos: el anillo de antes (no una píldora, para no competir con los
-     botones), bastante más chico, centrado debajo de "+ info" */
+     botones), bastante más chico, debajo de "+ info" y en el mismo eje vertical que el CX
+     (CX: botón de 44px a --m + 4px del borde en compu, a 14px en celu) */
   html.pv-pill.pv-split:not(.is-landscape-phone) .project-view .pv-counter{
     width:34px; height:34px; font-size:9.5px;
     top:calc(var(--pill-top) + var(--pill-h) + 14px);
-    right:calc(var(--pill-side) + var(--cnt-w, 86px) / 2 - 17px); left:auto;
+    right:calc(var(--m) + 4px + 22px - 17px); left:auto;
   }
-  html.pv-pill.pv-split.is-narrow .project-view .pv-counter{ width:30px; height:30px; font-size:8.5px; top:calc(var(--pill-top) + var(--pill-h) + 12px); right:calc(var(--pill-side) + var(--cnt-w, 72px) / 2 - 15px); }
+  html.pv-pill.pv-split.is-narrow .project-view .pv-counter{ width:30px; height:30px; font-size:8.5px; top:calc(var(--pill-top) + var(--pill-h) + 12px); right:calc(14px + 22px - 15px); }
   html.pv-pill.pv-split:not(.is-landscape-phone) .pv-counter::before{ inset:-14px; }
   /* mientras las gotas se forman todavía no está; aparece con su fade cuando se asientan */
   html.pv-pill.pv-split .project-view.pv-liquid .pv-counter{ opacity:0 !important; transition:none !important; }
@@ -3824,6 +3827,13 @@ const ProjectView = (() => {
   $('pvInfoToggle').addEventListener('click', () => setInfoOpen(!info.classList.contains('is-expanded')));
 
   $('pvBack').addEventListener('click', () => Router.home());
+  // links del proyecto en touch: amarillo apenas el dedo toca (como los datos del footer)
+  $('pvLinks').addEventListener('touchstart', e => {
+    const a = e.target.closest('a');
+    if (!a || canHover) return;
+    a.classList.add('is-tapped');
+    setTimeout(() => a.classList.remove('is-tapped'), 450);
+  }, { passive:true });
   $('pvContact').addEventListener('click', () => scrollToFooter());
 
   // re-medir cuando el feed cambia de tamaño de verdad (resize, rotación,
