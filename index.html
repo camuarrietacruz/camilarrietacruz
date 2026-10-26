@@ -126,7 +126,7 @@
   /* sistema de márgenes del celular (igual en loader, hero, proyecto y footer):
        · lateral 24px · superior e inferior 32px
        · fila de arriba: el nombre (hero) y los botones del proyecto (flecha · título ·
-         contador), todos con el centro a 51.5px (la caja del texto a 40px del borde); mismo tamaño de letra (15.9px), así al
+         + info), todos con el centro a 51.5px (la caja del texto a 40px del borde); mismo tamaño de letra (15.9px), así al
          abrir un proyecto el nombre queda quieto y los botones se arman a su alrededor
        · el ES/EN, siempre abajo a la derecha
      El nombre sigue centrado en horizontal (lo centra centerNameText). */
@@ -1134,9 +1134,9 @@
     text-shadow:0 0 1px rgba(0,0,0,0.35), 0 1px 14px rgba(0,0,0,0.45); /* que se lea mientras pasa por encima de la foto */
   }
   /* ════ proyecto: botones flotantes de vidrio (compu y celu; en el celu acostado sigue el layout de antes) ════
-     html.pv-pill.pv-split: la flecha, el nombre y el contador son tres píldoras sueltas
-     de vidrio ahumado con un canto azul. El nombre abre la info, una segunda píldora
-     12px debajo, a la derecha. (Las reglas con :not(.pv-split) son de la barra única,
+     html.pv-pill.pv-split: la flecha, el nombre y "+ info" son tres píldoras sueltas
+     de vidrio ahumado con un canto azul. "+ info" (y el nombre) abren la info, un
+     pop-up en el centro sobre un fondo oscuro. (Las reglas con :not(.pv-split) son de la barra única,
      que quedó sin uso.) */
   html.pv-pill:not(.is-landscape-phone) .project-view{
     --pill-h:60px; --pill-side:24px; --pill-top:24px; --pill-gap:10px; --pill-r:30px; --pill-card-r:24px;
@@ -1174,7 +1174,6 @@
     -webkit-mask:none; mask:none;
   }
   html.pv-pill.pv-split:not(.is-landscape-phone) .pv-info{ left:var(--pill-side); }
-  html.pv-pill:not(.is-landscape-phone) .pv-info::before{ display:none; }
   html.pv-pill:not(.is-landscape-phone) .pv-info.pv-info.pv-info{ overflow:visible; } /* (en celu, is-scrollable la recortaba) */
   html.pv-pill:not(.is-landscape-phone) .pv-head{
     position:relative; height:var(--pill-h); border-radius:var(--pill-r);
@@ -1244,27 +1243,52 @@
 
   /* la info: segunda píldora, 12px debajo y a la derecha; baja y aparece.
      Textos alineados a la derecha: año / tipo, qué es, coordenadas; abajo, con más aire, la descripción */
+  /* la info: un pop-up en el centro de la pantalla, sobre un fondo oscuro al 50%.
+     Textos a la izquierda: año / tipo, qué es, coordenadas y, más abajo y bien
+     grande (como en el panel lateral de antes), la descripción */
+  html.pv-pill:not(.is-landscape-phone) .pv-info::before{
+    content:''; display:block; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:rgba(0,0,0,0.5); -webkit-mask:none; mask:none;
+    opacity:0; transition:opacity 0.3s ease;
+  }
+  html.pv-pill:not(.is-landscape-phone) .pv-info.is-expanded::before{ opacity:1; transition:opacity 0.45s ease; }
   html.pv-pill:not(.is-landscape-phone) .pv-body{
-    position:absolute; top:calc(100% + 12px); right:0; left:auto; width:min(420px, 100%);
-    margin:0; padding:22px 26px 24px; border-radius:var(--pill-card-r);
-    display:flex; flex-direction:column; align-items:flex-end; text-align:right;
-    max-height:calc(100svh - var(--pill-top) - var(--pill-h) - 12px - var(--pill-side) - 60px); overflow-y:auto; scrollbar-width:none;
-    opacity:0; transform:translateY(-10px); visibility:hidden; pointer-events:none;
+    position:fixed; left:50%; top:50%; right:auto; width:min(680px, calc(100vw - 48px));
+    margin:0; padding:clamp(28px, 3vw, 44px) clamp(28px, 3.2vw, 48px); border-radius:var(--pill-card-r);
+    display:flex; flex-direction:column; align-items:flex-start; text-align:left;
+    max-height:calc(100svh - 2 * (var(--pill-top) + var(--pill-h) + 16px)); overflow-y:auto; scrollbar-width:none;
+    opacity:0; transform:translate(-50%, -50%) scale(0.97); visibility:hidden; pointer-events:none;
     transition: opacity 0.25s ease, transform 0.3s ease, visibility 0s linear 0.3s;
   }
   html.pv-pill:not(.is-landscape-phone) .pv-info.is-expanded .pv-body{
-    opacity:1; transform:none; visibility:visible; pointer-events:auto;
-    transition: opacity 0.45s ease, transform 0.6s cubic-bezier(.2,.7,.2,1), visibility 0s;
+    opacity:1; transform:translate(-50%, -50%); visibility:visible; pointer-events:auto;
+    transition: opacity 0.15s ease, transform 0.4s cubic-bezier(.2,.7,.2,1), visibility 0s;
+    /* se condensa (como la entrada de los botones), rápido: el vidrio aparece y el canto se dibuja */
+    animation:pv-condense 0.35s ease both;
   }
-  html.pv-pill.is-narrow .pv-body{ left:0; right:0; width:auto; padding:18px 20px 20px; }
+  html.pv-pill:not(.is-landscape-phone) .pv-info.is-expanded .pv-body::after{ animation:pv-rim-draw 0.45s cubic-bezier(.6,0,.3,1) 0.05s both; }
+  html.pv-pill.is-narrow .pv-body{ width:calc(100vw - 2 * var(--pill-side)); padding:24px 22px 26px; }
+  /* cruz para cerrar, arriba a la derecha (también cierra tocar afuera, "− info" y Esc) */
+  .pv-close{ display:none; }
+  html.pv-pill:not(.is-landscape-phone) .pv-close{
+    display:grid; place-items:center; position:absolute; top:14px; right:14px; z-index:1;
+    width:40px; height:40px; padding:0; margin:0; border:0; border-radius:50%;
+    background:none; color:var(--cream); cursor:pointer; opacity:0.7; transition:opacity 0.2s ease, background-color 0.2s ease;
+  }
+  html.pv-pill.can-hover:not(.is-landscape-phone) .pv-close:hover{ opacity:1; background-color:rgba(248,247,239,0.08); }
+  html.pv-pill.is-narrow .pv-close{ top:10px; right:10px; }
+  .pv-close svg{ display:block; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; fill:none; }
+  html.pv-pill:not(.is-landscape-phone) .pv-body > .pv-close{ order:-3; opacity:0.7; transform:none; }
   .pv-sub{ display:none; }
   html.pv-pill:not(.is-landscape-phone) .pv-sub{ display:block; order:-2; margin:0; }
   html.pv-pill:not(.is-landscape-phone) .pv-sub-meta{ display:block; font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; opacity:0.7; }
   html.pv-pill:not(.is-landscape-phone) .pv-sub-kind{ display:block; font-size:15px; line-height:1.4; margin-top:6px; }
   html.pv-pill:not(.is-landscape-phone) .pv-coords-body:not([hidden]){ display:block; order:-1; margin:6px 0 0; }
-  html.pv-pill:not(.is-landscape-phone) .pv-desc{ font-size:19px; line-height:1.45; margin:24px 0 0; max-width:none; opacity:0.92; }
-  html.pv-pill.is-narrow .pv-desc{ font-size:17px; margin-top:20px; }
-  html.pv-pill:not(.is-landscape-phone) .pv-links{ margin:16px 0 0; justify-content:flex-end; }
+  html.pv-pill:not(.is-landscape-phone) .pv-desc{ font-size:calc(clamp(19px, 1.7vw, 24px) + 2.67px); line-height:1.4; margin:28px 0 0; max-width:none; opacity:0.92; } /* (+2pt en compu) */
+  html.pv-pill.is-narrow .pv-desc{ font-size:19px; margin-top:22px; }
+  html.pv-pill:not(.is-landscape-phone) .pv-links{ margin:20px 0 0; justify-content:flex-start; }
+  /* con la info abierta, la barrita de velocidad se guarda */
+  html.pv-pill:not(.is-landscape-phone) .project-view:has(.pv-info.is-expanded) .pv-speed{ opacity:0; pointer-events:none; }
   html.pv-pill:not(.is-landscape-phone) .pv-rows{ margin-top:12px; }
   html.pv-pill:not(.is-landscape-phone) .pv-body > *{ opacity:0; transform:translateY(6px); transition:opacity 0.2s ease, transform 0.2s ease; }
   html.pv-pill:not(.is-landscape-phone) .pv-info.is-expanded .pv-body > *{
@@ -1278,7 +1302,7 @@
   }
   /* ════ entrada de los botones (pv-in-ac) ════
      El vidrio se condensa alrededor del nombre que llega y se estira en dos gotas
-     líquidas que se cortan y se asientan como la flecha y el contador (JS:
+     líquidas que se cortan y se asientan como la flecha y "+ info" (JS:
      pvLiquidBuild); después el canto se dibuja. Corre cada vez que la vista se
      arma (al sacarse .pv-chrome-out). */
   @property --rim-a{ syntax:'<angle>'; inherits:false; initial-value:360deg; }
@@ -1353,10 +1377,12 @@
   .pv-speed-track{ cursor:pointer; touch-action:none; }
   .pv-speed:has(input:focus-visible) .pv-speed-knob{ box-shadow:0 0 0 2px rgba(248,247,239,0.5), 0 0 10px 0 rgba(248,247,239,0.5); } /* (con teclado: sin recuadro, se ilumina la perilla) */
   /* celu: el ES/EN se corre a la derecha del botón de pausa */
-  /* botones: sin "+ info". La gota de la derecha es el contador de fotos y su
+  /* (en pausa) el contador como gota de la derecha, con el canto azul que se llena; hoy esa
+     gota es "+ info" y el contador no se muestra. Estas reglas quedan para reusarlo. Antes: la gota de la derecha era el contador de fotos y su
      canto azul se llena (desde arriba, hacia los dos lados) a medida que avanzan
      las fotos. El nombre abre la info, que baja en el mismo lugar. */
-  html.pv-pill.pv-split:not(.is-landscape-phone) .pv-info-toggle{ display:none; }
+  /* el contador queda guardado (para usarlo en otro lugar): con los botones no se muestra */
+  html.pv-pill.pv-split:not(.is-landscape-phone) .project-view .pv-counter{ display:none !important; }
   html.pv-pill.pv-split:not(.is-landscape-phone) .project-view .pv-counter{
     top:var(--pill-top); right:var(--pill-side); left:auto; z-index:3; /* debajo de la píldora del nombre: la gota sale de adentro */
     width:auto; min-width:var(--pill-h); height:var(--pill-h); padding:0 20px; border-radius:var(--pill-r);
@@ -1397,14 +1423,13 @@
   .pv-liquid-layer.is-condensing{ animation:pv-condense 0.38s ease both; }
   html.pv-pill.pv-split .project-view.pv-liquid .pv-title{ background:transparent !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; box-shadow:none !important; }
   html.pv-pill.pv-split .project-view.pv-liquid .pv-title::after{ opacity:0; }
-  html.pv-pill.pv-split .project-view.pv-liquid :is(.pv-back, .pv-counter){ opacity:0 !important; transition:none !important; }
+  html.pv-pill.pv-split .project-view.pv-liquid :is(.pv-back, .pv-info-toggle){ opacity:0 !important; transition:none !important; }
   /* al llegar las gotas: la flecha y el contador ya están (sin parpadeo); solo su
      contenido aparece con un fade suave y los cantos se dibujan */
   @keyframes pv-rim-grow{ from{ --rim-a:0deg; } }
-  html.pv-pill.pv-split .project-view.pv-rims-draw :is(.pv-back, .pv-counter){ opacity:1 !important; transition:none !important; }
-  html.pv-pill.pv-split .project-view.pv-rims-draw :is(.pv-back > span, .pv-counter > span){ animation:pv-fade 0.45s ease both; }
-  html.pv-pill.pv-split .project-view.pv-rims-draw .pv-counter::before{ animation:pv-rim-draw 0.61s cubic-bezier(.6,0,.3,1) both; }
-  html.pv-pill.pv-split .project-view.pv-rims-draw .pv-counter::after{ animation:pv-rim-grow 0.61s cubic-bezier(.6,0,.3,1) both; }
+  html.pv-pill.pv-split .project-view.pv-rims-draw :is(.pv-back, .pv-info-toggle){ opacity:1 !important; filter:none !important; transform:none !important; transition:none !important; }
+  html.pv-pill.pv-split .project-view.pv-rims-draw :is(.pv-back > span, .pv-info-toggle > span){ animation:pv-fade 0.45s ease both; }
+  html.pv-pill.pv-split .project-view.pv-rims-draw .pv-info-toggle::after{ animation:pv-rim-draw 0.61s cubic-bezier(.6,0,.3,1) both; }
   html.pv-pill.pv-split .project-view.pv-rims-draw .pv-title::after,
   html.pv-pill.pv-split .project-view.pv-rims-draw .pv-back::after{ animation:pv-rim-draw 0.61s cubic-bezier(.6,0,.3,1) both; }
 </style>
@@ -1481,6 +1506,7 @@
         <button class="pv-info-toggle" id="pvInfoToggle" type="button" aria-expanded="false"><span class="pv-info-icon" aria-hidden="true"><svg class="pv-ico-plus" width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><path d="M5.36133 9.14648C5.36133 9.28711 5.30859 9.4082 5.20312 9.50977C5.10156 9.61523 4.97852 9.66797 4.83398 9.66797C4.68945 9.66797 4.56641 9.61523 4.46484 9.50977C4.36328 9.4082 4.3125 9.28711 4.3125 9.14648V0.521484C4.3125 0.380859 4.36328 0.259766 4.46484 0.158203C4.56641 0.0527344 4.68945 0 4.83398 0C4.97852 0 5.10156 0.0527344 5.20312 0.158203C5.30859 0.259766 5.36133 0.380859 5.36133 0.521484V9.14648ZM0.521484 5.35547C0.380859 5.35547 0.257812 5.30469 0.152344 5.20312C0.0507812 5.10156 0 4.97852 0 4.83398C0 4.68945 0.0507812 4.56641 0.152344 4.46484C0.257812 4.35938 0.380859 4.30664 0.521484 4.30664H9.14648C9.28711 4.30664 9.4082 4.35938 9.50977 4.46484C9.61523 4.56641 9.66797 4.68945 9.66797 4.83398C9.66797 4.97852 9.61523 5.10156 9.50977 5.20312C9.4082 5.30469 9.28711 5.35547 9.14648 5.35547H0.521484Z"/></svg><svg class="pv-ico-minus" width="10" height="2" viewBox="0 0 10 2" xmlns="http://www.w3.org/2000/svg"><path d="M0.521484 1.04883C0.427734 1.04883 0.341797 1.02539 0.263672 0.978516C0.185547 0.931641 0.121094 0.869141 0.0703125 0.791016C0.0234375 0.708984 0 0.619141 0 0.521484C0 0.427734 0.0234375 0.341797 0.0703125 0.263672C0.121094 0.181641 0.185547 0.117188 0.263672 0.0703125C0.341797 0.0234375 0.427734 0 0.521484 0H9.14648C9.24023 0 9.32617 0.0234375 9.4043 0.0703125C9.48633 0.117188 9.55078 0.181641 9.59766 0.263672C9.64453 0.341797 9.66797 0.427734 9.66797 0.521484C9.66797 0.619141 9.64453 0.708984 9.59766 0.791016C9.55078 0.869141 9.48633 0.931641 9.4043 0.978516C9.32617 1.02539 9.24023 1.04883 9.14648 1.04883H0.521484Z"/></svg></span><span id="pvInfoToggleLabel"></span></button>
       </header>
       <div class="pv-body">
+        <button class="pv-close" id="pvClose" type="button" aria-label="Cerrar"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 1l12 12M13 1L1 13"/></svg></button>
         <p class="pv-sub" id="pvSub"></p>
         <div class="pv-coords pv-coords-body" id="pvCoordsBody" hidden></div>
         <p class="pv-desc" id="pvDesc"></p>
@@ -3519,6 +3545,7 @@ const ProjectView = (() => {
     projectViewEl.querySelectorAll('[data-pv]').forEach(el => { el.textContent = copy[el.dataset.pv]; });
     $('pvContact').setAttribute('aria-label', copy.pvContact);
     $('pvBack').setAttribute('aria-label', copy.pvBack);
+    $('pvClose').setAttribute('aria-label', currentLang === 'en' ? 'Close' : 'Cerrar');
     $('pvOrbitText').textContent = copy.pvContactOrbit;
     projectViewEl.style.setProperty('--pv-accent', p.accent || 'var(--blue)');
     $('pvIndex').textContent = 'CX-' + String(PROJECTS.indexOf(p) + 1).padStart(2, '0');
@@ -4586,7 +4613,7 @@ document.documentElement.classList.add('pv-telemetry', 'pv-sheet-fade');
 document.documentElement.classList.add('pv-pill', 'pv-split', 'pv-in-ac');
 // botones: dónde arrancan las gotas de "+ info" (su ancho cambia con el idioma)
 function pvMeasureDrops(){
-  const pv = document.getElementById('projectView'), c = document.getElementById('pvCounter'), t = document.getElementById('pvTitle');
+  const pv = document.getElementById('projectView'), c = document.getElementById('pvInfoToggle'), t = document.getElementById('pvTitle');
   if (c && c.offsetWidth) pv.style.setProperty('--cnt-w', c.offsetWidth + 'px');
   if (t && t.offsetWidth) pv.style.setProperty('--title-w', t.offsetWidth + 'px');
 }
@@ -4601,6 +4628,10 @@ window.addEventListener('resize', pvMeasureDrops);
 // el nombre también abre / cierra la info
 document.getElementById('pvTitle').addEventListener('click', () => {
   if (document.documentElement.classList.contains('pv-pill')) document.getElementById('pvInfoToggle').click();
+});
+document.getElementById('pvClose').addEventListener('click', () => {
+  const inf = document.getElementById('pvInfo');
+  if (inf && inf.classList.contains('is-expanded')) document.getElementById('pvInfoToggle').click();
 });
 document.getElementById('pvTitle').addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && document.documentElement.classList.contains('pv-pill')){ e.preventDefault(); document.getElementById('pvInfoToggle').click(); }
@@ -4648,12 +4679,13 @@ function pvLiquidBuild(){
   pvLiquidStop();
   if (!root.classList.contains('pv-split') || !root.classList.contains('pv-in-ac')) return;
   if (root.classList.contains('is-landscape-phone') || prefersReducedMotion) return;
-  const title = document.getElementById('pvTitle'), back = document.getElementById('pvBack'), cnt = document.getElementById('pvCounter');
+  const title = document.getElementById('pvTitle'), back = document.getElementById('pvBack'), cnt = document.getElementById('pvInfoToggle'); // la gota de la derecha: "+ info"
   const pr = pv.getBoundingClientRect(), tb = title.getBoundingClientRect();
   if (!tb.width || !back.offsetWidth || !cnt.offsetWidth) return;
   const T = { l: tb.left - pr.left, r: tb.right - pr.left }, R = tb.height / 2, cy = tb.top - pr.top + R;
   const B = { cx: back.offsetLeft + back.offsetWidth / 2 };
-  const C = { cx: cnt.offsetLeft + cnt.offsetWidth / 2, w: cnt.offsetWidth };
+  const cb = cnt.getBoundingClientRect();
+  const C = { cx: cb.left - pr.left + cb.width / 2, w: cb.width };
   const layer = document.createElement('div');
   layer.className = 'pv-liquid-layer';
   const condense = true; // el vidrio se condensa alrededor del nombre antes de estirarse
