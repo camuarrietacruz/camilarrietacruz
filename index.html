@@ -4757,7 +4757,7 @@ new MutationObserver(records => {
 document.addEventListener('click', e => {
   const r = document.documentElement, inf = document.getElementById('pvInfo');
   if (!r.classList.contains('pv-pill') || !inf || !inf.classList.contains('is-expanded')) return;
-  if (e.target.closest('.pv-head, .pv-body')) return;
+  if (e.target.closest('.pv-head, .pv-body, .lang-switch')) return; // (cambiar de idioma no cierra la info)
   document.getElementById('pvInfoToggle').click();
 });
 (function(){
