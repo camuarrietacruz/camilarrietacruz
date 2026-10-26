@@ -879,8 +879,9 @@
   /* links del proyecto ("↗ Instagram") debajo de la descripción */
   .pv-links{ display:flex; flex-wrap:wrap; gap:8px 22px; margin-top:-16px; margin-bottom:40px; font-size:13px; letter-spacing:0.08em; }
   .pv-links:empty{ display:none; }
-  .pv-links a{ color:inherit; text-decoration:none; opacity:0.85; transition:opacity 0.2s ease; }
-  html.can-hover .pv-links a:hover{ opacity:1; }
+  .pv-links a{ color:inherit; text-decoration:none; opacity:0.85; transition:opacity 0.2s ease, color 0.2s ease; }
+  /* hover: el amarillo complementario del azul (el del punto del cursor en el footer) */
+  html.can-hover .pv-links a:hover{ opacity:1; color:#F5CD0A; }
   /* cliente / servicios / créditos: apilados abajo de todo del panel */
   .pv-rows{ margin-top:auto; }
   .pv-rows[hidden]{ display:none; }
